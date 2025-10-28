@@ -22,8 +22,8 @@ import AccountSettings from "./pages/AccountSettings";
 import { DialogProvider } from "./contexts/DialogContext";
 import AppDialog from "./components/AppDialog";
 import GameDetails from "./pages/GameDetails";
-import { SnackbarProvider } from "./components/ui/AppSnackbar";
- 
+import { SnackbarProvider } from "./components/AppSnackbar";
+
 const theme = createTheme({
     palette: { mode: "dark", background: { default: "#0b0d13" } },
     typography: { fontFamily: "'Exo', sans-serif" }

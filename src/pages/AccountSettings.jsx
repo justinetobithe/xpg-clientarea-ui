@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import { getAuth, updatePassword, signOut } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "../firebase";
-import { useSnackbar } from "../components/ui/AppSnackbar";
+import { useSnackbar } from "../components/AppSnackbar";
 import {
   Avatar,
   Box,
