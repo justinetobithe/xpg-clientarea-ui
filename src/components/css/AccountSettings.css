@@ -1,0 +1,167 @@
+/* Import czcionki Exo z Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Exo:wght@500;700&display=swap');
+
+/* Strona główna ustawień konta */
+.account-settings-page {
+  background-color: #fff;
+  color: #000;
+  min-height: 100vh;
+  font-family: 'Exo', sans-serif;
+  font-weight: 500; /* Domyślna grubość dla kontenera */
+  max-width: 800px; /* Opcjonalnie możesz ustawić szerokość kontenera */
+}
+
+/* Zapewniamy font-weight: 400 dla wszystkich nagłówków w obrębie .account-settings-page */
+.account-settings-page h1,
+.account-settings-page h2,
+.account-settings-page h3,
+.account-settings-page h4,
+.account-settings-page h5,
+.account-settings-page h6 {
+  font-weight: 400;
+}
+
+/* --- Media Queries (opcjonalne dostosowanie marginesów) --- */
+@media (max-width: 1200px) {
+  .account-settings-page {
+    margin-left: 150px;
+    margin-top: 50px;
+  }
+}
+
+@media (max-width: 992px) {
+  .account-settings-page {
+    margin: 60px;
+  }
+}
+
+@media (max-width: 768px) {
+  .account-settings-page {
+    margin: 40px;
+  }
+}
+
+@media (max-width: 576px) {
+  .account-settings-page {
+    margin: 20px;
+  }
+}
+
+/* Sekcja ustawień konta */
+.settings-section {
+  padding: 20px;
+}
+
+/* Bardzo duży napis "Account Settings" */
+.main-heading {
+  font-size: 64px;
+  margin-bottom: 30px;
+  font-weight: 400;
+}
+
+/* Formularz ustawień */
+.settings-form {
+  max-width: 660px; /* Szerokość formularza */
+}
+
+/* Każda grupa pól – tu dodajemy animowaną linię przy focus */
+.settings-form .form-group {
+  position: relative;
+  margin-bottom: 25px; /* nieco większy margines, by linia nie nachodziła na kolejny element */
+}
+
+.settings-form label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 400;
+}
+
+/* Czerwona gwiazdka */
+.required {
+  color: red;
+}
+
+/* Czarna gwiazdka */
+.black-star {
+  color: #000;
+  margin-right: 4px;
+}
+
+/* Pola formularza */
+.form-control {
+  width: 100%;
+  max-width: 800px;
+  background: #fff;
+  border: 1px solid #d9d9d9;
+  box-sizing: border-box;
+  padding: 8px;
+  color: #000;
+  font-weight: 400;
+  height: 45px;
+  font-size: 15px;
+  font-family: 'Exo', sans-serif;
+  outline: none; /* Usuwa niebieską obwódkę w niektórych przeglądarkach */
+}
+
+/* Animowana linia "wyrastająca" spod inputa, w kolorze jasnoniebieskim */
+.settings-form .form-group::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0px;            /* linia pojawia się poniżej dolnej krawędzi inputa */
+  width: 100%;
+  height: 3px;             /* docelowa wysokość linii */
+  background: #5ac3e6;     /* jasnoniebieski kolor */
+  transform: scaleY(0);    /* start: 0% wysokości */
+  transform-origin: bottom;
+  transition: transform 0.3s ease;
+  z-index: 1;
+}
+
+/* Kiedy w obrębie .form-group jest focus (czyli kursor w input), linia rośnie */
+.settings-form .form-group:focus-within::after {
+  transform: scaleY(1);    /* z 0% do 100% (3px) wysokości */
+}
+
+/* Dodatkowe info o haśle */
+.password-warning {
+  font-style: italic;
+  color: #666;
+  margin-bottom: 10px;
+  font-weight: 400;
+}
+
+/* Guzik zapisu */
+.save-changes-btn {
+  background: #5ac3e6;
+  color: #fff;
+  border: none;
+  padding: 8px 30px;
+  cursor: pointer;
+  font-weight: 400;
+  height: 60px;
+  border-radius: 50px;
+  font-family: 'Exo', sans-serif;
+  font-size: 16px;
+}
+
+.btn:hover {
+  opacity: 0.9;
+}
+
+/* Szara poświata tylko na input email */
+.input-wrapper {
+  position: relative;
+}
+
+.input-wrapper .overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(128, 128, 128, 0.3); /* Szary półprzezroczysty */
+  pointer-events: all;   /* Blokuje kliknięcia na input */
+  cursor: not-allowed;   /* Wskazuje, że nie można edytować */
+  z-index: 2;
+}

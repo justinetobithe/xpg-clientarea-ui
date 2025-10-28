@@ -1,0 +1,88 @@
+{
+    "welcome": "Welcome",
+    "home": "Home",
+    "games": "Games",
+    "accountSettings": "Account Settings",
+    "logout": "Log Out",
+    "footer": {
+        "here": "here",
+        "privacy_policy": "XPG Live’s logo and graphic materials are the exclusive intellectual property of XPG Live and may not be copied, reproduced, distributed, or displayed without prior written consent from XPG Live. XPG Live operates in full compliance with gaming regulations across multiple jurisdictions. We are committed to protecting your privacy. View our Privacy Policy and Cookie Policy.",
+        "cookie_policy": "XPG Cookie Policy clarifies what cookies we use. Read our Cookie Policy",
+        "copyright": "Copyright © 2008 - 2025 XPG. All Rights Reserved."
+    },
+    "header": {
+        "login": "Login",
+        "createAccount": "Create Account"
+    },
+    "account_settings_title": "Account Settings",
+    "your_details_title": "Your details",
+    "email_label": "Email",
+    "full_name_label": "Full Name",
+    "company_label": "Company",
+    "team_label": "Team (which team are you representing)",
+    "company_website_label": "Company Website",
+    "change_password_title": "Change Password",
+    "change_password_info": "* When changing password you will be logged out.",
+    "set_new_password_label": "Set new password",
+    "repeat_new_password_label": "Repeat new password",
+    "save_settings_button": "Save Settings",
+    "success_user_data_updated": "User data updated successfully.",
+    "success_password_changed": "Password changed successfully!",
+    "info_logged_out_new_password": "Logged out. Please log in again with your new password.",
+    "error_not_logged_in": "You are not logged in!",
+    "latest_games_title": "Latest Games",
+    "new_game_label": "New",
+    "access_denied_title": "Access Denied",
+    "access_denied_message": "We're sorry, but you do not have access to this game.",
+    "access_denied_contact": "Want access? Contact us and we'll resolve it for you!",
+    "close_button": "Close",
+    "homePage": {
+        "bannerText": "{{text}}",
+        "bannerSubText": "{{subText}}"
+    },
+    "gameGrid": {
+        "allGames": "All Games",
+        "search": "Game Name"
+    },
+    "filters": {
+        "label": "Sort by",
+        "category": "Category",
+        "sortBy": "Sort by"
+    },
+    "sort": {
+        "newest": "Newest",
+        "alphabetically": "Alphabetically"
+    },
+    "uploadDate": {
+        "label": "Upload Date",
+        "any": "Any Date",
+        "lastWeek": "Last Week",
+        "lastMonth": "Last Month",
+        "last3Months": "Last 3 Months",
+        "lastYear": "Last Year",
+        "last2Years": "Last 2 Years"
+    },
+    "promotions": {
+        "label": "Promotions",
+        "christmas": "Christmas",
+        "football": "Football",
+        "halloween": "Halloween",
+        "mobile": "Mobile",
+        "promotions": "Promotions",
+        "stValentine": "St Valentine's",
+        "summer": "Summer"
+    },
+    "dealerOptions": {
+        "label": "Dealers",
+        "all": "All Dealers",
+        "twentyFivePlus": "25+",
+        "female": "Female",
+        "male": "Male"
+    },
+    "gameProfile": {
+        "untitled_section": "Untitled Section",
+        "filter_by_file_type": "Filter by File Type",
+        "all": "All",
+        "more_promotion_packs": "More promotion packs"
+    }
+}

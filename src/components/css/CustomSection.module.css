@@ -1,0 +1,248 @@
+@import url('https://fonts.googleapis.com/css2?family=Exo:wght@400;700&display=swap');
+
+/* Styl sekcji – analogicznie do Images/Game Rules */
+.imagesSection {
+  width: 90%;
+  max-width: 1000px;
+  margin-top: 10px;
+  margin-left: 20px;
+  font-family: 'Exo', sans-serif;
+}
+
+/* Pasek nagłówkowy zakładki */
+.headerTab {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 25px 20px;
+  background-color: #f0f0f0;
+  cursor: pointer;
+  margin-bottom: 20px;
+  font-weight: 400;
+}
+.headerTab h3 {
+  font-weight: 400;
+}
+
+.headerTab.open {
+  background-color: #5ac3e6;
+  color: #fff;
+}
+
+.headerTab.closed {
+  background-color: #f0f0f0;
+  color: #333333;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+/* Kontener kółka dla logo */
+.iconCircle {
+  background-color: #585858;
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.iconCircle img {
+  width: calc(100% - 11px);
+  height: calc(100% - 11px);
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
+
+.headerIcon {
+  display: block;
+  width: calc(100% - 6px);
+  height: calc(100% - 6px);
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
+
+/* Kontener dla ikony strzałki – okrągły element z tłem #585858 */
+.toggleIconContainer {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+  background-color: #585858;
+}
+
+.toggleIcon {
+  font-size: 1.5rem;
+  transform: rotate(0deg);
+  border-radius: 4px;
+}
+
+.headerTab.closed .toggleIcon {
+  color: #CCCCCC;
+}
+
+.headerTab.open .toggleIcon {
+  color: #5ac3e6;
+  transform: rotate(180deg);
+}
+
+/* Lista plików */
+.fileList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+/* Karta pojedynczego pliku – szerokość 100% kontenera */
+.fileItem {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  background-color: #f0f0f0;
+  margin: 0;
+  width: 100%;
+  min-height: 80px;
+}
+
+/* Miniaturka */
+.thumbnailContainer {
+  flex: 0 0 auto;
+  max-width: 100px;
+  height: 71.5px;
+  overflow: hidden;
+  transition: opacity 0.3s ease;
+}
+
+.thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  margin: 0;
+  padding: 0;
+}
+
+/* Opis pliku */
+.fileInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-left: 10px;
+  padding: 0;
+  min-width: 0; /* Kluczowe dla zawijania długich nazw plików w układzie flex */
+}
+
+.fileName {
+  font-weight: 400;
+  font-size: 1rem;
+  color: #333333;
+  margin: 0;
+  /* Pozwala na ładne zawijanie tekstu */
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.fileFormat {
+  font-size: 0.9rem;
+  color: #888888;
+  margin: 0;
+}
+
+/* Kontener przycisków – wszystkie przyciski razem, wyrównane do prawej */
+.fileButtonsContainer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+/* Przycisk tekstowy (preview) */
+.previewBtn {
+  background: transparent;
+  border: none;
+  color: #333333;
+  cursor: pointer;
+  font-size: 0.9rem;
+  text-decoration: underline dashed;
+  padding: 0 4px;
+}
+
+.previewBtn:hover {
+  color: #000;
+}
+
+/* Domyślny styl przycisków ikon (dla mniejszych ekranów) */
+.iconBtn {
+  background-color: #d9d9d9;
+  border: none;
+  width: 28px;
+  height: 80px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.iconBtn:hover {
+  background-color: #5ac3e6;
+}
+
+.innerCircle {
+  background-color: #00AEEF;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.innerCircle svg {
+  font-size: 0.9rem;
+  color: #fff !important;
+}
+
+/* Media query – dla ekranów mniejszych niż 600px */
+@media (max-width: 600px) {
+  .thumbnailContainer {
+    display: none;
+  }
+  .fileFormat {
+    display: none;
+  }
+  .fileName {
+    font-size: 0.9rem;
+    overflow-wrap: break-word;
+  }
+
+  /* Zmiana rozmieszczenia elementów wewnątrz pliku – przycisk z prawej strony przylega bezpośrednio */
+  .fileItem {
+    justify-content: flex-start; /* Usuwamy duże odstępy */
+  }
+  .fileButtonsContainer {
+    margin-left: auto; /* Przesuwamy przyciski na skraj prawej strony */
+  }
+   .previewBtn {
+      display: none;
+    }
+}
+
+
+/* Dla ekranów szerszych niż 600px – przyciski ikon stają się kwadratowe */
+@media (min-width: 600px) {
+  .iconBtn {
+    width: 80px;
+    height: 80px;
+  }
+}

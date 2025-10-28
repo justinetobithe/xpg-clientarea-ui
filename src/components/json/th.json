@@ -1,0 +1,84 @@
+{
+    "welcome": "ยินดีต้อนรับ",
+    "home": "หน้าหลัก",
+    "games": "เกม",
+    "accountSettings": "การตั้งค่าบัญชี",
+    "logout": "ออกจากระบบ",
+    "footer": {
+        "here": "ที่นี่",
+        "privacy_policy": "โลโก้และสื่อกราฟิกของ XPG Live เป็นทรัพย์สินทางปัญญาเฉพาะของ XPG Live และไม่อาจคัดลอก ทำซ้ำ แจกจ่าย หรือแสดงได้โดยไม่ได้รับความยินยอมเป็นลายลักษณ์อักษรล่วงหน้าจาก XPG Live XPG Live ดำเนินการโดยปฏิบัติตามกฎระเบียบการเล่นเกมอย่างเต็มรูปแบบในเขตอำนาจศาลหลายแห่ง เราให้คำมั่นว่าจะปกป้องความเป็นส่วนตัวของคุณ ดู นโยบายความเป็นส่วนตัว และ นโยบายคุกกี้ ของเรา",
+        "cookie_policy": "นโยบายคุกกี้ของ XPG ชี้แจงว่าเราใช้คุกกี้อะไรบ้าง อ่านนโยบายคุกกี้ของเรา",
+        "copyright": "ลิขสิทธิ์ © 2008 - 2025 XPG สงวนลิขสิทธิ์"
+    },
+    "header": {
+        "login": "เข้าสู่ระบบ",
+        "createAccount": "สร้างบัญชี"
+    },
+    "account_settings_title": "การตั้งค่าบัญชี",
+    "your_details_title": "รายละเอียดของคุณ",
+    "email_label": "อีเมล",
+    "full_name_label": "ชื่อเต็ม",
+    "company_label": "บริษัท",
+    "team_label": "ทีม (คุณเป็นตัวแทนทีมใด)",
+    "company_website_label": "เว็บไซต์บริษัท",
+    "change_password_title": "เปลี่ยนรหัสผ่าน",
+    "change_password_info": "* เมื่อเปลี่ยนรหัสผ่าน คุณจะถูกออกจากระบบ",
+    "set_new_password_label": "ตั้งรหัสผ่านใหม่",
+    "repeat_new_password_label": "ยืนยันรหัสผ่านใหม่",
+    "save_settings_button": "บันทึกการตั้งค่า",
+    "success_user_data_updated": "อัปเดตข้อมูลผู้ใช้สำเร็จ",
+    "success_password_changed": "เปลี่ยนรหัสผ่านสำเร็จ!",
+    "info_logged_out_new_password": "ออกจากระบบแล้ว โปรดเข้าสู่ระบบอีกครั้งด้วยรหัสผ่านใหม่ของคุณ",
+    "error_not_logged_in": "คุณยังไม่ได้เข้าสู่ระบบ!",
+    "latest_games_title": "เกมล่าสุด",
+    "new_game_label": "ใหม่",
+    "access_denied_title": "การเข้าถึงถูกปฏิเสธ",
+    "access_denied_message": "ขออภัย คุณไม่สามารถเข้าถึงเกมนี้ได้",
+    "access_denied_contact": "ต้องการเข้าถึงหรือไม่? ติดต่อเราและเราจะแก้ไขให้คุณ!",
+    "close_button": "ปิด",
+    "gameGrid": {
+        "allGames": "เกมทั้งหมด",
+        "search": "ชื่อเกม"
+    },
+    "filters": {
+        "label": "เรียงตาม",
+        "category": "หมวดหมู่",
+        "sortBy": "เรียงตาม"
+    },
+    "sort": {
+        "newest": "ใหม่ล่าสุด",
+        "alphabetically": "ตามตัวอักษร"
+    },
+    "uploadDate": {
+        "label": "วันที่อัปโหลด",
+        "any": "ทุกวัน",
+        "lastWeek": "สัปดาห์ที่แล้ว",
+        "lastMonth": "เดือนที่แล้ว",
+        "last3Months": "3 เดือนที่แล้ว",
+        "lastYear": "ปีที่แล้ว",
+        "last2Years": "2 ปีที่แล้ว"
+    },
+    "promotions": {
+        "label": "โปรโมชั่น",
+        "christmas": "คริสต์มาส",
+        "football": "ฟุตบอล",
+        "halloween": "ฮาโลวีน",
+        "mobile": "มือถือ",
+        "promotions": "โปรโมชั่น",
+        "stValentine": "วันวาเลนไทน์",
+        "summer": "ฤดูร้อน"
+    },
+    "dealerOptions": {
+        "label": "ดีลเลอร์",
+        "all": "ดีลเลอร์ทั้งหมด",
+        "twentyFivePlus": "25+",
+        "female": "ผู้หญิง",
+        "male": "ผู้ชาย"
+    },
+    "gameProfile": {
+        "untitled_section": "ส่วนที่ไม่มีชื่อ",
+        "filter_by_file_type": "กรองตามประเภทไฟล์",
+        "all": "ทั้งหมด",
+        "more_promotion_packs": "แพ็คโปรโมชั่นเพิ่มเติม"
+    }
+}

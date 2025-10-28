@@ -1,0 +1,112 @@
+@import url('https://fonts.googleapis.com/css2?family=Exo:wght@500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@500&display=swap');
+
+
+/* Kontener całej sekcji (już nie wymusza koloru tła, bo mamy czarny na body) */
+.latestGamesContainer {
+  width: 100vw; /* Pełna szerokość okna przeglądarki */
+  padding: 2rem 5vw; /* Padding po bokach dla lepszego rozmieszczenia */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #272727;
+}
+
+/* Nagłówek sekcji */
+.header {
+  color: #ffffff;
+  /* Czcionka Exo już jest globalnie, ale można dodatkowo doprecyzować */
+  font-family: 'Exo', sans-serif;
+  font-weight: 500;
+  font-size: 2rem; /* duży rozmiar czcionki */
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+/* Kontener kafelków gier ustawiony w poziomą linię */
+.gamesGrid {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  flex-wrap: wrap; /* W razie mniejszych ekranów */
+  width: 100%;
+}
+
+/* Pojedynczy kafelek gry */
+.gameCard {
+  width: 300px; /* szerokość kafelka - dopasuj do potrzeb */
+  cursor: pointer;
+  /* Dodajemy transition, żeby animacje działały przy hover */
+  transition: transform 0.3s ease;
+
+  /* Opcjonalnie można dodać cień lub inny efekt */
+  /* box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5); */
+}
+
+/* Po najechaniu na cały kafelek - unosimy obrazek i etykietę New! */
+.gameCard:hover .gameImage,
+.gameCard:hover .newLabel {
+  transform: translateY(-10px);
+}
+
+/* Kontener na miniaturkę (zdjęcie gry) */
+.imageContainer {
+  position: relative;
+  overflow: hidden; /* ukrycie części zdjęcia poza granicami przy animacji */
+  border-radius: 5px; /* lekko zaokrąglone rogi, opcjonalnie */
+}
+
+/* Zdjęcie gry */
+.gameImage {
+  width: 300px; /* Szerokość dostosowana do kontenera */
+  height: 165px; /* Stała wysokość */
+  object-fit: cover; /* Przycięcie zamiast rozciągania */
+  object-position: top; /* Wyrównanie do góry - dolna część zostanie ucięta */
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+
+.newLabel {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: #f3643a; /* pomarańczowe tło */
+  color: #ffffff;
+  border-radius: 15px;
+  padding: 5px 10px;
+  transition: transform 0.3s ease; /* żeby także się unosiła */
+
+  /* Nowa czcionka */
+  font-family: 'Open Sans', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 500; /* Medium */
+}
+
+/* Tytuł gry pod miniaturką */
+.gameTitle {
+  text-align: center;
+  color: #ffffff;
+  font-size: 1.2rem;
+  margin-top: 1rem;
+  transition: color 0.3s ease;
+  font-family: 'Exo', sans-serif;
+    font-weight: 500;
+}
+
+/* Po najechaniu na samą nazwę gry (tekst) - kolor zmienia się na niebieski */
+.gameTitle:hover {
+  color: #0000ff; /* niebieski */
+}
+
+/* Styl dla braku zdjęcia */
+.noImage {
+  width: 100%;
+  height: 200px;
+  background-color: #444444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+}

@@ -1,0 +1,56 @@
+.home {
+  color: #fff;
+  background-color: #f0f0f0;
+}
+
+.hero-section {
+  position: relative;
+  height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: url('https://via.placeholder.com/800x300.png?text=Kasyno+Tło') center/cover no-repeat;
+}
+
+.hero-section h2 {
+  font-size: 2rem;
+  text-transform: uppercase;
+  z-index: 1;
+}
+
+.promo-section {
+  padding: 2rem;
+  text-align: center;
+}
+
+.promo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.promo-item {
+  background-color: #111;
+  padding: 1rem;
+  border-radius: 5px;
+  transition: transform 0.2s ease;
+}
+
+.promo-item:hover {
+  transform: translateY(-5px);
+}
+
+.promo-item img {
+  width: 100%;
+  border-radius: 5px;
+}
+
+.promo-item h3 {
+  margin: 1rem 0 0.5rem;
+}
+
+.promo-item p {
+  margin-bottom: 1rem;
+  color: #ccc;
+}

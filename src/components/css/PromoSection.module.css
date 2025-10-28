@@ -1,0 +1,157 @@
+/* src/components/css/PromoSection.module.css */
+
+@import url('https://fonts.googleapis.com/css2?family=Exo:wght@400;700&display=swap');
+
+.promoSection {
+  padding: 40px 20px;
+  background-color: #ffffff;
+  font-family: 'Exo', sans-serif;
+  max-width: 1300px; /* Dodano maksymalną szerokość */
+  margin: 0 auto; /* Wyśrodkowanie sekcji */
+}
+
+.promoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 40px;
+  width: 100%;
+}
+
+.promoItem {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background-color: #fff;
+}
+
+.doubleWidth {
+  grid-column: span 2;
+}
+
+.imageContainer {
+  width: 100%;
+  height: 350px; /* Ustawiona stała wysokość */
+  overflow: hidden;
+  position: relative;
+  z-index: 0;
+}
+
+.promoImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Zapewnia, że obraz wypełnia kontener, przycinając nadmiar */
+  object-position: center; /* Wyśrodkowanie obrazu */
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.promoItem:hover .promoImage {
+  transform: scale(1.05);
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s ease;
+  z-index: 1;
+}
+
+.promoItem:hover .overlay {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.promoTitle {
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-align: center;
+  color: #ffffff;
+}
+
+.promoButton {
+  padding: 8px 30px;
+  background-color: #5ac2e8;
+  border: none;
+  border-radius: 50px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 700;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.promoButton:hover {
+  background-color: #33cfff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsywność */
+
+/* Ekrany średniej wielkości (tablety) */
+@media (max-width: 1024px) {
+  .promoGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 30px;
+  }
+
+  .doubleWidth {
+    grid-column: span 1;
+  }
+
+  .promoTitle {
+    font-size: 1.3rem;
+  }
+
+  .promoButton {
+    padding: 8px 25px;
+    font-size: 0.85rem;
+  }
+
+  .imageContainer {
+    height: 400px; /* Zmniejszona wysokość na tablety */
+  }
+}
+
+/* Ekrany małe (telefony komórkowe) */
+@media (max-width: 768px) {
+  .promoGrid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .promoTitle {
+    font-size: 1.2rem;
+  }
+
+  .promoButton {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+  }
+
+  .imageContainer {
+    height: 300px; /* Zmniejszona wysokość na telefony */
+  }
+}
+
+/* Dodatkowy breakpoint dla bardzo szerokich ekranów */
+@media (min-width: 1600px) {
+  .promoGrid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 40px;
+  }
+
+  .doubleWidth {
+    grid-column: span 2;
+  }
+}

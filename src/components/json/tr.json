@@ -1,0 +1,84 @@
+{
+    "welcome": "Hoş Geldiniz",
+    "home": "Ana Sayfa",
+    "games": "Oyunlar",
+    "accountSettings": "Hesap Ayarları",
+    "logout": "Çıkış Yap",
+    "footer": {
+        "here": "burada",
+        "privacy_policy": "XPG Live'ın logosu ve grafik materyalleri XPG Live'ın münhasır fikri mülkiyetidir ve XPG Live'dan önceden yazılı izin alınmadan kopyalanamaz, çoğaltılamaz, dağıtılamaz veya görüntülenemez. XPG Live, birden fazla yargı alanında oyun düzenlemelerine tam uyum içinde çalışır. Gizliliğinizi korumayı taahhüt ediyoruz. Gizlilik Politikamızı ve Çerez Politikamızı inceleyin.",
+        "cookie_policy": "XPG'in Çerez Politikası, hangi çerezleri kullandığımızı açıklar. Çerez Politikamızı okuyun.",
+        "copyright": "Telif Hakkı © 2008 - 2025 XPG. Tüm Hakları Saklıdır."
+    },
+    "header": {
+        "login": "Giriş Yap",
+        "createAccount": "Hesap Oluştur"
+    },
+    "account_settings_title": "Hesap Ayarları",
+    "your_details_title": "Detaylarınız",
+    "email_label": "E-posta",
+    "full_name_label": "Tam Adı",
+    "company_label": "Şirket",
+    "team_label": "Takım (hangi takımı temsil ediyorsunuz)",
+    "company_website_label": "Şirket Web Sitesi",
+    "change_password_title": "Şifreyi Değiştir",
+    "change_password_info": "* Şifreyi değiştirirken oturumunuz kapatılacaktır.",
+    "set_new_password_label": "Yeni şifre belirle",
+    "repeat_new_password_label": "Yeni şifreyi tekrarla",
+    "save_settings_button": "Ayarları Kaydet",
+    "success_user_data_updated": "Kullanıcı verileri başarıyla güncellendi.",
+    "success_password_changed": "Şifre başarıyla değiştirildi!",
+    "info_logged_out_new_password": "Oturumunuz kapatıldı. Lütfen yeni şifrenizle tekrar giriş yapın.",
+    "error_not_logged_in": "Giriş yapmadınız!",
+    "latest_games_title": "En Son Oyunlar",
+    "new_game_label": "Yeni",
+    "access_denied_title": "Erişim Reddedildi",
+    "access_denied_message": "Üzgünüz, bu oyuna erişiminiz yok.",
+    "access_denied_contact": "Erişim mi istiyorsunuz? Bize ulaşın, sizin için çözelim!",
+    "close_button": "Kapat",
+    "gameGrid": {
+        "allGames": "Tüm Oyunlar",
+        "search": "Oyun Adı"
+    },
+    "filters": {
+        "label": "Sırala",
+        "category": "Kategori",
+        "sortBy": "Sırala"
+    },
+    "sort": {
+        "newest": "En Yeni",
+        "alphabetically": "Alfabetik"
+    },
+    "uploadDate": {
+        "label": "Yükleme Tarihi",
+        "any": "Herhangi Bir Tarih",
+        "lastWeek": "Geçen Hafta",
+        "lastMonth": "Geçen Ay",
+        "last3Months": "Son 3 Ay",
+        "lastYear": "Geçen Yıl",
+        "last2Years": "Son 2 Yıl"
+    },
+    "promotions": {
+        "label": "Promosyonlar",
+        "christmas": "Noel",
+        "football": "Futbol",
+        "halloween": "Cadılar Bayramı",
+        "mobile": "Mobil",
+        "promotions": "Promosyonlar",
+        "stValentine": "Sevgililer Günü",
+        "summer": "Yaz"
+    },
+    "dealerOptions": {
+        "label": "Dağıtıcılar",
+        "all": "Tüm Dağıtıcılar",
+        "twentyFivePlus": "25+",
+        "female": "Kadın",
+        "male": "Erkek"
+    },
+    "gameProfile": {
+        "untitled_section": "Başlıksız Bölüm",
+        "filter_by_file_type": "Dosya Türüne Göre Filtrele",
+        "all": "Tümü",
+        "more_promotion_packs": "Daha fazla promosyon paketi"
+    }
+}

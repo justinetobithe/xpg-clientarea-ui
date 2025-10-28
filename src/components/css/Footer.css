@@ -1,0 +1,18 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Exo:wght@500;700&display=swap');
+.footer {
+  background-color: #111;
+  color: #aaa;
+  text-align: center;
+  padding: 2rem;
+
+  font-family: 'Exo', sans-serif;
+}
+
+.footer-legal a {
+
+  font-family: 'Exo', sans-serif;
+  color: #aaa;
+  text-decoration: underline;
+  margin: 0 0.5rem;
+}

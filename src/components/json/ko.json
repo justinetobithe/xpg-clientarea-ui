@@ -1,0 +1,88 @@
+{
+    "welcome": "환영합니다",
+    "home": "홈",
+    "games": "게임",
+    "accountSettings": "계정 설정",
+    "logout": "로그아웃",
+    "footer": {
+        "here": "여기",
+        "privacy_policy": "XPG Live의 로고와 그래픽 자료는 XPG Live의 독점적인 지적 재산이며, XPG Live의 사전 서면 동의 없이는 복사, 복제, 배포 또는 표시할 수 없습니다. XPG Live는 여러 관할권의 게임 규정을 완벽하게 준수합니다. 당사는 귀하의 개인정보 보호를 위해 최선을 다하고 있습니다. 개인정보 보호정책 및 쿠키 정책을 확인하세요.",
+        "cookie_policy": "XPG 쿠키 정책은 사용하는 쿠키를 명확히 합니다. 쿠키 정책을 읽어보세요.",
+        "copyright": "저작권 © 2008 - 2025 XPG. 모든 권리 보유."
+    },
+    "header": {
+        "login": "로그인",
+        "createAccount": "계정 생성"
+    },
+    "account_settings_title": "계정 설정",
+    "your_details_title": "내 정보",
+    "email_label": "이메일",
+    "full_name_label": "이름",
+    "company_label": "회사",
+    "team_label": "팀 (어느 팀을 대표하시나요?)",
+    "company_website_label": "회사 웹사이트",
+    "change_password_title": "비밀번호 변경",
+    "change_password_info": "* 비밀번호를 변경하면 로그아웃됩니다.",
+    "set_new_password_label": "새 비밀번호 설정",
+    "repeat_new_password_label": "새 비밀번호 재입력",
+    "save_settings_button": "설정 저장",
+    "success_user_data_updated": "사용자 데이터가 성공적으로 업데이트되었습니다.",
+    "success_password_changed": "비밀번호가 성공적으로 변경되었습니다!",
+    "info_logged_out_new_password": "로그아웃되었습니다. 새 비밀번호로 다시 로그인해주세요.",
+    "error_not_logged_in": "로그인되지 않았습니다!",
+    "latest_games_title": "최신 게임",
+    "new_game_label": "신규",
+    "access_denied_title": "접근 거부",
+    "access_denied_message": "죄송합니다. 이 게임에 접근할 수 없습니다.",
+    "access_denied_contact": "접근 권한을 원하십니까? 저희에게 연락하시면 해결해 드리겠습니다!",
+    "close_button": "닫기",
+    "homePage": {
+        "bannerText": "{{text}}",
+        "bannerSubText": "{{subText}}"
+    },
+    "gameGrid": {
+        "allGames": "모든 게임",
+        "search": "게임 이름"
+    },
+    "filters": {
+        "label": "정렬 기준",
+        "category": "카테고리",
+        "sortBy": "정렬 기준"
+    },
+    "sort": {
+        "newest": "최신순",
+        "alphabetically": "가나다순"
+    },
+    "uploadDate": {
+        "label": "업로드 날짜",
+        "any": "전체 날짜",
+        "lastWeek": "지난주",
+        "lastMonth": "지난달",
+        "last3Months": "지난 3개월",
+        "lastYear": "작년",
+        "last2Years": "지난 2년"
+    },
+    "promotions": {
+        "label": "프로모션",
+        "christmas": "크리스마스",
+        "football": "축구",
+        "halloween": "할로윈",
+        "mobile": "모바일",
+        "promotions": "프로모션",
+        "stValentine": "밸런타인데이",
+        "summer": "여름"
+    },
+    "dealerOptions": {
+        "label": "딜러",
+        "all": "모든 딜러",
+        "twentyFivePlus": "25세 이상",
+        "female": "여성",
+        "male": "남성"
+    },
+    "gameProfile": {
+        "untitled_section": "제목 없는 섹션",
+        "filter_by_file_type": "파일 유형별 필터",
+        "all": "전체",
+        "more_promotion_packs": "더 많은 프로모션 팩"
+    }
+}

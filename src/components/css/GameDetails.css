@@ -1,0 +1,36 @@
+/* src/css/GameDetails.css */
+.game-details .hero-section {
+  position: relative;
+  background-color: #1a1a1a;
+  color: #fff;
+  padding: 4rem 2rem;
+  text-align: left;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.game-details .game-image {
+  max-width: 400px;
+  width: 100%;
+  border-radius: 5px;
+  margin-right: 2rem;
+}
+
+.game-details .game-cta {
+  flex: 1;
+}
+
+.cta-button {
+  margin-top: 1rem;
+  padding: 0.75rem 1.5rem;
+  background-color: #e74c3c;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.cta-button:hover {
+  background-color: #c0392b;
+}

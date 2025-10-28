@@ -1,0 +1,428 @@
+@import url('https://fonts.googleapis.com/css2?family=Exo:wght@400;700&display=swap');
+
+/* Ogólny układ strony */
+.gameProfile {
+  display: flex;
+  flex-direction: column;
+  align-items: left;
+  background-color: #fff; /* Tło całej sekcji */
+  min-height: 100vh;
+  color: #333333;
+  font-family: 'Exo', sans-serif; /* Zastosowanie czcionki Exo */
+}
+
+.gameDetails {
+  width: 90%;
+  max-width: 800px;
+  padding: 20px;
+  text-align: left;
+}
+
+/* Spinner do ładowania */
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+.spinner {
+  border: 12px solid #f3f3f3;
+  border-top: 12px solid #3498db;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error {
+  text-align: center;
+  font-size: 1.2rem;
+  color: red;
+}
+
+/* Sekcja Images (i Game Rules – dziedziczy te same właściwości) */
+.imagesSection {
+  width: 90%;
+  max-width: 1000px;
+  margin-top: 10px;
+  margin-left: 20px;
+  background-color: #000;
+}
+
+/* Pasek nagłówkowy zakładki */
+.headerTab {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 25px 20px;
+  background-color: #f0f0f0;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+
+.headerTab.open {
+  background-color: #5ac3e6;
+  color: #fff;
+}
+
+.headerTab.closed {
+  background-color: #f0f0f0;
+  color: #f0f0f0;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.iconCircle {
+  background-color: #000;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+.headerIcon {
+  color: #fff; /* Ikonka w nagłówku */
+  font-size: 1rem;
+}
+
+/* Ikona strzałki */
+.toggleIcon {
+  font-size: 1.3rem;
+  transition: transform 0.3s ease;
+  transform: rotate(-90deg);
+  color: #333333;
+}
+
+/* Lista plików */
+.fileList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+/*
+  KARTA POJEDYNCZEGO PLIKU:
+  - Ustawiona jako kontener o jednolitym tle
+  - Podzielony na trzy sekcje: miniaturka, opis, przyciski
+*/
+.fileItem {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  background-color: #f0f0f0;
+  margin: 0;
+  max-width: 944px;
+}
+
+/* Miniaturka */
+.thumbnailContainer {
+  flex: 0 0 auto;
+  max-width: 100px; /* Szerokość miniaturki – możesz ustawić tutaj max-width */
+  height: 71.5px; /* Wymuszona wysokość */
+  overflow: hidden;
+  transition: width 0.3s ease;
+}
+
+.thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  margin: 0;
+  padding: 0;
+}
+
+/* Opis pliku */
+.fileInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-left: 10px;
+  padding: 0;
+}
+
+.fileName {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #333333;
+  margin: 0;
+}
+
+.fileFormat {
+  font-size: 0.9rem;
+  color: #888888;
+  margin: 0;
+}
+
+/* Przyciski */
+.fileButtons {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+/* Przycisk podglądu (w sekcji Images) */
+.previewBtn {
+  background: transparent;
+  border: none;
+  color: #333333;
+  cursor: pointer;
+  font-size: 0.9rem;
+  text-decoration: underline dashed;
+  padding: 0;
+  transition: color 0.3s ease;
+}
+
+.previewBtn:hover {
+  color: #000;
+}
+
+/* Przycisk akcji (ikony) */
+.iconBtn {
+  background-color: #d9d9d9;
+  border: none;
+  aspect-ratio: 1 / 1;
+  height: 100%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  transition: background-color 0.3s ease;
+}
+
+.iconBtn:hover {
+  background-color: #555555;
+}
+
+.innerCircle {
+  background-color: #00AEEF;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.innerCircle svg {
+  color: #fff !important;
+  font-size: 0.8rem;
+}
+
+/* Modal (popup) */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 90%;
+  max-height: 90%;
+  overflow: auto;
+  text-align: center;
+  position: relative;
+}
+
+.modalImage {
+  max-width: 100%;
+  max-height: 70vh;
+  border-radius: 4px;
+}
+
+.modalButtons {
+  margin-top: 20px;
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+}
+
+.modalBtn {
+  background-color: #00AEEF;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 20px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s ease;
+}
+
+.modalBtn:hover {
+  background-color: #008fc1;
+}
+
+/* Rozwinięty widok ikony PDF w Game Rules */
+.expandedPdfContainer {
+  display: flex;
+  align-items: center;
+  padding-left: 15px;
+}
+
+.expandedPdfIcon {
+  font-size: 3rem;
+  color: #000;
+}
+
+/* Upewnienie się, że karta w Game Rules ma taką samą szerokość i wyrównanie jak w Images */
+.gameRulesSection .fileItem {
+  max-width: 944px;
+  width: 100%;
+}
+
+/* ============ MEDIA QUERIES DLA URZĄDZEŃ MOBILNYCH ============ */
+
+/* Dla ekranów o szerokości do 480px */
+@media (max-width: 480px) {
+  .imagesSection {
+    margin-left: 0;
+    width: 100%;
+    padding: 0 10px;
+  }
+  .thumbnailContainer {
+    max-width: 60px;
+    width: 60px;
+    height: 50px;
+  }
+  .fileName {
+    font-size: 0.85rem;
+  }
+  .fileFormat {
+    font-size: 0.75rem;
+  }
+  .fileInfo {
+    margin-left: 5px;
+  }
+  .iconBtn {
+    width: 30px;
+    height: 30px;
+  }
+  .innerCircle {
+    width: 14px;
+    height: 14px;
+  }
+  .fileButtons {
+    gap: 4px;
+  }
+  .previewBtn {
+    display: none;
+  }
+  .fileItem {
+    max-width: 100%;
+  }
+}
+
+/* Dla bardzo małych ekranów (do 360px) */
+@media (max-width: 360px) {
+  .thumbnailContainer {
+    max-width: 50px;
+    width: 50px;
+    height: 40px;
+  }
+  .fileName {
+    font-size: 0.8rem;
+  }
+  .fileFormat {
+    font-size: 0.7rem;
+  }
+  .iconBtn {
+    width: 28px;
+    height: 28px;
+  }
+  .innerCircle {
+    width: 12px;
+    height: 12px;
+  }
+  .fileInfo {
+    margin-left: 3px;
+  }
+}
+
+/* Nowa sekcja More promotion packs */
+.morePromotionPacks {
+  margin: 20px auto;
+  width: 90%;
+  max-width: 1000px;
+}
+
+.morePromotionPacks h3 {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+  font-weight: 400;       /* Lżejsza waga (używamy Exo 400) */
+  white-space: normal;    /* Pozwala na zawijanie tekstu */
+  line-height: 1.3;
+}
+
+/* Ustawiamy grid na 5 kolumn, co przy limit(10) utworzy 2 wiersze */
+.promotionGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 20px;
+}
+
+.gameCardPromotion {
+  background-color: #fff;
+  overflow: hidden;
+  text-align: center;
+  padding: 10px;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: transform 0.3s ease;
+}
+
+.gameCardPromotion:hover {
+  transform: scale(1.03);
+}
+
+/* Zdjęcia w sekcji More promotion packs w proporcji 16:9 */
+.promotionImage {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+/* Opcjonalnie: opisy pod grami wewnątrz kart – jeśli używasz np. h4 */
+.gameCardPromotion h4 {
+  font-family: 'Exo', sans-serif;
+  font-weight: 400;
+  white-space: normal;
+  margin-top: 10px;
+}
+
+/* Na mniejszych ekranach maksymalnie 2 kolumny w gridzie */
+@media (max-width: 768px) {
+  .promotionGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

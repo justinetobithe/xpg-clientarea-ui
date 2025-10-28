@@ -1,0 +1,52 @@
+/* src/css/GameCatalog.css */
+.game-catalog-section {
+  background-color: #1a1a1a;
+  color: #ecf0f1;
+  padding: 3rem 2rem;
+  text-align: center;
+}
+
+.catalog-controls {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.catalog-controls input, .catalog-controls select {
+  padding: 0.5rem;
+  border: none;
+  border-radius: 3px;
+}
+
+.catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.catalog-tile {
+  background-color: #36454F;
+  padding: 1rem;
+  border-radius: 5px;
+}
+
+.catalog-tile img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 5px;
+}
+
+.details-button {
+  display: inline-block;
+  margin-top: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: #e74c3c;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 3px;
+}
+
+.details-button:hover {
+  background-color: #c0392b;
+}

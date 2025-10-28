@@ -1,0 +1,84 @@
+{
+    "welcome": "欢迎",
+    "home": "首页",
+    "games": "游戏",
+    "accountSettings": "账户设置",
+    "logout": "登出",
+    "footer": {
+        "here": "这里",
+        "privacy_policy": "XPG Live 的徽标和图形材料是 XPG Live 的独家知识产权，未经 XPG Live 事先书面许可，不得复制、复印、分发或展示。XPG Live 的运营完全遵守多个司法管辖区的博彩法规。我们致力于保护您的隐私。查看我们的隐私政策和 Cookie 政策",
+        "cookie_policy": "XPG 的 Cookie 政策阐明了我们使用的 Cookie。阅读我们的 Cookie 政策。",
+        "copyright": "版权所有 © 2008 - 2025 XPG。保留所有权利。"
+    },
+    "header": {
+        "login": "登录",
+        "createAccount": "创建账户"
+    },
+    "account_settings_title": "账户设置",
+    "your_details_title": "您的详细信息",
+    "email_label": "电子邮件",
+    "full_name_label": "全名",
+    "company_label": "公司",
+    "team_label": "团队（您代表哪个团队）",
+    "company_website_label": "公司网站",
+    "change_password_title": "更改密码",
+    "change_password_info": "* 更改密码时，您将被登出。",
+    "set_new_password_label": "设置新密码",
+    "repeat_new_password_label": "重复新密码",
+    "save_settings_button": "保存设置",
+    "success_user_data_updated": "用户数据更新成功。",
+    "success_password_changed": "密码更改成功！",
+    "info_logged_out_new_password": "已登出。请使用您的新密码重新登录。",
+    "error_not_logged_in": "您尚未登录！",
+    "latest_games_title": "最新游戏",
+    "new_game_label": "新",
+    "access_denied_title": "访问被拒绝",
+    "access_denied_message": "很抱歉，您没有访问此游戏的权限。",
+    "access_denied_contact": "想要访问权限？请联系我们，我们会为您解决！",
+    "close_button": "关闭",
+    "gameGrid": {
+        "allGames": "所有游戏",
+        "search": "游戏名称"
+    },
+    "filters": {
+        "label": "排序方式",
+        "category": "类别",
+        "sortBy": "排序方式"
+    },
+    "sort": {
+        "newest": "最新",
+        "alphabetically": "按字母顺序"
+    },
+    "uploadDate": {
+        "label": "上传日期",
+        "any": "任何日期",
+        "lastWeek": "上周",
+        "lastMonth": "上个月",
+        "last3Months": "最近 3 个月",
+        "lastYear": "去年",
+        "last2Years": "最近 2 年"
+    },
+    "promotions": {
+        "label": "促销活动",
+        "christmas": "圣诞节",
+        "football": "足球",
+        "halloween": "万圣节",
+        "mobile": "移动端",
+        "promotions": "促销活动",
+        "stValentine": "情人节",
+        "summer": "夏天"
+    },
+    "dealerOptions": {
+        "label": "荷官",
+        "all": "所有荷官",
+        "twentyFivePlus": "25 岁以上",
+        "female": "女性",
+        "male": "男性"
+    },
+    "gameProfile": {
+        "untitled_section": "未命名部分",
+        "filter_by_file_type": "按文件类型筛选",
+        "all": "全部",
+        "more_promotion_packs": "更多促销包"
+    }
+}

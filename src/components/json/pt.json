@@ -1,0 +1,84 @@
+{
+    "welcome": "Bem-vindo(a)",
+    "home": "Página Inicial",
+    "games": "Jogos",
+    "accountSettings": "Configurações da Conta",
+    "logout": "Sair",
+    "footer": {
+        "here": "aqui",
+        "privacy_policy": "O logotipo e os materiais gráficos da XPG Live são propriedade intelectual exclusiva da XPG Live e não podem ser copiados, reproduzidos, distribuídos ou exibidos sem o consentimento prévio por escrito da XPG Live. A XPG Live opera em total conformidade com as regulamentações de jogos em diversas jurisdições. Temos o compromisso de proteger sua privacidade. Consulte nossa Política de Privacidade e Política de Cookies.",
+        "cookie_policy": "A Política de Cookies da XPG esclarece quais cookies usamos. Leia nossa Política de Cookies.",
+        "copyright": "Copyright © 2008 - 2025 XPG. Todos os direitos reservados."
+    },
+    "header": {
+        "login": "Entrar",
+        "createAccount": "Criar Conta"
+    },
+    "account_settings_title": "Configurações da Conta",
+    "your_details_title": "Seus detalhes",
+    "email_label": "Email",
+    "full_name_label": "Nome Completo",
+    "company_label": "Empresa",
+    "team_label": "Equipe (qual equipe você representa)",
+    "company_website_label": "Website da Empresa",
+    "change_password_title": "Mudar Senha",
+    "change_password_info": "* Ao mudar a senha, você será desconectado(a).",
+    "set_new_password_label": "Definir nova senha",
+    "repeat_new_password_label": "Repetir nova senha",
+    "save_settings_button": "Salvar Configurações",
+    "success_user_data_updated": "Dados do usuário atualizados com sucesso.",
+    "success_password_changed": "Senha alterada com sucesso!",
+    "info_logged_out_new_password": "Desconectado(a). Por favor, faça login novamente com sua nova senha.",
+    "error_not_logged_in": "Você não está logado(a)!",
+    "latest_games_title": "Jogos Mais Recentes",
+    "new_game_label": "Novo",
+    "access_denied_title": "Acesso Negado",
+    "access_denied_message": "Desculpe, você não tem acesso a este jogo.",
+    "access_denied_contact": "Quer acesso? Entre em contato conosco e resolveremos para você!",
+    "close_button": "Fechar",
+    "gameGrid": {
+        "allGames": "Todos os Jogos",
+        "search": "Nome do Jogo"
+    },
+    "filters": {
+        "label": "Ordenar por",
+        "category": "Categoria",
+        "sortBy": "Ordenar por"
+    },
+    "sort": {
+        "newest": "Mais Recentes",
+        "alphabetically": "Alfabética"
+    },
+    "uploadDate": {
+        "label": "Data de Upload",
+        "any": "Qualquer Data",
+        "lastWeek": "Última Semana",
+        "lastMonth": "Último Mês",
+        "last3Months": "Últimos 3 Meses",
+        "lastYear": "Último Ano",
+        "last2Years": "Últimos 2 Anos"
+    },
+    "promotions": {
+        "label": "Promoções",
+        "christmas": "Natal",
+        "football": "Futebol",
+        "halloween": "Halloween",
+        "mobile": "Mobile",
+        "promotions": "Promoções",
+        "stValentine": "Dia dos Namorados",
+        "summer": "Verão"
+    },
+    "dealerOptions": {
+        "label": "Distribuidores",
+        "all": "Todos os Distribuidores",
+        "twentyFivePlus": "25+",
+        "female": "Feminino",
+        "male": "Masculino"
+    },
+    "gameProfile": {
+        "untitled_section": "Seção Sem Título",
+        "filter_by_file_type": "Filtrar por Tipo de Arquivo",
+        "all": "Todos",
+        "more_promotion_packs": "Mais pacotes de promoção"
+    }
+}

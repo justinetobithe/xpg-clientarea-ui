@@ -1,0 +1,263 @@
+/* src/components/RegistrationModal.module.css */
+@import url('https://fonts.googleapis.com/css2?family=Exo:wght@500;700&display=swap');
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+
+  font-family: 'Exo', sans-serif;
+}
+
+.modal {
+  background-color: #ffffff;
+  border-radius: 10px;
+  width: 40%;
+  max-width: 500px;
+  padding: 30px;
+  position: relative;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.closeButton {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background-color: #00aEEF;
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  color: #ffffff;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background-color 0.3s ease;
+}
+
+.closeButton:hover {
+  background-color: #33cfff;
+}
+
+.logoContainer {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.logo {
+  max-width: 150px;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+  color: #000000;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+}
+
+.checkboxGroup {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  cursor: pointer;
+  position: relative;
+}
+
+.checkboxLabel input {
+  margin-right: 10px;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.checkboxLabel:hover {
+  background-color: #f9f9f9;
+}
+
+.inputGroup {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.inputIcon {
+  position: absolute;
+  top: 50%;
+  left: 10px;
+  transform: translateY(-50%);
+  color: #00AEEF;
+}
+
+.inputField {
+  width: 100%;
+  padding: 10px 10px 10px 35px;
+  border: 1px solid #cccccc;
+  border-radius: 5px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.inputField:focus {
+  border-color: #00AEEF;
+  outline: none;
+}
+
+.inputError {
+  border-color: #ff4d4f;
+}
+
+.error {
+  color: #ff4d4f;
+  font-size: 0.875rem;
+  margin-top: 5px;
+}
+
+.firebaseError {
+  color: #ff4d4f;
+  font-size: 0.875rem;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.recaptchaContainer {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.submitButton {
+  background-color: #00AEEF;
+  color: #ffffff;
+  padding: 12px;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.submitButton:hover {
+  background-color: #33cfff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.submitButton:disabled {
+  background-color: #a0cfee;
+  cursor: not-allowed;
+}
+
+.linksContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 15px;
+}
+
+.forgotPasswordLink {
+  color: #888888;
+  font-size: 0.9rem;
+  text-decoration: none;
+  margin-bottom: 10px;
+  transition: text-decoration 0.3s ease;
+}
+
+.forgotPasswordLink:hover {
+  text-decoration: underline;
+}
+
+.alreadyAccount {
+  font-size: 0.9rem;
+  color: #000000;
+}
+
+.signInLink {
+  color: #00AEEF;
+  text-decoration: none;
+  transition: text-decoration 0.3s ease;
+}
+
+.signInLink:hover {
+  text-decoration: underline;
+}
+
+/* Responsywność */
+@media (max-width: 768px) {
+  .modal {
+    width: 80%;
+    padding: 20px;
+  }
+
+  .header {
+    font-size: 1.3rem;
+  }
+
+  .inputField {
+    font-size: 0.9rem;
+  }
+
+  .submitButton {
+    padding: 10px;
+    font-size: 0.9rem;
+  }
+
+  .forgotPasswordLink,
+  .alreadyAccount {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal {
+    width: 90%;
+    padding: 15px;
+  }
+
+  .header {
+    font-size: 1.1rem;
+  }
+
+  .inputField {
+    font-size: 0.85rem;
+  }
+
+  .submitButton {
+    padding: 8px;
+    font-size: 0.85rem;
+  }
+
+  .forgotPasswordLink,
+  .alreadyAccount {
+    font-size: 0.75rem;
+  }
+}
+.signInLink {
+  background: none;
+  border: none;
+  outline: none;
+  appearance: none; /* removes default styling on some browsers */
+  /* If there's an icon inserted via a pseudo-element, hide it: */
+}
+
+.signInLink::before,
+.signInLink::after {
+  display: none;
+}

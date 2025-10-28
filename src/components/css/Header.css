@@ -1,0 +1,494 @@
+/* === Nagłówek ogólny === */
+@import url('https://fonts.googleapis.com/css2?family=Exo:wght@500;700&display=swap');
+
+.header {
+  width: 100%;
+  background-color: #2C2C2C; /* Jaśniejszy, antracytowy odcień */
+  border-bottom: 1px solid #333; /* Cienka linia oddzielająca nagłówka */
+  position: relative; /* Potrzebne do pozycjonowania menu mobilnego */
+
+  font-family: 'Exo', sans-serif;
+}
+
+/* === Kontener nagłówka === */
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  /* max-width: 1200px;  usuń */
+  /* margin: 0 auto;     usuń */
+  margin: 0;           /* teraz jest 0 */
+  padding: 0px 20px;          /* lub np. 0 10px, jeśli chcesz minimalny odstęp */
+  height: 70px;
+  width: 100%;         /* zapewnia pełną szerokość */
+  box-sizing: border-box;
+}
+
+
+/* === Logo === */
+.logo {
+  flex: 0 0 auto; /* Zapobiega rozciąganiu logo */
+}
+
+.logo a {
+  text-decoration: none;
+  display: inline-block;
+}
+
+.logo-img {
+  width: 110px; /* Sugerowana szerokość */
+  height: 70px; /* Sugerowana wysokość */
+  object-fit: contain; /* Dopasowuje proporcje bez przycinania */
+}
+
+/* === Nawigacja (Menu) === */
+.nav {
+  flex: 1; /* Pozwala na rozciąganie na dostępne miejsce */
+  margin-left: 30px;
+  height: 100%;
+}
+
+.nav-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex; /* Użycie flex dla lepszej alignacji */
+  height: 100%; /* Zapewnienie, że lista wypełnia wysokość nagłówka */
+}
+
+.nav-list li {
+  position: relative; /* Dla dropdown */
+}
+
+.nav-list li a {
+  display: flex; /* Umożliwia centrowanie treści pionowo */
+  align-items: center; /* Centrowanie pionowe */
+  height: 100%; /* Wypełnienie wysokości nagłówka */
+  padding: 0 15px; /* Padding poziomy */
+  color: #fff;
+  text-decoration: none;
+  transition: background-color 0.3s, color 0.3s;
+  white-space: nowrap; /* Zapobiega zawijaniu tekstu */
+  box-sizing: border-box; /* Upewnia się, że padding nie zwiększa wysokości elementu */
+}
+
+/* === Hover efekt dla wszystkich linków oprócz Brands === */
+.nav-list li a:hover,
+.nav-list li a:focus {
+  background-color: #3C3C3C; /* Lekko jaśniejszy kolor tła przy hover */
+  color: #00AEEF; /* Zmiana koloru tekstu przy hover */
+}
+
+/* === Separator 0.5px między Home a Brands === */
+.nav-divider {
+  display: inline-block;
+  align-self: center;    /* Wyśrodkowanie w pionie */
+  height: 50%;           /* Ustawienie wysokości na 40% nagłówka */
+  border-left: 0.5px solid #fff;
+  margin: 0 15px;
+  opacity: 0.3;
+}
+
+
+/* Ustawienie minimalnej szerokości dla przycisku Brands */
+.nav-list .dropdown > a {
+  min-width: 160px;
+  box-sizing: border-box; /* Zapewnia, że padding nie zwiększa szerokości */
+}
+
+/* === Dropdown "Brands" === */
+.dropdown-content {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: #2C2C2C;
+  min-width: 160px;
+  list-style: none;
+  margin: 0;
+  padding: 10px 0;
+  z-index: 999;
+  text-align: left;
+}
+
+.dropdown-content li {
+  width: 100%;
+}
+
+.dropdown-content li a {
+  display: block;
+  padding: 8px 16px;
+  color: #fff;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.dropdown-content li a:hover {
+  background-color: #333;
+  border-left: 2px solid #00AEEF;
+}
+
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+
+/* === Sekcja przycisków akcji === */
+.action-buttons {
+  display: flex;
+  align-items: center;
+  font-family: 'Exo', sans-serif;
+  height: 100%;
+}
+
+/* Podstawowy styl przycisków */
+.btn {
+  display: inline-block;
+  text-decoration: none;
+  text-align: center;
+  line-height: 38px;
+  min-width: 100px; /* Minimalna szerokość */
+  height: 100%;
+  margin-left: 10px;
+  background-color: #00AEEF;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.3s, box-shadow 0.3s, border 0.3s;
+  white-space: nowrap; /* Zapobiega zawijaniu tekstu */
+  padding: 0 15px; /* Dodatkowe odstępy wewnętrzne dla lepszej czytelności */
+  border: none; /* Usunięcie domyślnej obramówki */
+  box-sizing: border-box; /* Zapobiega zwiększaniu rozmiaru przycisku przez padding */
+}
+
+/* Przycisk Login (z białą obramówką i zaokrąglonymi rogami) */
+.login-btn {
+  border: 1px solid #fff; /* Biała obramówka */
+  border-radius: 999px; /* W pełni zaokrąglone rogi */
+  background-color: #00AEEF; /* Utrzymanie tła */
+  max-height:40px;
+}
+
+.login-btn:hover {
+  border-color: transparent; /* Obramówka znika przy hover */
+  background-color: #00bfff; /* Jaśniejszy odcień błękitu */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Przycisk Create Account (z zaokrąglonymi rogami, bez obramówki) */
+.create-account-btn {
+  border-radius: 999px; /* W pełni zaokrąglone rogi */
+  max-height:40px;
+}
+
+.create-account-btn:hover {
+  background-color: #00bfff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+/* === Ikona Koszyka (widoczna tylko na urządzeniach mobilnych) === */
+.mobile-cart-icon {
+  display: none; /* Ukryte na dużych ekranach */
+  color: #fff; /* Kolor ikony */
+  margin-right: 20px; /* Zmniejszony odstęp między koszykiem a hamburgerem */
+  transition: color 0.3s;
+}
+
+.mobile-cart-icon:hover {
+  color: #00AEEF; /* Kolor ikony przy hover */
+}
+
+.mobile-cart-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* === Ikona Hamburgera === */
+.hamburger {
+  display: none; /* Ukryte na dużych ekranach */
+  flex-direction: column;
+  justify-content: space-between;
+  width: 30px;
+  height: 21px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  z-index: 1000; /* Upewnia się, że hamburger jest nad innymi elementami */
+}
+
+.hamburger:focus {
+  outline: none;
+}
+
+.hamburger-line {
+  width: 100%;
+  height: 3px;
+  background-color: #fff;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+/* === Menu Mobilne === */
+.mobile-nav {
+  display: none; /* Ukryte domyślnie */
+  background-color: #2C2C2C;
+  position: absolute;
+  top: 70px; /* Poniżej nagłówka */
+  left: 0;
+  width: 100%;
+  z-index: 998;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-in-out;
+}
+
+.mobile-nav.active {
+  display: block;
+  max-height: 1000px; /* Dostosuj w zależności od zawartości */
+}
+
+.mobile-nav-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex; /* Użycie flex */
+  flex-direction: column;
+  align-items: center; /* Wyśrodkowanie elementów */
+}
+
+.mobile-nav-list li {
+  width: 100%; /* Pełna szerokość dla linków */
+  border-bottom: 1px solid #333;
+}
+
+.mobile-nav-list li a {
+  display: block;
+  padding: 15px 20px;
+  color: #fff;
+  text-decoration: none;
+  transition: background-color 0.3s, color 0.3s;
+  text-align: center; /* Wyśrodkowanie tekstu */
+}
+
+.mobile-nav-list li a:hover,
+.mobile-nav-list li a:focus {
+  background-color: #3C3C3C;
+  color: #00AEEF;
+}
+/* Usunięcie paddingu dla przycisków akcji w menu mobilnym */
+.mobile-nav-list .mobile-action-buttons a {
+  padding: 0px 20px; /* Ustaw inny padding według potrzeb */
+  /* Możesz również dodać inne style specyficzne dla przycisków */
+
+  font-family: 'Exo', sans-serif;
+}
+
+
+/* Sekcja przycisków akcji w menu mobilnym */
+.mobile-action-buttons {
+  width: 100%;
+  display: flex;
+  justify-content: center; /* Wyśrodkowanie przycisków */
+  padding: 10px 0;
+
+  font-family: 'Exo', sans-serif;
+}
+
+.mobile-action-buttons .btn {
+  width: 80%; /* Dostosowanie szerokości przycisków */
+  margin: 10px 0; /* Odstęp między przyciskami */
+
+  font-family: 'Exo', sans-serif;
+}
+
+/* === Responsywność === */
+@media (max-width: 768px) {
+  /* Ukryj standardowe menu i przyciski akcji */
+  .nav,
+  .action-buttons {
+    display: none;
+  }
+
+  /* Pokaż ikonę hamburgera i koszyka */
+  .hamburger,
+  .mobile-cart-icon {
+    display: flex;
+    align-items: center;
+  }
+
+  /* Dostosowanie ikony koszyka w menu mobilnym */
+  mobile-cart-icon {
+      order: 2; /* Ustawienie koszyka przed hamburgerem */
+      margin-right: 20px; /* Dostosowanie marginesu */
+    }
+
+    .hamburger {
+      order: 3; /* Ustawienie hamburgera po koszyku */
+      margin-left: 0; /* Upewnienie się, że nie ma dodatkowego marginesu */
+    }
+}
+
+/* === Animacja ikony hamburgera === */
+.hamburger.active .hamburger-line:nth-child(1) {
+  transform: rotate(45deg) translate(5px, 5px);
+}
+
+.hamburger.active .hamburger-line:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger.active .hamburger-line:nth-child(3) {
+  transform: rotate(-45deg) translate(5px, -5px);
+}
+/* Nowy kontener dla ikon mobilnych */
+.mobile-icons {
+  display: none; /* Ukryte na dużych ekranach */
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  /* Ukryj standardowe menu i przyciski akcji */
+  .nav,
+  .action-buttons {
+    display: none;
+  }
+
+  /* Pokaż kontener z ikonami mobilnymi */
+  .mobile-icons {
+    display: flex;
+  }
+
+  /* Dostosowanie ikony koszyka w menu mobilnym */
+  .mobile-cart-icon {
+    margin-right: 20px; /* Zmniejszony odstęp */
+  }
+
+  .hamburger {
+    margin-left: 0; /* Usunięcie dodatkowego marginesu */
+  }
+  .header-container {
+  padding: 0px 10px;
+  }
+}
+
+.logout-button {
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  padding: 0;
+  width: 100%;
+  text-align: left;
+}
+.user-icon {
+   margin-right: 5px;
+ }
+ .dropdown-arrow {
+   margin-left: 5px;
+   transition: transform 0.3s ease;
+ }
+/* Stylizacja przycisku dropdown w nawigacji */
+
+
+ /* Obrócenie strzałki, gdy dropdown jest otwarty */
+ .dropdown-btn[aria-expanded="true"] .dropdown-arrow {
+   transform: rotate(180deg);
+ }
+ .dropdown-content li a:hover,
+ .dropdown-content li button.logout-button:hover {
+   background-color: #333;
+   color: #00AEEF;
+ }
+/* Ogólne style dla dropdown */
+.dropdown {
+  position: relative;
+}
+
+/* Style przycisku dropdown */
+.dropdown-btn {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  padding: 0 15px;
+  height: 100%;
+  white-space: nowrap;
+}
+
+/* Hover i focus dla przycisku dropdown */
+.dropdown-btn:hover,
+.dropdown-btn:focus {
+  background-color: #3C3C3C;
+  color: #00AEEF;
+}
+
+/* Zawartość dropdown */
+.dropdown-content {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: #2C2C2C;
+  min-width: 160px;
+  list-style: none;
+  margin: 0;
+  padding: 10px 0;
+  z-index: 999;
+  text-align: left;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+}
+
+/* Pozycjonowanie dropdown-content */
+.dropdown-content li {
+  width: 100%;
+}
+.desktop-cart-icon cart-icon-container {
+  height: 100%;
+}
+
+/* Linki w dropdown-content */
+.dropdown-content li a,
+.dropdown-content li button.logout-button {
+  display: block;
+  padding: 8px 16px;
+  color: #fff;
+  text-decoration: none;
+  white-space: nowrap;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+/* Kontener wokół ikony koszyka, by pozycjonować kółko z liczbą itemów */
+.cart-icon-container {
+  position: relative;
+  background: none;  /* Bez tła */
+  border: none;
+  cursor: pointer;
+  color: #fff; /* Biały kolor tekstu/ikony */
+
+}
+
+/* Sama ikonka koszyka – biała, bez tła */
+.cart-icon {
+  color: #fff;
+}
+
+/* Kółko w prawym dolnym rogu z liczbą itemów */
+.cart-badge {
+  position: absolute;
+  bottom: 15px;
+  right: -15px;
+  background-color: #fff;   /* Białe tło */
+  color: #000;              /* Czarny tekst */
+  border-radius: 50%;       /* Kółko */
+  font-size: 10px;          /* Mała czcionka */
+  font-weight: bold;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
