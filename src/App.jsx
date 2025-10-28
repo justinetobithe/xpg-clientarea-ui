@@ -8,8 +8,7 @@ import Home from "./pages/Home";
 import ForgotPassword from "./components/ForgotPassword";
 import AuthModalManager from "./components/AuthModalManager";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
-import { CartProvider } from "./contexts/CartContext";
-import { SnackbarProvider } from "./components/ui/AppSnackbar";
+import { CartProvider } from "./contexts/CartContext"; 
 import { LanguageProvider } from "./contexts/LanguageContext";
 import "./i18n";
 import Login from "./components/Login";
@@ -22,7 +21,8 @@ import Roadmap from "./pages/Roadmap";
 import AccountSettings from "./pages/AccountSettings";
 import { DialogProvider } from "./contexts/DialogContext";
 import AppDialog from "./components/AppDialog";
-import GameDetails from "./pages/GameDetails";
+import GameDetails from "./pages/GameDetails"; 
+import { SnackbarProvider } from "./components/ui/AppSnackbar"; 
 
 const theme = createTheme({
     palette: { mode: "dark", background: { default: "#0b0d13" } },
