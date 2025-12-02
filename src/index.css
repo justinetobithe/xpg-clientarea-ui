@@ -1,0 +1,109 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --radius: 0.9rem;
+
+    --background: 0 0% 100%;
+    --foreground: 240 10% 4%;
+
+    --card: 240 12% 10%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 4%;
+
+    --primary: 190 95% 38%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 240 10% 4%;
+
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 5% 35%;
+
+    --accent: 240 5% 96%;
+    --accent-foreground: 240 10% 4%;
+
+    --destructive: 0 80% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 6% 88%;
+    --input: 240 6% 88%;
+    --ring: 190 95% 45%;
+
+    --chart-1: 190 95% 45%;
+    --chart-2: 210 95% 55%;
+    --chart-3: 160 85% 45%;
+    --chart-4: 40 95% 55%;
+    --chart-5: 0 85% 55%;
+  }
+
+  .dark {
+    --background: 240 10% 4%;
+    --foreground: 0 0% 98%;
+
+    --card: 240 12% 10%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 240 8% 10%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 190 95% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 240 6% 18%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 240 5% 25%;
+    --muted-foreground: 240 5% 70%;
+
+    --accent: 240 6% 16%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 80% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 5% 22%;
+    --input: 240 5% 22%;
+    --ring: 190 95% 45%;
+
+    --chart-1: 190 95% 45%;
+    --chart-2: 210 95% 55%;
+    --chart-3: 160 85% 45%;
+    --chart-4: 40 95% 55%;
+    --chart-5: 0 85% 55%;
+  }
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+}
+
+.bg-evo {
+  background: radial-gradient(
+      1200px circle at 50% -10%,
+      rgba(0, 220, 255, 0.12),
+      transparent 60%
+    ),
+    radial-gradient(
+      1000px circle at 80% 30%,
+      rgba(90, 0, 255, 0.12),
+      transparent 60%
+    ),
+    #050507;
+}
