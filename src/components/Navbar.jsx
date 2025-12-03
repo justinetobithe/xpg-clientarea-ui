@@ -1,179 +1,283 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useMutation } from "@tanstack/react-query";
-import { auth, db } from "../firebase";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
+import { Fragment, useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Dialog, Transition, Menu as HMenu, Popover } from "@headlessui/react";
+import {
+    Menu,
+    Search,
+    User,
+    X,
+    ChevronDown,
+    LogOut,
+    Settings,
+    LayoutGrid
+} from "lucide-react";
+import { useAuthStore } from "../store/authStore";
+import { signOut } from "firebase/auth";
+import { auth } from "../firebase";
 
-export default function Register() {
+const games = [
+    "Baccarat",
+    "Blackjack",
+    "Roulette",
+    "Andar Bahar",
+    "Teen Patti",
+    "32 Cards",
+    "Sic Bo",
+    "Dragon Tiger"
+];
+
+const other = ["Roadmap", "Announcements", "Settings", "What’s New?"];
+
+const brands = [
+    "XPG Live",
+    "XPG Slots",
+    "XPG Virtuals",
+    "XPG White Label",
+    "EU Studios",
+    "HTML5 Client"
+];
+
+export default function Navbar() {
+    const [open, setOpen] = useState(false);
+    const [scrollY, setScrollY] = useState(0);
+    const [hovered, setHovered] = useState(false);
+    const [hoverArmed, setHoverArmed] = useState(false);
+
+    const { pathname } = useLocation();
     const nav = useNavigate();
-    const [err, setErr] = useState("");
+    const clearUser = useAuthStore((s) => s.clearUser);
+    const user = useAuthStore((s) => s.user);
 
-    const [form, setForm] = useState({
-        fullName: "",
-        company: "",
-        department: "",
-        email: "",
-        password: "",
-        confirmPassword: "",
-        newsletter: false,
-        notice: false,
-        privacy: false
-    });
+    useEffect(() => {
+        const onScroll = () => setScrollY(window.scrollY || 0);
+        onScroll();
+        window.addEventListener("scroll", onScroll, { passive: true });
+        return () => window.removeEventListener("scroll", onScroll);
+    }, []);
 
-    const set = (k, v) => setForm((s) => ({ ...s, [k]: v }));
+    useEffect(() => {
+        window.scrollTo(0, 0);
+        setScrollY(0);
+        setHovered(false);
+        setHoverArmed(false);
+        const arm = () => setHoverArmed(true);
+        window.addEventListener("mousemove", arm, { once: true });
+        window.addEventListener("touchstart", arm, { once: true });
+        return () => {
+            window.removeEventListener("mousemove", arm);
+            window.removeEventListener("touchstart", arm);
+        };
+    }, [pathname]);
 
-    const registerMutation = useMutation({
-        mutationFn: async (form) => {
-            const cred = await createUserWithEmailAndPassword(auth, form.email, form.password);
-            await updateProfile(cred.user, { displayName: form.fullName });
+    const navItem = (to, label) => (
+        <Link
+            to={to}
+            className={`text-lg font-semibold tracking-wide transition hover:opacity-80 ${pathname === to ? "text-primary" : "text-white"
+                }`}
+        >
+            {label}
+        </Link>
+    );
 
-            await setDoc(doc(db, "clients", cred.user.uid), {
-                fullName: form.fullName,
-                company: form.company,
-                department: form.department,
-                email: form.email,
-                newsletter: form.newsletter,
-                createdAt: new Date().toISOString(),
-                status: "pending"
-            });
-
-            return cred.user;
-        },
-        onSuccess: () => nav("/login"),
-        onError: () => setErr("Unable to register. Try another email.")
-    });
-
-    const onSubmit = (e) => {
-        e.preventDefault();
-        setErr("");
-
-        if (form.password !== form.confirmPassword) {
-            setErr("Passwords do not match.");
-            return;
-        }
-        if (!form.notice || !form.privacy) {
-            setErr("Please accept required policies.");
-            return;
-        }
-
-        registerMutation.mutate(form);
+    const onLogout = async () => {
+        await signOut(auth);
+        clearUser();
+        nav("/login");
     };
 
+    const atTop = scrollY === 0;
+    const showBg = !atTop || (hoverArmed && hovered);
+
     return (
-        <div className="min-h-screen text-foreground flex items-center justify-center relative overflow-hidden">
-            <div className="absolute inset-0 bg-[url('/image/bg.jpg')] bg-cover bg-center scale-110 blur-lg opacity-70" />
-            <div className="absolute inset-0 bg-black/70" />
+        <>
+            <header
+                onMouseEnter={() => setHovered(true)}
+                onMouseLeave={() => setHovered(false)}
+                className={`sticky top-0 z-50 transition-all duration-300 ${showBg
+                    ? "bg-black/80 backdrop-blur-md border-b border-border shadow-lg"
+                    : "!bg-transparent !backdrop-blur-0 border-b border-transparent shadow-none"
+                    }`}
+            >
+                <div className="px-4 md:px-10 h-16 md:h-20 flex items-center justify-between">
+                    <div className="flex items-center gap-6">
+                        <button onClick={() => setOpen(true)} className="md:hidden text-white">
+                            <Menu size={26} />
+                        </button>
 
-            <div className="relative w-[94%] max-w-xl rounded-2xl border border-border bg-card shadow-2xl p-8 md:p-10">
-                <div className="flex flex-col items-center gap-3 mb-5">
-                    <img src="/image/logo-white.png" alt="Logo" className="h-[80px]" />
-                    <div className="text-sm tracking-widest opacity-70">CLIENT AREA</div>
-                </div>
+                        <Link to="/" className="flex items-center gap-3 shrink-0">
+                            <img src="/image/logo-white.png" className="h-8 md:h-11" />
+                        </Link>
 
-                <h1 className="text-center text-base font-semibold mb-4">
-                    Please read before signing up
-                </h1>
+                        <nav className="hidden md:flex items-center gap-8">
+                            {navItem("/", "Home")}
 
-                <div className="text-sm leading-relaxed opacity-85 space-y-3 mb-6 max-h-48 overflow-auto pr-2 scrollbar-hide">
-                    <p>The Client Area contains marketing assets, demos and other useful data for our games and brands.</p>
-                    <p>You must be a customer to access the system. Only company emails are allowed.</p>
-                    <p>Your application will be reviewed before access is granted.</p>
-                    <p>Please do not share assets externally without permission.</p>
-                </div>
+                            <Popover className="relative">
+                                <Popover.Button className="flex items-center gap-2 text-lg font-semibold tracking-wide text-white hover:opacity-80">
+                                    Brands <ChevronDown size={18} />
+                                </Popover.Button>
 
-                <form onSubmit={onSubmit} className="space-y-4">
-                    <input
-                        className="w-full rounded-md border border-input bg-background/40 px-4 py-3 text-base"
-                        placeholder="Full name"
-                        value={form.fullName}
-                        onChange={(e) => set("fullName", e.target.value)}
-                    />
+                                <Transition
+                                    as={Fragment}
+                                    enter="transition duration-150 ease-out"
+                                    enterFrom="opacity-0 translate-y-1"
+                                    enterTo="opacity-100 translate-y-0"
+                                    leave="transition duration-100 ease-in"
+                                    leaveFrom="opacity-100 translate-y-0"
+                                    leaveTo="opacity-0 translate-y-1"
+                                >
+                                    <Popover.Panel className="absolute left-0 mt-3 w-56 rounded-xl border border-border bg-card shadow-xl p-2">
+                                        <div className="flex flex-col">
+                                            {brands.map((b) => (
+                                                <Link
+                                                    key={b}
+                                                    to="/brands"
+                                                    className="px-3 py-2 rounded-lg text-sm text-white/90 hover:bg-white/5 hover:text-white"
+                                                >
+                                                    {b}
+                                                </Link>
+                                            ))}
+                                        </div>
+                                    </Popover.Panel>
+                                </Transition>
+                            </Popover>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <input
-                            className="w-full rounded-md border border-input bg-background/40 px-4 py-3 text-base"
-                            placeholder="Company"
-                            value={form.company}
-                            onChange={(e) => set("company", e.target.value)}
-                        />
-                        <input
-                            className="w-full rounded-md border border-input bg-background/40 px-4 py-3 text-base"
-                            placeholder="Department"
-                            value={form.department}
-                            onChange={(e) => set("department", e.target.value)}
-                        />
+                            {navItem("/announcements", "Announcement")}
+                            {navItem("/roadmap", "Roadmap")}
+                        </nav>
                     </div>
 
-                    <input
-                        className="w-full rounded-md border border-input bg-background/40 px-4 py-3 text-base"
-                        placeholder="Email"
-                        value={form.email}
-                        onChange={(e) => set("email", e.target.value)}
-                    />
+                    <div className="flex items-center gap-2 md:gap-3 shrink-0">
+                        <button className="md:hidden relative flex items-center justify-center bg-primary text-primary-foreground h-9 w-9 rounded-md">
+                            <LayoutGrid size={18} />
+                            <span className="absolute -top-1 -right-1 bg-black text-white text-[10px] leading-none px-1.5 py-0.5 rounded-full">
+                                1
+                            </span>
+                        </button>
 
-                    <input
-                        type="password"
-                        className="w-full rounded-md border border-input bg-background/40 px-4 py-3 text-base"
-                        placeholder="Password"
-                        value={form.password}
-                        onChange={(e) => set("password", e.target.value)}
-                    />
+                        <button className="hidden md:flex items-center gap-2 bg-primary text-primary-foreground font-semibold px-4 py-2.5 rounded-md text-sm">
+                            Collections
+                            <span className="bg-black text-white text-xs rounded-full px-2">1</span>
+                        </button>
 
-                    <input
-                        type="password"
-                        className="w-full rounded-md border border-input bg-background/40 px-4 py-3 text-base"
-                        placeholder="Confirm Password"
-                        value={form.confirmPassword}
-                        onChange={(e) => set("confirmPassword", e.target.value)}
-                    />
+                        <div className="hidden md:flex items-center bg-white rounded-md overflow-hidden">
+                            <input
+                                className="px-3 py-2 text-sm text-black outline-none w-60"
+                                placeholder="Search..."
+                            />
+                            <div className="px-2 text-black">
+                                <Search size={16} />
+                            </div>
+                        </div>
 
-                    <label className="flex items-center gap-3 text-sm opacity-90">
-                        <input
-                            type="checkbox"
-                            checked={form.newsletter}
-                            onChange={(e) => set("newsletter", e.target.checked)}
-                        />
-                        Subscribe to the newsletter?
-                    </label>
+                        <HMenu as="div" className="relative hidden md:block">
+                            <HMenu.Button className="text-white flex items-center gap-2">
+                                <User size={22} />
+                            </HMenu.Button>
 
-                    <label className="flex items-center gap-3 text-sm opacity-90">
-                        <input
-                            type="checkbox"
-                            checked={form.notice}
-                            onChange={(e) => set("notice", e.target.checked)}
-                        />
-                        I have read and understood the full notice
-                    </label>
+                            <Transition
+                                as={Fragment}
+                                enter="transition duration-150 ease-out"
+                                enterFrom="opacity-0 translate-y-1"
+                                enterTo="opacity-100 translate-y-0"
+                                leave="transition duration-100 ease-in"
+                                leaveFrom="opacity-100 translate-y-0"
+                                leaveTo="opacity-0 translate-y-1"
+                            >
+                                <HMenu.Items className="absolute right-0 mt-3 w-56 rounded-xl border border-border bg-card shadow-xl p-2 focus:outline-none">
+                                    <div className="px-3 py-2 text-sm text-white/70">
+                                        {user?.displayName || user?.email || "Account"}
+                                    </div>
 
-                    <label className="flex items-center gap-3 text-sm opacity-90">
-                        <input
-                            type="checkbox"
-                            checked={form.privacy}
-                            onChange={(e) => set("privacy", e.target.checked)}
-                        />
-                        I agree to the privacy policy
-                    </label>
+                                    <HMenu.Item>
+                                        {({ active }) => (
+                                            <Link
+                                                to="/settings"
+                                                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-white ${active ? "bg-white/5" : ""
+                                                    }`}
+                                            >
+                                                <Settings size={16} /> Settings
+                                            </Link>
+                                        )}
+                                    </HMenu.Item>
 
-                    {err && <div className="text-sm text-red-400 pt-1">{err}</div>}
+                                    <HMenu.Item>
+                                        {({ active }) => (
+                                            <button
+                                                onClick={onLogout}
+                                                className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-white ${active ? "bg-white/5" : ""
+                                                    }`}
+                                            >
+                                                <LogOut size={16} /> Logout
+                                            </button>
+                                        )}
+                                    </HMenu.Item>
+                                </HMenu.Items>
+                            </Transition>
+                        </HMenu>
+                    </div>
+                </div>
+            </header>
 
-                    <button
-                        disabled={registerMutation.isPending}
-                        className="w-fit mx-auto block mt-1 rounded-md bg-primary px-7 py-2.5 text-base font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
+            <Transition show={open} as={Fragment}>
+                <Dialog onClose={setOpen} className="relative z-50 md:hidden">
+                    <Transition.Child
+                        as={Fragment}
+                        enter="transition-opacity duration-200"
+                        enterFrom="opacity-0"
+                        enterTo="opacity-100"
+                        leave="transition-opacity duration-200"
+                        leaveFrom="opacity-100"
+                        leaveTo="opacity-0"
                     >
-                        {registerMutation.isPending ? "Registering..." : "Register"}
-                    </button>
-                </form>
+                        <div className="fixed inset-0 bg-black/70" />
+                    </Transition.Child>
 
-                <div className="text-center text-sm mt-7 opacity-80">
-                    Already have an account?
-                </div>
-                <div className="text-center mt-2">
-                    <Link to="/login" className="text-sm text-primary hover:underline">
-                        Return to login page
-                    </Link>
-                </div>
-            </div>
-        </div>
+                    <Transition.Child
+                        as={Fragment}
+                        enter="transition duration-200 ease-out"
+                        enterFrom="-translate-x-full"
+                        enterTo="translate-x-0"
+                        leave="transition duration-200 ease-in"
+                        leaveFrom="translate-x-0"
+                        leaveTo="-translate-x-full"
+                    >
+                        <Dialog.Panel className="fixed left-0 top-0 h-full w-[82%] bg-[#2b2a36] p-6 overflow-y-auto">
+                            <div className="flex items-center justify-between mb-6">
+                                <img src="/image/logo-white.png" className="h-8" />
+                                <button onClick={() => setOpen(false)} className="text-white">
+                                    <X size={22} />
+                                </button>
+                            </div>
+
+                            <div className="text-primary font-semibold text-xl mb-2">
+                                <Link to="/" onClick={() => setOpen(false)}>Home</Link>
+                            </div>
+
+                            <div className="border-t border-white/20 my-4" />
+
+                            <div className="text-white text-xl font-semibold mb-3">Games</div>
+                            <div className="space-y-2 text-white/90 text-lg">
+                                {games.map((g) => <div key={g}>{g}</div>)}
+                            </div>
+
+                            <div className="border-t border-white/20 my-6" />
+
+                            <div className="text-white text-xl font-semibold mb-3">Brands</div>
+                            <div className="space-y-2 text-white/90 text-lg">
+                                {brands.map((b) => <div key={b}>{b}</div>)}
+                            </div>
+
+                            <div className="border-t border-white/20 my-6" />
+
+                            <div className="text-white text-xl font-semibold mb-3">Other</div>
+                            <div className="space-y-2 text-white/90 text-lg">
+                                {other.map((o) => <div key={o}>{o}</div>)}
+                                <button onClick={onLogout} className="text-left w-full">Logout</button>
+                            </div>
+                        </Dialog.Panel>
+                    </Transition.Child>
+                </Dialog>
+            </Transition>
+        </>
     );
 }

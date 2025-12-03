@@ -66,18 +66,17 @@ export default function Login() {
             <div className="absolute inset-0 bg-[url('/image/bg.jpg')] bg-cover bg-center scale-110 blur-xl opacity-60" />
             <div className="absolute inset-0 bg-black/70" />
 
-            <div className="relative w-[94%] max-w-lg rounded-2xl border border-border bg-card shadow-2xl p-8 md:p-10">
-                <div className="flex flex-col items-center gap-3 mb-6">
-                    <img src="/image/logo-white.png" alt="Logo" className="h-[80px]" />
-                    <div className="text-sm tracking-widest text-white/80">CLIENT AREA</div>
+            <div className="relative w-[94%] max-w-2xl rounded-2xl border border-border bg-card shadow-2xl p-8 md:p-10 lg:p-12">
+                <div className="flex flex-col items-center gap-3 mb-8">
+                    <img src="/image/logo-black.png" alt="Logo" className="h-[90px]" />
                 </div>
 
-                <h1 className="text-center text-lg font-semibold text-white mb-6">
+                <h1 className="text-center text-xl font-semibold text-white mb-7">
                     Client login
                 </h1>
 
                 <form onSubmit={handleSubmit(onSubmit)}>
-                    <Fieldset className="space-y-4">
+                    <Fieldset className="space-y-5">
                         <Field>
                             <Label className="sr-only">Email</Label>
                             <Input
@@ -127,20 +126,20 @@ export default function Login() {
 
                         <button
                             disabled={loginMutation.isPending}
-                            className="w-fit mx-auto block mt-2 rounded-md bg-primary px-7 py-2.5 text-base font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
+                            className="w-fit mx-auto block mt-2 rounded-md bg-primary px-9 py-3 text-base font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
                         >
                             {loginMutation.isPending ? "Logging in..." : "Login"}
                         </button>
                     </Fieldset>
                 </form>
 
-                <div className="text-center text-sm mt-5">
+                <div className="text-center text-sm mt-6">
                     <button className="text-primary hover:underline">
                         Forgot password?
                     </button>
                 </div>
 
-                <div className="text-center text-sm mt-7 text-white/80">
+                <div className="text-center text-sm mt-8 text-white/80">
                     Create an account?
                 </div>
                 <div className="text-center mt-2">
@@ -149,18 +148,18 @@ export default function Login() {
                     </Link>
                 </div>
 
-                <div className="mt-9 pt-6 border-t border-border">
-                    <div className="text-center text-sm text-white/70 mb-4 leading-relaxed">
+                <div className="mt-10 pt-7 border-t border-border">
+                    <div className="text-center text-sm text-white/70 mb-5 leading-relaxed">
                         The largest collection of online casino assets to supercharge your casino performance
                     </div>
 
-                    <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-4">
+                    <div className="flex flex-wrap items-center justify-center gap-x-7 gap-y-4">
                         {partners.map((src) => (
                             <img
                                 key={src}
                                 src={src}
                                 alt="partner"
-                                className="h-7 md:h-8 object-contain opacity-90"
+                                className="h-8 md:h-9 object-contain opacity-90"
                             />
                         ))}
                     </div>

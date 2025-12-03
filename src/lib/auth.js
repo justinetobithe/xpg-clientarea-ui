@@ -1,10 +1,6 @@
-import app from "../firebase";
-import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth";
+import { setPersistence, browserLocalPersistence, browserSessionPersistence } from "firebase/auth";
+import { auth } from "../firebase";
 
-export const auth = getAuth(app);
-
-export async function enableRememberMe(remember) {
-    if (remember) {
-        await setPersistence(auth, browserLocalPersistence);
-    }
+export function enableRememberMe(remember) {
+    return setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence);
 }

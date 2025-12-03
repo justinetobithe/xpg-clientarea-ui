@@ -1,13 +1,24 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Fieldset, Field, Input, Label } from "@headlessui/react";
 import { useMutation } from "@tanstack/react-query";
 import { auth, db } from "../firebase";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
+import { createUserWithEmailAndPassword, updateProfile, signOut } from "firebase/auth";
+import {
+    doc,
+    setDoc,
+    getDocs,
+    collection,
+    query,
+    orderBy,
+    limit
+} from "firebase/firestore";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useDialog } from "../contexts/DialogContext";
+import CookiePolicy from "../components/CookiePolicy";
+import PrivacyPolicy from "../components/PrivacyPolicy";
 
 const schema = z
     .object({
@@ -33,6 +44,28 @@ const schema = z
 export default function Register() {
     const nav = useNavigate();
     const [err, setErr] = useState("");
+    const { openDialog } = useDialog();
+    const [captchaOk] = useState(true);
+    const [userIPInfo, setUserIPInfo] = useState(null);
+
+    useEffect(() => {
+        const fetchIPInfo = async () => {
+            try {
+                const res = await fetch("https://ipapi.co/json/");
+                const data = await res.json();
+                setUserIPInfo({
+                    ip: data.ip || null,
+                    city: data.city || null,
+                    region: data.region || null,
+                    country: data.country_name || null,
+                    loc: data.loc || null
+                });
+            } catch (e) {
+                setUserIPInfo(null);
+            }
+        };
+        fetchIPInfo();
+    }, []);
 
     const {
         register,
@@ -55,18 +88,41 @@ export default function Register() {
 
     const registerMutation = useMutation({
         mutationFn: async (form) => {
+            const usersRef = collection(db, "users");
+            const q = query(usersRef, orderBy("opid", "desc"), limit(1));
+            const snap = await getDocs(q);
+
+            let latestOpid = 0;
+            if (!snap.empty) {
+                const lastDoc = snap.docs[0];
+                latestOpid = lastDoc.data()?.opid || 0;
+            }
+            const newOpid = latestOpid + 1;
+
             const cred = await createUserWithEmailAndPassword(auth, form.email, form.password);
             await updateProfile(cred.user, { displayName: form.fullName });
 
-            await setDoc(doc(db, "clients", cred.user.uid), {
+            await setDoc(doc(db, "users", cred.user.uid), {
                 fullName: form.fullName,
                 company: form.company,
                 department: form.department,
                 email: form.email,
-                newsletter: form.newsletter,
+                newsletter: !!form.newsletter,
                 createdAt: new Date().toISOString(),
-                status: "pending"
+                status: "pending",
+                uid: cred.user.uid,
+                id: cred.user.uid,
+                opid: newOpid,
+                ip: userIPInfo?.ip || null,
+                location: {
+                    city: userIPInfo?.city || null,
+                    region: userIPInfo?.region || null,
+                    country: userIPInfo?.country || null,
+                    coordinates: userIPInfo?.loc || null
+                }
             });
+
+            await signOut(auth);
 
             return cred.user;
         },
@@ -79,22 +135,31 @@ export default function Register() {
         registerMutation.mutate(data);
     };
 
+    const handleOpenCookiePolicy = (e) => {
+        e.preventDefault();
+        openDialog("Cookie Policy", <CookiePolicy />);
+    };
+
+    const handleOpenPrivacyPolicy = (e) => {
+        e.preventDefault();
+        openDialog("Privacy Policy", <PrivacyPolicy />);
+    };
+
     return (
         <div className="min-h-screen flex items-center justify-center relative overflow-hidden text-foreground">
             <div className="absolute inset-0 bg-[url('/image/bg.jpg')] bg-cover bg-center scale-110 blur-xl opacity-60" />
             <div className="absolute inset-0 bg-black/70" />
 
-            <div className="relative w-[94%] max-w-xl rounded-2xl border border-border bg-card shadow-2xl p-8 md:p-10">
-                <div className="flex flex-col items-center gap-3 mb-5">
-                    <img src="/image/logo-white.png" alt="Logo" className="h-[80px]" />
-                    <div className="text-sm tracking-widest text-white/80">CLIENT AREA</div>
+            <div className="relative w-[94%] max-w-3xl rounded-2xl border border-border bg-card shadow-2xl p-8 md:p-10 lg:p-12">
+                <div className="flex flex-col items-center gap-3 mb-6">
+                    <img src="/image/logo-black.png" alt="Logo" className="h-[90px]" />
                 </div>
 
-                <h1 className="text-center text-lg font-semibold text-white mb-4">
+                <h1 className="text-center text-xl font-semibold text-white mb-5">
                     Please read before signing up
                 </h1>
 
-                <div className="text-sm leading-relaxed text-white/80 space-y-3 mb-6 max-h-48 overflow-auto pr-2 scrollbar-hide">
+                <div className="text-sm leading-relaxed text-white/80 space-y-3 mb-7 max-h-56 overflow-auto pr-2 scrollbar-hide">
                     <p>The Client Area contains marketing assets, demos and other useful data for our games and brands.</p>
                     <p>You must be a customer to access the system. Only company emails are allowed.</p>
                     <p>Your application will be reviewed before access is granted.</p>
@@ -102,8 +167,8 @@ export default function Register() {
                 </div>
 
                 <form onSubmit={handleSubmit(onSubmit)}>
-                    <Fieldset className="space-y-4">
-                        <Field>
+                    <Fieldset className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <Field className="md:col-span-2">
                             <Label className="sr-only">Full name</Label>
                             <Input
                                 placeholder="Full name"
@@ -115,33 +180,31 @@ export default function Register() {
                             )}
                         </Field>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <Field>
-                                <Label className="sr-only">Company</Label>
-                                <Input
-                                    placeholder="Company"
-                                    {...register("company")}
-                                    className="w-full rounded-md border border-input bg-background/10 px-4 py-3 text-base text-white placeholder:text-white/50 outline-none focus:ring-2 focus:ring-ring"
-                                />
-                                {errors.company && (
-                                    <div className="text-sm text-red-400 mt-1">{errors.company.message}</div>
-                                )}
-                            </Field>
-
-                            <Field>
-                                <Label className="sr-only">Department</Label>
-                                <Input
-                                    placeholder="Department"
-                                    {...register("department")}
-                                    className="w-full rounded-md border border-input bg-background/10 px-4 py-3 text-base text-white placeholder:text-white/50 outline-none focus:ring-2 focus:ring-ring"
-                                />
-                                {errors.department && (
-                                    <div className="text-sm text-red-400 mt-1">{errors.department.message}</div>
-                                )}
-                            </Field>
-                        </div>
+                        <Field>
+                            <Label className="sr-only">Company</Label>
+                            <Input
+                                placeholder="Company"
+                                {...register("company")}
+                                className="w-full rounded-md border border-input bg-background/10 px-4 py-3 text-base text-white placeholder:text-white/50 outline-none focus:ring-2 focus:ring-ring"
+                            />
+                            {errors.company && (
+                                <div className="text-sm text-red-400 mt-1">{errors.company.message}</div>
+                            )}
+                        </Field>
 
                         <Field>
+                            <Label className="sr-only">Department</Label>
+                            <Input
+                                placeholder="Department"
+                                {...register("department")}
+                                className="w-full rounded-md border border-input bg-background/10 px-4 py-3 text-base text-white placeholder:text-white/50 outline-none focus:ring-2 focus:ring-ring"
+                            />
+                            {errors.department && (
+                                <div className="text-sm text-red-400 mt-1">{errors.department.message}</div>
+                            )}
+                        </Field>
+
+                        <Field className="md:col-span-2">
                             <Label className="sr-only">Email</Label>
                             <Input
                                 placeholder="Email"
@@ -181,37 +244,48 @@ export default function Register() {
                             )}
                         </Field>
 
-                        <label className="flex items-center gap-3 text-sm text-white/90">
-                            <input type="checkbox" {...register("newsletter")} />
-                            Subscribe to the newsletter?
-                        </label>
+                        <div className="md:col-span-2 space-y-3 pt-1">
+                            <label className="flex items-center gap-3 text-sm text-white/90">
+                                <input type="checkbox" {...register("newsletter")} />
+                                Subscribe to the newsletter?
+                            </label>
 
-                        <label className="flex items-center gap-3 text-sm text-white/90">
-                            <input type="checkbox" {...register("notice")} />
-                            I have read and understood the full notice
-                        </label>
+                            <label className="flex items-center gap-3 text-sm text-white/90">
+                                <input type="checkbox" {...register("notice")} />
+                                I have read and understood the full{" "}
+                                <button type="button" onClick={handleOpenCookiePolicy} className="text-primary hover:underline">
+                                    Cookie Policy
+                                </button>{" "}
+                                (referred to as notice)
+                            </label>
 
-                        <label className="flex items-center gap-3 text-sm text-white/90">
-                            <input type="checkbox" {...register("privacy")} />
-                            I agree to the privacy policy
-                        </label>
+                            <label className="flex items-center gap-3 text-sm text-white/90">
+                                <input type="checkbox" {...register("privacy")} />
+                                I agree to the{" "}
+                                <button type="button" onClick={handleOpenPrivacyPolicy} className="text-primary hover:underline">
+                                    Privacy Policy
+                                </button>
+                            </label>
 
-                        {(errors.privacy || err) && (
-                            <div className="text-sm text-red-400 pt-1">
-                                {errors.privacy?.message || err}
-                            </div>
-                        )}
+                            {(errors.privacy || err) && (
+                                <div className="text-sm text-red-400 pt-1">
+                                    {errors.privacy?.message || err}
+                                </div>
+                            )}
+                        </div>
 
-                        <button
-                            disabled={registerMutation.isPending}
-                            className="w-fit mx-auto block mt-1 rounded-md bg-primary px-7 py-2.5 text-base font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
-                        >
-                            {registerMutation.isPending ? "Registering..." : "Register"}
-                        </button>
+                        <div className="md:col-span-2 pt-2">
+                            <button
+                                disabled={registerMutation.isPending || !captchaOk}
+                                className="w-fit mx-auto block rounded-md bg-primary px-9 py-3 text-base font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
+                            >
+                                {registerMutation.isPending ? "Registering..." : "Register"}
+                            </button>
+                        </div>
                     </Fieldset>
                 </form>
 
-                <div className="text-center text-sm mt-7 text-white/80">
+                <div className="text-center text-sm mt-8 text-white/80">
                     Already have an account?
                 </div>
                 <div className="text-center mt-2">

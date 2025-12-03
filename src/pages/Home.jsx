@@ -1,59 +1,65 @@
+import RecentDownloadsPanel from "../components/home/RecentDownloadsPanel";
+import AnnouncementsPanel from "../components/home/AnnouncementsPanel";
+import GamesSection from "../components/home/GamesSection";
+
 export default function Home() {
+    const recentDownloads = [
+        { id: 1, name: "Baccarat_Assets_Pack.zip", date: "2025-10-01", url: "#" },
+        { id: 2, name: "Roulette_Logo_AI.ai", date: "2025-10-01", url: "#" },
+        { id: 3, name: "Blackjack_Banner.psd", date: "2025-10-01", url: "#" },
+        { id: 4, name: "DragonTiger_Video.mp4", date: "2025-10-01", url: "#" },
+        { id: 5, name: "SicBo_KeyVisual.png", date: "2025-10-01", url: "#" }
+    ];
+
+    const announcements = [
+        {
+            id: 1,
+            title: "Lightning Roulette Assets Updated!",
+            body: "New key visuals, thumbnails and promo pack have been added to the portal.",
+            date: "Nov 21, 2025",
+            image: "/image/welcome-banner.png",
+            links: [
+                { label: "Read Announcement", to: "/announcements" },
+                { label: "View Marketing Pack", to: "/brands" }
+            ]
+        },
+        {
+            id: 2,
+            title: "New Baccarat Dealer Shots",
+            body: "Fresh studio shots are now available for all partners.",
+            date: "Nov 10, 2025",
+            image: "/image/welcome-banner.png",
+            links: [{ label: "Download Pack", to: "/brands" }]
+        }
+    ];
+
     return (
-        <div className="px-4 md:px-8 py-6 max-w-6xl mx-auto w-full">
-            <div className="rounded-2xl overflow-hidden border border-border bg-card">
-                <div className="relative h-[220px] md:h-[320px]">
-                    <img src="/image/bg.jpg" className="absolute inset-0 w-full h-full object-cover opacity-40" />
-                    <div className="absolute inset-0 bg-black/60" />
+        <div className="w-full">
+            <section className="relative w-screen left-1/2 right-1/2 -mx-[50vw] overflow-hidden border-b border-border">
+                <div className="relative h-[320px] md:h-[650px]">
+                    <img
+                        src="/image/welcome-banner.png"
+                        className="absolute inset-0 w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/55" />
                     <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6">
                         <div className="text-sm md:text-base tracking-widest text-white/70 mb-2">
                             WELCOME TO THE
                         </div>
-                        <div className="text-3xl md:text-5xl font-extrabold text-white">
+                        <div className="text-3xl md:text-6xl font-extrabold text-white">
                             CLIENT AREA
                         </div>
-                        <div className="text-white/80 text-base md:text-lg mt-3 max-w-2xl">
-                            Your central place for XPG marketing assets, demos, game info, and partner resources.
-                        </div>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-card border border-border rounded-2xl p-5">
-                    <div className="text-lg font-semibold mb-4">Recent Downloads</div>
-                    <div className="space-y-3 text-sm text-white/80">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                            <div key={i} className="flex items-center justify-between bg-background/30 rounded-lg px-3 py-2">
-                                <div>
-                                    <div className="font-medium text-white">File {i + 1}</div>
-                                    <div className="text-white/60">2025-10-01</div>
-                                </div>
-                                <button className="text-primary font-semibold">Download</button>
-                            </div>
-                        ))}
-                    </div>
+            <div className="px-4 md:px-8 py-8 max-w-7xl mx-auto w-full">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <RecentDownloadsPanel items={recentDownloads} />
+                    <AnnouncementsPanel items={announcements} />
                 </div>
 
-                <div className="bg-card border border-border rounded-2xl p-5">
-                    <div className="text-lg font-semibold mb-4">All Games</div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
-                        {[
-                            "Baccarat",
-                            "Blackjack",
-                            "Roulette",
-                            "Andar Bahar",
-                            "Teen Patti",
-                            "32 Cards",
-                            "Sic Bo",
-                            "Dragon Tiger"
-                        ].map((g) => (
-                            <div key={g} className="bg-background/30 rounded-xl p-3 text-center text-white font-medium">
-                                {g}
-                            </div>
-                        ))}
-                    </div>
-                </div>
+                <GamesSection />
             </div>
         </div>
     );
