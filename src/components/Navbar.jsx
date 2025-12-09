@@ -12,6 +12,7 @@ import {
     LayoutGrid
 } from "lucide-react";
 import { useAuthStore } from "../store/authStore";
+import { useCollectionsStore } from "../store/collectionsStore";
 import { signOut } from "firebase/auth";
 import { auth } from "../firebase";
 
@@ -40,13 +41,20 @@ const brands = [
 export default function Navbar() {
     const [open, setOpen] = useState(false);
     const [scrollY, setScrollY] = useState(0);
-    const [hovered, setHovered] = useState(false);
-    const [hoverArmed, setHoverArmed] = useState(false);
 
     const { pathname } = useLocation();
     const nav = useNavigate();
     const clearUser = useAuthStore((s) => s.clearUser);
     const user = useAuthStore((s) => s.user);
+
+    const collections = useCollectionsStore((s) => s.collections);
+    const startUserCollectionsListener = useCollectionsStore(
+        (s) => s.startUserCollectionsListener
+    );
+    const stopUserCollectionsListener = useCollectionsStore(
+        (s) => s.stopUserCollectionsListener
+    );
+    const toggleDrawer = useCollectionsStore((s) => s.toggleDrawer);
 
     useEffect(() => {
         const onScroll = () => setScrollY(window.scrollY || 0);
@@ -56,18 +64,15 @@ export default function Navbar() {
     }, []);
 
     useEffect(() => {
-        window.scrollTo(0, 0);
         setScrollY(0);
-        setHovered(false);
-        setHoverArmed(false);
-        const arm = () => setHoverArmed(true);
-        window.addEventListener("mousemove", arm, { once: true });
-        window.addEventListener("touchstart", arm, { once: true });
-        return () => {
-            window.removeEventListener("mousemove", arm);
-            window.removeEventListener("touchstart", arm);
-        };
+        window.scrollTo(0, 0);
     }, [pathname]);
+
+    useEffect(() => {
+        if (!user?.uid) return;
+        startUserCollectionsListener(user.uid);
+        return () => stopUserCollectionsListener();
+    }, [user?.uid, startUserCollectionsListener, stopUserCollectionsListener]);
 
     const navItem = (to, label) => (
         <Link
@@ -85,22 +90,23 @@ export default function Navbar() {
         nav("/login");
     };
 
-    const atTop = scrollY === 0;
-    const showBg = !atTop || (hoverArmed && hovered);
+    const isTop = scrollY < 10;
+    const collectionsCount = collections?.length || 0;
 
     return (
         <>
             <header
-                onMouseEnter={() => setHovered(true)}
-                onMouseLeave={() => setHovered(false)}
-                className={`sticky top-0 z-50 transition-all duration-300 ${showBg
-                    ? "bg-black/80 backdrop-blur-md border-b border-border shadow-lg"
-                    : "!bg-transparent !backdrop-blur-0 border-b border-transparent shadow-none"
+                className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isTop
+                        ? "bg-transparent border-b border-transparent shadow-none"
+                        : "bg-black/80 backdrop-blur-md border-b border-border shadow-lg"
                     }`}
             >
                 <div className="px-4 md:px-10 h-16 md:h-20 flex items-center justify-between">
                     <div className="flex items-center gap-6">
-                        <button onClick={() => setOpen(true)} className="md:hidden text-white">
+                        <button
+                            onClick={() => setOpen(true)}
+                            className="md:hidden text-white"
+                        >
                             <Menu size={26} />
                         </button>
 
@@ -147,16 +153,24 @@ export default function Navbar() {
                     </div>
 
                     <div className="flex items-center gap-2 md:gap-3 shrink-0">
-                        <button className="md:hidden relative flex items-center justify-center bg-primary text-primary-foreground h-9 w-9 rounded-md">
+                        <button
+                            onClick={toggleDrawer}
+                            className="md:hidden relative flex items-center justify-center bg-primary text-primary-foreground h-9 w-9 rounded-md"
+                        >
                             <LayoutGrid size={18} />
                             <span className="absolute -top-1 -right-1 bg-black text-white text-[10px] leading-none px-1.5 py-0.5 rounded-full">
-                                1
+                                {collectionsCount}
                             </span>
                         </button>
 
-                        <button className="hidden md:flex items-center gap-2 bg-primary text-primary-foreground font-semibold px-4 py-2.5 rounded-md text-sm">
+                        <button
+                            onClick={toggleDrawer}
+                            className="hidden md:flex items-center gap-2 bg-primary text-primary-foreground font-semibold px-4 py-2.5 rounded-md text-sm"
+                        >
                             Collections
-                            <span className="bg-black text-white text-xs rounded-full px-2">1</span>
+                            <span className="bg-black text-white text-xs rounded-full px-2">
+                                {collectionsCount}
+                            </span>
                         </button>
 
                         <div className="hidden md:flex items-center bg-white rounded-md overflow-hidden">
@@ -244,35 +258,65 @@ export default function Navbar() {
                         <Dialog.Panel className="fixed left-0 top-0 h-full w-[82%] bg-[#2b2a36] p-6 overflow-y-auto">
                             <div className="flex items-center justify-between mb-6">
                                 <img src="/image/logo-white.png" className="h-8" />
-                                <button onClick={() => setOpen(false)} className="text-white">
+                                <button
+                                    onClick={() => setOpen(false)}
+                                    className="text-white"
+                                >
                                     <X size={22} />
                                 </button>
                             </div>
 
                             <div className="text-primary font-semibold text-xl mb-2">
-                                <Link to="/" onClick={() => setOpen(false)}>Home</Link>
+                                <Link to="/" onClick={() => setOpen(false)}>
+                                    Home
+                                </Link>
                             </div>
 
                             <div className="border-t border-white/20 my-4" />
 
-                            <div className="text-white text-xl font-semibold mb-3">Games</div>
+                            <div className="text-white text-xl font-semibold mb-3">
+                                Games
+                            </div>
                             <div className="space-y-2 text-white/90 text-lg">
-                                {games.map((g) => <div key={g}>{g}</div>)}
+                                {games.map((g) => (
+                                    <div key={g}>{g}</div>
+                                ))}
                             </div>
 
                             <div className="border-t border-white/20 my-6" />
 
-                            <div className="text-white text-xl font-semibold mb-3">Brands</div>
+                            <div className="text-white text-xl font-semibold mb-3">
+                                Brands
+                            </div>
                             <div className="space-y-2 text-white/90 text-lg">
-                                {brands.map((b) => <div key={b}>{b}</div>)}
+                                {brands.map((b) => (
+                                    <div key={b}>{b}</div>
+                                ))}
                             </div>
 
                             <div className="border-t border-white/20 my-6" />
 
-                            <div className="text-white text-xl font-semibold mb-3">Other</div>
+                            <div className="text-white text-xl font-semibold mb-3">
+                                Other
+                            </div>
                             <div className="space-y-2 text-white/90 text-lg">
-                                {other.map((o) => <div key={o}>{o}</div>)}
-                                <button onClick={onLogout} className="text-left w-full">Logout</button>
+                                {other.map((o) => (
+                                    <div key={o}>{o}</div>
+                                ))}
+
+                                <button
+                                    onClick={() => {
+                                        setOpen(false);
+                                        toggleDrawer();
+                                    }}
+                                    className="text-left w-full text-white/90 text-lg"
+                                >
+                                    Collections ({collectionsCount})
+                                </button>
+
+                                <button onClick={onLogout} className="text-left w-full">
+                                    Logout
+                                </button>
                             </div>
                         </Dialog.Panel>
                     </Transition.Child>

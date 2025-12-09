@@ -4,49 +4,49 @@ import { db } from "../firebase";
 
 export const useAnnouncementStore = create((set, get) => ({
     items: [],
-    loading: true,
+    loading: false,
     error: null,
     unsub: null,
 
-    startAnnouncementsListener: () => {
-        const { unsub } = get();
-        if (unsub) {
-            unsub();
-            set({ unsub: null });
-        }
+    startAnnouncementsListener: (pageSize = 5) => {
+        const prev = get().unsub;
+        if (prev) prev();
 
         set({ loading: true, error: null });
 
-        const qCol = query(collection(db, "announcements"), orderBy("createdAt", "desc"));
+        const qCol = query(
+            collection(db, "announcements"),
+            orderBy("createdAt", "desc")
+        );
 
-        const newUnsub = onSnapshot(
+        const unsub = onSnapshot(
             qCol,
             (snap) => {
-                const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+                const list = snap.docs.map((d) => ({
+                    id: d.id,
+                    ...d.data()
+                }));
                 set({
-                    items: list,
+                    items: pageSize ? list.slice(0, pageSize) : list,
                     loading: false,
-                    error: null,
+                    error: null
                 });
             },
-            (error) => {
-                console.error("Error fetching announcements:", error);
+            (err) => {
                 set({
                     items: [],
                     loading: false,
-                    error: error?.message || "Failed to load announcements",
+                    error: err?.message || "Failed to load announcements"
                 });
             }
         );
 
-        set({ unsub: newUnsub });
+        set({ unsub });
     },
 
     stopAnnouncementsListener: () => {
-        const { unsub } = get();
-        if (unsub) {
-            unsub();
-            set({ unsub: null, items: [], loading: false, error: null });
-        }
+        const prev = get().unsub;
+        if (prev) prev();
+        set({ unsub: null });
     }
 }));
