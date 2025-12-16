@@ -11,16 +11,20 @@ import { useAuthListener } from "./hooks/useAuthListener";
 import { useAuthStore } from "./store/authStore";
 import { DialogProvider } from "./contexts/DialogContext";
 import GameDetails from "./pages/GameDetails";
+import { ToastProvider } from "./contexts/ToastContext";
+import CollectionsDrawer from "./components/CollectionsDrawer";
+
 function ProtectedLayout({ children }) {
   return (
     <div className="min-h-screen bg-evo text-foreground flex flex-col">
       <Navbar />
+      <CollectionsDrawer />
       <div className="flex-1">{children}</div>
       <Footer />
     </div>
   );
 }
-
+ 
 export default function App() {
   useAuthListener();
   const user = useAuthStore((s) => s.user);
@@ -29,34 +33,81 @@ export default function App() {
   if (loading) return null;
 
   return (
-    <DialogProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route
-            path="/"
-            element={user ? <ProtectedLayout><Home /></ProtectedLayout> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/announcements"
-            element={user ? <ProtectedLayout><Announcements /></ProtectedLayout> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/announcement/:id"
-            element={user ? <ProtectedLayout><AnnouncementDetails /></ProtectedLayout> : <Navigate to="/login" />}
-          />
-
-          <Route
-            path="/game/:gameId"
-            element={user ? <ProtectedLayout><GameDetails /></ProtectedLayout> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/settings"
-            element={user ? <ProtectedLayout><Settings /></ProtectedLayout> : <Navigate to="/login" />}
-          />
-          <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
-          <Route path="/register" element={!user ? <Register /> : <Navigate to="/" />} />
-        </Routes>
-      </BrowserRouter>
-    </DialogProvider>
+    <ToastProvider>
+      <DialogProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                user ? (
+                  <ProtectedLayout>
+                    <Home />
+                  </ProtectedLayout>
+                ) : (
+                  <Navigate to="/login" />
+                )
+              }
+            />
+            <Route
+              path="/announcements"
+              element={
+                user ? (
+                  <ProtectedLayout>
+                    <Announcements />
+                  </ProtectedLayout>
+                ) : (
+                  <Navigate to="/login" />
+                )
+              }
+            />
+            <Route
+              path="/announcement/:id"
+              element={
+                user ? (
+                  <ProtectedLayout>
+                    <AnnouncementDetails />
+                  </ProtectedLayout>
+                ) : (
+                  <Navigate to="/login" />
+                )
+              }
+            />
+            <Route
+              path="/game/:gameId"
+              element={
+                user ? (
+                  <ProtectedLayout>
+                    <GameDetails />
+                  </ProtectedLayout>
+                ) : (
+                  <Navigate to="/login" />
+                )
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                user ? (
+                  <ProtectedLayout>
+                    <Settings />
+                  </ProtectedLayout>
+                ) : (
+                  <Navigate to="/login" />
+                )
+              }
+            />
+            <Route
+              path="/login"
+              element={!user ? <Login /> : <Navigate to="/" />}
+            />
+            <Route
+              path="/register"
+              element={!user ? <Register /> : <Navigate to="/" />}
+            />
+          </Routes>
+        </BrowserRouter>
+      </DialogProvider>
+    </ToastProvider>
   );
 }

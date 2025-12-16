@@ -107,6 +107,8 @@ export default function Register() {
                 company: form.company,
                 department: form.department,
                 email: form.email,
+                role: 'user',
+                access: false,
                 newsletter: !!form.newsletter,
                 createdAt: new Date().toISOString(),
                 status: "pending",

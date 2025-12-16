@@ -2,13 +2,15 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Switch, Fieldset, Field, Input, Label } from "@headlessui/react";
 import { useMutation } from "@tanstack/react-query";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../firebase";
+import { signInWithEmailAndPassword, signOut } from "firebase/auth";
+import { auth, db } from "../firebase";
+import { doc, getDoc } from "firebase/firestore";
 import { enableRememberMe } from "../lib/auth";
 import { useAuthStore } from "../store/authStore";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useToast } from "../contexts/ToastContext";
 
 const partners = [
     "/image/gibraltar.png",
@@ -16,29 +18,30 @@ const partners = [
     "/image/responsible-gaming.png",
     "/image/be-gamble-aware-gray-footer.png",
     "/image/ecogra.png",
-    "/image/gambling-commission.png"
+    "/image/gambling-commission.png",
 ];
 
 const schema = z.object({
     email: z.string().email("Please enter a valid email"),
     password: z.string().min(6, "Password must be at least 6 characters"),
-    remember: z.boolean().optional()
+    remember: z.boolean().optional(),
 });
 
 export default function Login() {
     const nav = useNavigate();
     const setUser = useAuthStore((s) => s.setUser);
     const [err, setErr] = useState("");
+    const { showToast } = useToast();
 
     const {
         register,
         handleSubmit,
         setValue,
         watch,
-        formState: { errors }
+        formState: { errors },
     } = useForm({
         resolver: zodResolver(schema),
-        defaultValues: { email: "", password: "", remember: false }
+        defaultValues: { email: "", password: "", remember: false },
     });
 
     const remember = watch("remember");
@@ -47,13 +50,47 @@ export default function Login() {
         mutationFn: async ({ email, password, remember }) => {
             await enableRememberMe(remember);
             const cred = await signInWithEmailAndPassword(auth, email, password);
-            return cred.user;
+
+            const userRef = doc(db, "users", cred.user.uid);
+            const snap = await getDoc(userRef);
+
+            let hasAccess = false;
+
+            if (snap.exists()) {
+                const accessVal = snap.data().access;
+                hasAccess = accessVal === true || accessVal === "true";
+            }
+
+            return { user: cred.user, hasAccess };
         },
-        onSuccess: (user) => {
-            setUser(user);
-            nav("/");
+        onSuccess: async ({ user, hasAccess }) => {
+            if (hasAccess) {
+                setUser(user);
+                showToast({
+                    variant: "success",
+                    title: "Login successful",
+                    description: "Welcome back!",
+                });
+                nav("/");
+            } else {
+                await signOut(auth);
+                setErr("Your account is pending approval.");
+                showToast({
+                    variant: "warning",
+                    title: "Approval required",
+                    description:
+                        "Your account needs to be approved by an administrator before you can log in.",
+                });
+            }
         },
-        onError: () => setErr("Invalid email or password.")
+        onError: () => {
+            setErr("Invalid email or password.");
+            showToast({
+                variant: "error",
+                title: "Login failed",
+                description: "Invalid email or password. Please try again.",
+            });
+        },
     });
 
     const onSubmit = (data) => {
@@ -111,10 +148,12 @@ export default function Login() {
                             <Switch
                                 checked={remember}
                                 onChange={(v) => setValue("remember", v)}
-                                className={`${remember ? "bg-primary" : "bg-muted"} relative inline-flex h-6 w-11 items-center rounded-full transition`}
+                                className={`${remember ? "bg-primary" : "bg-muted"
+                                    } relative inline-flex h-6 w-11 items-center rounded-full transition`}
                             >
                                 <span
-                                    className={`${remember ? "translate-x-6" : "translate-x-1"} inline-block h-4 w-4 transform rounded-full bg-white transition`}
+                                    className={`${remember ? "translate-x-6" : "translate-x-1"
+                                        } inline-block h-4 w-4 transform rounded-full bg-white transition`}
                                 />
                             </Switch>
                             <span className="text-sm text-white/90">
@@ -150,7 +189,8 @@ export default function Login() {
 
                 <div className="mt-10 pt-7 border-t border-border">
                     <div className="text-center text-sm text-white/70 mb-5 leading-relaxed">
-                        The largest collection of online casino assets to supercharge your casino performance
+                        The largest collection of online casino assets to supercharge your
+                        casino performance
                     </div>
 
                     <div className="flex flex-wrap items-center justify-center gap-x-7 gap-y-4">

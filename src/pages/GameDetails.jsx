@@ -28,7 +28,6 @@ import {
     getExt,
     isImage,
     isPDF,
-    buildForcedDownloadURL,
     flattenSectionsToFiles,
     collectExtensions,
     collectSectionNames
@@ -40,11 +39,9 @@ export default function GameDetails() {
     const user = useAuthStore((s) => s.user);
     const addDownload = useDownloadsStore((s) => s.addDownload);
 
-    const collections = useCollectionsStore((s) => s.collections);
+    const collections = useCollectionsStore((s) => s.collections) || [];
     const createCollection = useCollectionsStore((s) => s.createCollection);
     const addFileToCollection = useCollectionsStore((s) => s.addFileToCollection);
-    const startUserCollectionsListener = useCollectionsStore((s) => s.startUserCollectionsListener);
-    const stopUserCollectionsListener = useCollectionsStore((s) => s.stopUserCollectionsListener);
 
     const {
         game,
@@ -69,7 +66,6 @@ export default function GameDetails() {
     const [page, setPage] = useState(1);
     const [previewOpen, setPreviewOpen] = useState(false);
     const [previewIndex, setPreviewIndex] = useState(0);
-
     const [creatingForFile, setCreatingForFile] = useState(null);
     const [newCollectionName, setNewCollectionName] = useState("");
 
@@ -92,35 +88,47 @@ export default function GameDetails() {
     }, [user, gameId, startRelatedListener, stopRelatedListener]);
 
     useEffect(() => {
-        if (!user?.uid) return;
-        startUserCollectionsListener(user.uid);
-        return () => stopUserCollectionsListener();
-    }, [user?.uid, startUserCollectionsListener, stopUserCollectionsListener]);
-
-    useEffect(() => {
         const t = inputValue.trim();
         const id = setTimeout(() => setSearchTerm(t), 450);
         return () => clearTimeout(id);
     }, [inputValue]);
 
-    const hero = useMemo(() => game?.bannerURL || game?.imageURL || "", [game]);
-    const allSectionNames = useMemo(() => collectSectionNames(sections), [sections]);
-    const allExtensions = useMemo(() => collectExtensions(sections), [sections]);
-    const flatFiles = useMemo(() => flattenSectionsToFiles(sections), [sections]);
+    const hero = useMemo(
+        () => game?.bannerURL || game?.imageURL || "",
+        [game]
+    );
+    const allSectionNames = useMemo(
+        () => collectSectionNames(sections),
+        [sections]
+    );
+    const allExtensions = useMemo(
+        () => collectExtensions(sections),
+        [sections]
+    );
+    const flatFiles = useMemo(
+        () => flattenSectionsToFiles(sections),
+        [sections]
+    );
 
     const filteredFiles = useMemo(() => {
         const nameFilter = searchTerm.toLowerCase();
 
         let arr = flatFiles.filter((r) => {
-            const secOK = selectedSectionNames.size === 0 || selectedSectionNames.has(r._sectionTitle);
-            const extOK = selectedExts.size === 0 || (r._ext && selectedExts.has(r._ext));
+            const secOK =
+                selectedSectionNames.size === 0 ||
+                selectedSectionNames.has(r._sectionTitle);
+            const extOK =
+                selectedExts.size === 0 || (r._ext && selectedExts.has(r._ext));
             const nameOK = !nameFilter || r._name.toLowerCase().includes(nameFilter);
             return secOK && extOK && nameOK;
         });
 
         if (sortBy === "alpha") {
             arr.sort((a, b) =>
-                a._name.localeCompare(b._name, undefined, { sensitivity: "base", numeric: true })
+                a._name.localeCompare(b._name, undefined, {
+                    sensitivity: "base",
+                    numeric: true
+                })
             );
         } else {
             arr.sort((a, b) => {
@@ -140,7 +148,10 @@ export default function GameDetails() {
         return filteredFiles.slice(start, start + PAGE_SIZE);
     }, [filteredFiles, page]);
 
-    useEffect(() => setPage(1), [searchTerm, sortBy, selectedSectionNames, selectedExts]);
+    useEffect(
+        () => setPage(1),
+        [searchTerm, sortBy, selectedSectionNames, selectedExts]
+    );
 
     const openPreviewAt = useCallback((globalIndex) => {
         setPreviewIndex(globalIndex);
@@ -166,15 +177,20 @@ export default function GameDetails() {
             });
         }
 
-        const forced = buildForcedDownloadURL(url, name);
-        const a = document.createElement("a");
-        a.href = forced;
-        a.setAttribute("download", name);
-        a.rel = "noopener";
-        a.style.display = "none";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        try {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            const blobUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = blobUrl;
+            a.download = name;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(blobUrl);
+        } catch (e) {
+            console.error("download error", e);
+        }
     };
 
     const fileToCollectionPayload = (f) => ({
@@ -211,9 +227,10 @@ export default function GameDetails() {
 
     return (
         <div className="min-h-screen bg-[#0b0d13] text-white">
-            <HeroBanner image={hero}>
-                <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-black/70" />
-            </HeroBanner>
+            <HeroBanner
+                image={hero}
+                overlayClassName="bg-gradient-to-b from-black/5 via-black/35 to-black/70"
+            />
 
             <div className="w-full px-4 md:px-6 lg:max-w-6xl lg:mx-auto py-6">
                 <div className="mb-4">
@@ -224,9 +241,13 @@ export default function GameDetails() {
                         </div>
                     ) : (
                         <>
-                            <h1 className="text-2xl md:text-3xl font-extrabold">{game?.name}</h1>
+                            <h1 className="text-2xl md:text-3xl font-extrabold">
+                                {game?.name}
+                            </h1>
                             {!!game?.description && (
-                                <p className="text-sm text-white/80 mt-1">{game.description}</p>
+                                <p className="text-sm text-white/80 mt-1">
+                                    {game.description}
+                                </p>
                             )}
                         </>
                     )}
@@ -239,8 +260,8 @@ export default function GameDetails() {
                                 {({ selected }) => (
                                     <button
                                         className={`px-4 py-2 rounded-md text-sm font-semibold border transition ${selected
-                                            ? "bg-primary text-black border-primary"
-                                            : "bg-transparent text-white/80 border-white/20 hover:bg-white/5"
+                                                ? "bg-primary text-black border-primary"
+                                                : "bg-transparent text-white/80 border-white/20 hover:bg-white/5"
                                             }`}
                                     >
                                         {t}
@@ -264,7 +285,11 @@ export default function GameDetails() {
                                     />
                                 )}
 
-                                <div className={showLeftFilters ? "lg:col-span-9" : "lg:col-span-12"}>
+                                <div
+                                    className={
+                                        showLeftFilters ? "lg:col-span-9" : "lg:col-span-12"
+                                    }
+                                >
                                     <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3 mb-3">
                                         <div className="relative w-full md:max-w-xs">
                                             <Search
@@ -320,15 +345,20 @@ export default function GameDetails() {
                                                     </div>
                                                 )}
 
-                                                {!(loadingSections || loadingGame) && pageFiles.length === 0 && (
-                                                    <div className="p-6 text-white/70 text-sm">No files found.</div>
-                                                )}
+                                                {!(loadingSections || loadingGame) &&
+                                                    pageFiles.length === 0 && (
+                                                        <div className="p-6 text-white/70 text-sm">
+                                                            No files found.
+                                                        </div>
+                                                    )}
 
                                                 {!(loadingSections || loadingGame) &&
                                                     pageFiles.map((f, idx) => {
-                                                        const globalIndex = (page - 1) * PAGE_SIZE + idx;
+                                                        const globalIndex =
+                                                            (page - 1) * PAGE_SIZE + idx;
                                                         const ext = getExt(f._name, f._ext);
-                                                        const showImg = isImage(ext) && (f._thumb || f._url);
+                                                        const showImg =
+                                                            isImage(ext) && (f._thumb || f._url);
                                                         const showPdf = isPDF(ext);
 
                                                         return (
@@ -338,7 +368,10 @@ export default function GameDetails() {
                                                                 style={{ gridTemplateColumns: COLS }}
                                                             >
                                                                 <div className="flex items-center justify-center">
-                                                                    <input type="checkbox" className="accent-primary" />
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        className="accent-primary"
+                                                                    />
                                                                 </div>
 
                                                                 <button
@@ -353,17 +386,25 @@ export default function GameDetails() {
                                                                             loading="lazy"
                                                                         />
                                                                     ) : showPdf ? (
-                                                                        <FileText className="text-red-400" size={22} />
+                                                                        <FileText
+                                                                            className="text-red-400"
+                                                                            size={22}
+                                                                        />
                                                                     ) : (
                                                                         <div className="flex flex-col items-center text-white/80">
                                                                             <File size={20} />
-                                                                            <div className="text-[10px] mt-1">{ext || "FILE"}</div>
+                                                                            <div className="text-[10px] mt-1">
+                                                                                {ext || "FILE"}
+                                                                            </div>
                                                                         </div>
                                                                     )}
 
                                                                     {showImg && (
                                                                         <div className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-                                                                            <ZoomIn size={18} className="drop-shadow" />
+                                                                            <ZoomIn
+                                                                                size={18}
+                                                                                className="drop-shadow"
+                                                                            />
                                                                         </div>
                                                                     )}
                                                                 </button>
@@ -371,11 +412,20 @@ export default function GameDetails() {
                                                                 <div className="min-w-0 px-3">
                                                                     <div className="flex items-start gap-2 font-semibold text-sm">
                                                                         {showPdf ? (
-                                                                            <FileText size={16} className="text-white/70 mt-0.5 flex-shrink-0" />
+                                                                            <FileText
+                                                                                size={16}
+                                                                                className="text-white/70 mt-0.5 flex-shrink-0"
+                                                                            />
                                                                         ) : isImage(ext) ? (
-                                                                            <FileImage size={16} className="text-white/70 mt-0.5 flex-shrink-0" />
+                                                                            <FileImage
+                                                                                size={16}
+                                                                                className="text-white/70 mt-0.5 flex-shrink-0"
+                                                                            />
                                                                         ) : (
-                                                                            <File size={16} className="text-white/70 mt-0.5 flex-shrink-0" />
+                                                                            <File
+                                                                                size={16}
+                                                                                className="text-white/70 mt-0.5 flex-shrink-0"
+                                                                            />
                                                                         )}
 
                                                                         <span className="break-words whitespace-normal leading-snug line-clamp-3">
@@ -389,10 +439,15 @@ export default function GameDetails() {
                                                                 </div>
 
                                                                 <div className="text-xs text-white/70 pr-3">
-                                                                    {!!f._size && <div className="truncate">{f._size}</div>}
+                                                                    {!!f._size && (
+                                                                        <div className="truncate">{f._size}</div>
+                                                                    )}
                                                                     {!!f._date && (
                                                                         <div className="truncate">
-                                                                            Added {new Date(f._date).toLocaleDateString()}
+                                                                            Added{" "}
+                                                                            {new Date(
+                                                                                f._date
+                                                                            ).toLocaleDateString()}
                                                                         </div>
                                                                     )}
                                                                 </div>
@@ -408,7 +463,9 @@ export default function GameDetails() {
                                                                         </button>
 
                                                                         <button
-                                                                            onClick={() => openPreviewAt(globalIndex)}
+                                                                            onClick={() =>
+                                                                                openPreviewAt(globalIndex)
+                                                                            }
                                                                             className="inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded border border-white/30 text-white text-xs font-semibold hover:bg-white/5"
                                                                         >
                                                                             <Eye size={14} />
@@ -446,11 +503,21 @@ export default function GameDetails() {
                                                                                     {collections.map((c) => (
                                                                                         <button
                                                                                             key={c.id}
-                                                                                            onClick={() => addToExistingCollection(c.id, f)}
+                                                                                            onClick={() =>
+                                                                                                addToExistingCollection(
+                                                                                                    c.id,
+                                                                                                    f
+                                                                                                )
+                                                                                            }
                                                                                             className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm text-white hover:bg-white/5"
                                                                                         >
-                                                                                            <span className="truncate">{c.name}</span>
-                                                                                            <Check size={14} className="opacity-70" />
+                                                                                            <span className="truncate">
+                                                                                                {c.name}
+                                                                                            </span>
+                                                                                            <Check
+                                                                                                size={14}
+                                                                                                className="opacity-70"
+                                                                                            />
                                                                                         </button>
                                                                                     ))}
                                                                                 </div>
@@ -473,13 +540,19 @@ export default function GameDetails() {
                                                                                         <input
                                                                                             autoFocus
                                                                                             value={newCollectionName}
-                                                                                            onChange={(e) => setNewCollectionName(e.target.value)}
+                                                                                            onChange={(e) =>
+                                                                                                setNewCollectionName(
+                                                                                                    e.target.value
+                                                                                                )
+                                                                                            }
                                                                                             placeholder="Collection name"
                                                                                             className="w-full px-3 py-2 text-sm rounded-md bg-white text-black outline-none"
                                                                                         />
                                                                                         <div className="grid grid-cols-2 gap-2">
                                                                                             <button
-                                                                                                onClick={() => createAndAddCollection(f)}
+                                                                                                onClick={() =>
+                                                                                                    createAndAddCollection(f)
+                                                                                                }
                                                                                                 className="px-3 py-2 rounded-md bg-primary text-black text-xs font-bold"
                                                                                             >
                                                                                                 Create
@@ -524,7 +597,9 @@ export default function GameDetails() {
 
                                             <button
                                                 disabled={page >= totalPages}
-                                                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                                                onClick={() =>
+                                                    setPage((p) => Math.min(totalPages, p + 1))
+                                                }
                                                 className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-white/30 text-white text-sm disabled:opacity-40 hover:bg-white/5"
                                             >
                                                 Next
@@ -559,7 +634,10 @@ export default function GameDetails() {
                                             >
                                                 <div className="aspect-[16/9] bg-black/40">
                                                     <img
-                                                        src={g.imageURL || "https://via.placeholder.com/300?text=No+Image"}
+                                                        src={
+                                                            g.imageURL ||
+                                                            "https://via.placeholder.com/300?text=No+Image"
+                                                        }
                                                         alt={g.name}
                                                         className="w-full h-full object-cover"
                                                     />

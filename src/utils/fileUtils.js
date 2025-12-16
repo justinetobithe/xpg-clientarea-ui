@@ -65,3 +65,28 @@ export const flattenSectionsToFiles = (sections = []) => {
     });
     return out;
 };
+
+export const parseSizeToBytes = (v) => {
+    if (!v || typeof v !== "string") return 0;
+    const match = v.trim().match(/^([\d.,]+)\s*([kKmMgG]?B)$/);
+    if (!match) return 0;
+    const value = parseFloat(match[1].replace(",", ""));
+    const unit = match[2].toUpperCase();
+    if (Number.isNaN(value)) return 0;
+    if (unit === "KB") return value * 1024;
+    if (unit === "MB") return value * 1024 * 1024;
+    if (unit === "GB") return value * 1024 * 1024 * 1024;
+    return value;
+};
+
+export const formatBytes = (bytes) => {
+    if (!bytes || bytes <= 0) return "0 B";
+    const units = ["B", "KB", "MB", "GB", "TB"];
+    let i = 0;
+    let v = bytes;
+    while (v >= 1024 && i < units.length - 1) {
+        v /= 1024;
+        i += 1;
+    }
+    return `${v.toFixed(2)} ${units[i]}`;
+};
