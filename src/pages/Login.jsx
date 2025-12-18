@@ -18,13 +18,13 @@ const partners = [
     "/image/responsible-gaming.png",
     "/image/be-gamble-aware-gray-footer.png",
     "/image/ecogra.png",
-    "/image/gambling-commission.png",
+    "/image/gambling-commission.png"
 ];
 
 const schema = z.object({
     email: z.string().email("Please enter a valid email"),
     password: z.string().min(6, "Password must be at least 6 characters"),
-    remember: z.boolean().optional(),
+    remember: z.boolean().optional()
 });
 
 export default function Login() {
@@ -38,10 +38,10 @@ export default function Login() {
         handleSubmit,
         setValue,
         watch,
-        formState: { errors },
+        formState: { errors }
     } = useForm({
         resolver: zodResolver(schema),
-        defaultValues: { email: "", password: "", remember: false },
+        defaultValues: { email: "", password: "", remember: false }
     });
 
     const remember = watch("remember");
@@ -51,14 +51,12 @@ export default function Login() {
             await enableRememberMe(remember);
             const cred = await signInWithEmailAndPassword(auth, email, password);
 
-            const userRef = doc(db, "users", cred.user.uid);
-            const snap = await getDoc(userRef);
+            const snap = await getDoc(doc(db, "users", cred.user.uid));
 
             let hasAccess = false;
-
             if (snap.exists()) {
-                const accessVal = snap.data().access;
-                hasAccess = accessVal === true || accessVal === "true";
+                const v = snap.data()?.access;
+                hasAccess = v === true || v === "true";
             }
 
             return { user: cred.user, hasAccess };
@@ -66,31 +64,23 @@ export default function Login() {
         onSuccess: async ({ user, hasAccess }) => {
             if (hasAccess) {
                 setUser(user);
-                showToast({
-                    variant: "success",
-                    title: "Login successful",
-                    description: "Welcome back!",
-                });
+                showToast({ variant: "success", title: "Login successful", description: "Welcome back!" });
                 nav("/");
-            } else {
-                await signOut(auth);
-                setErr("Your account is pending approval.");
-                showToast({
-                    variant: "warning",
-                    title: "Approval required",
-                    description:
-                        "Your account needs to be approved by an administrator before you can log in.",
-                });
+                return;
             }
+
+            await signOut(auth);
+            setErr("Your account is pending approval.");
+            showToast({
+                variant: "warning",
+                title: "Approval required",
+                description: "Your account needs to be approved by an administrator before you can log in."
+            });
         },
         onError: () => {
             setErr("Invalid email or password.");
-            showToast({
-                variant: "error",
-                title: "Login failed",
-                description: "Invalid email or password. Please try again.",
-            });
-        },
+            showToast({ variant: "error", title: "Login failed", description: "Invalid email or password. Please try again." });
+        }
     });
 
     const onSubmit = (data) => {
@@ -108,9 +98,7 @@ export default function Login() {
                     <img src="/image/logo-black.png" alt="Logo" className="h-[90px]" />
                 </div>
 
-                <h1 className="text-center text-xl font-semibold text-white mb-7">
-                    Client login
-                </h1>
+                <h1 className="text-center text-xl font-semibold text-white mb-7">Client login</h1>
 
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <Fieldset className="space-y-5">
@@ -122,11 +110,7 @@ export default function Login() {
                                 {...register("email")}
                                 className="w-full rounded-md border border-input bg-background/10 px-4 py-3 text-base text-white placeholder:text-white/50 outline-none focus:ring-2 focus:ring-ring"
                             />
-                            {errors.email && (
-                                <div className="text-sm text-red-400 mt-1">
-                                    {errors.email.message}
-                                </div>
-                            )}
+                            {errors.email && <div className="text-sm text-red-400 mt-1">{errors.email.message}</div>}
                         </Field>
 
                         <Field>
@@ -137,28 +121,18 @@ export default function Login() {
                                 {...register("password")}
                                 className="w-full rounded-md border border-input bg-background/10 px-4 py-3 text-base text-white placeholder:text-white/50 outline-none focus:ring-2 focus:ring-ring"
                             />
-                            {errors.password && (
-                                <div className="text-sm text-red-400 mt-1">
-                                    {errors.password.message}
-                                </div>
-                            )}
+                            {errors.password && <div className="text-sm text-red-400 mt-1">{errors.password.message}</div>}
                         </Field>
 
                         <div className="flex items-center gap-3 pt-1">
                             <Switch
                                 checked={remember}
                                 onChange={(v) => setValue("remember", v)}
-                                className={`${remember ? "bg-primary" : "bg-muted"
-                                    } relative inline-flex h-6 w-11 items-center rounded-full transition`}
+                                className={`${remember ? "bg-primary" : "bg-muted"} relative inline-flex h-6 w-11 items-center rounded-full transition`}
                             >
-                                <span
-                                    className={`${remember ? "translate-x-6" : "translate-x-1"
-                                        } inline-block h-4 w-4 transform rounded-full bg-white transition`}
-                                />
+                                <span className={`${remember ? "translate-x-6" : "translate-x-1"} inline-block h-4 w-4 transform rounded-full bg-white transition`} />
                             </Switch>
-                            <span className="text-sm text-white/90">
-                                Remember me on this device
-                            </span>
+                            <span className="text-sm text-white/90">Remember me on this device</span>
                         </div>
 
                         {err && <div className="text-sm text-red-400 pt-1">{err}</div>}
@@ -173,36 +147,14 @@ export default function Login() {
                 </form>
 
                 <div className="text-center text-sm mt-6">
-                    <button className="text-primary hover:underline">
-                        Forgot password?
-                    </button>
+                    <button className="text-primary hover:underline">Forgot password?</button>
                 </div>
 
-                <div className="text-center text-sm mt-8 text-white/80">
-                    Create an account?
-                </div>
+                <div className="text-center text-sm mt-8 text-white/80">Create an account?</div>
                 <div className="text-center mt-2">
                     <Link to="/register" className="text-sm text-primary hover:underline">
                         Register for a new account
                     </Link>
-                </div>
-
-                <div className="mt-10 pt-7 border-t border-border">
-                    <div className="text-center text-sm text-white/70 mb-5 leading-relaxed">
-                        The largest collection of online casino assets to supercharge your
-                        casino performance
-                    </div>
-
-                    <div className="flex flex-wrap items-center justify-center gap-x-7 gap-y-4">
-                        {partners.map((src) => (
-                            <img
-                                key={src}
-                                src={src}
-                                alt="partner"
-                                className="h-8 md:h-9 object-contain opacity-90"
-                            />
-                        ))}
-                    </div>
                 </div>
             </div>
         </div>

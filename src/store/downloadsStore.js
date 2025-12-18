@@ -1,15 +1,24 @@
 import { create } from "zustand";
 import {
-    addDoc,
+    doc,
+    setDoc,
     collection,
-    serverTimestamp,
     query,
     where,
     orderBy,
     limit,
-    onSnapshot
+    onSnapshot,
+    serverTimestamp
 } from "firebase/firestore";
 import { db } from "../firebase";
+
+const hashString = (str = "") => {
+    let h = 5381;
+    for (let i = 0; i < str.length; i++) h = (h * 33) ^ str.charCodeAt(i);
+    return (h >>> 0).toString(36);
+};
+
+const makeDownloadDocId = (userId, fileKey) => `${userId}_${hashString(fileKey)}`;
 
 export const useDownloadsStore = create((set, get) => ({
     downloads: [],
@@ -17,13 +26,24 @@ export const useDownloadsStore = create((set, get) => ({
     error: null,
     unsub: null,
 
-    addDownload: async (payload) => {
+    upsertDownload: async (payload) => {
         try {
             set({ error: null });
-            await addDoc(collection(db, "downloads"), {
-                ...payload,
-                downloadedAt: serverTimestamp()
-            });
+
+            const userId = payload?.userId;
+            const fileKey = payload?.fileKey || payload?.fileURL || payload?.fileName || "";
+            if (!userId || !fileKey) throw new Error("Missing userId or fileKey");
+
+            const id = makeDownloadDocId(userId, fileKey);
+            await setDoc(
+                doc(db, "downloads", id),
+                {
+                    ...payload,
+                    fileKey,
+                    downloadedAt: serverTimestamp()
+                },
+                { merge: true }
+            );
         } catch (e) {
             set({ error: e?.message || "Failed to store download" });
         }
@@ -52,11 +72,7 @@ export const useDownloadsStore = create((set, get) => ({
             onSnapshot(
                 q,
                 (snap) => {
-                    let rows = snap.docs.map((d) => ({
-                        id: d.id,
-                        ...d.data()
-                    }));
-
+                    let rows = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
                     if (sortClient) {
                         rows.sort((a, b) => {
                             const ad = a.downloadedAt?.toMillis?.() || 0;
@@ -64,7 +80,6 @@ export const useDownloadsStore = create((set, get) => ({
                             return bd - ad;
                         });
                     }
-
                     set({ downloads: rows, loading: false });
                 },
                 (err) => {
@@ -73,11 +88,7 @@ export const useDownloadsStore = create((set, get) => ({
                         set({ unsub: unsubFallback, error: null });
                         return;
                     }
-
-                    set({
-                        error: err?.message || "Failed to load downloads",
-                        loading: false
-                    });
+                    set({ error: err?.message || "Failed to load downloads", loading: false });
                 }
             );
 

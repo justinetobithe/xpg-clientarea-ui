@@ -1,5 +1,6 @@
-import { Link } from "react-router-dom";
-import { FileText, FileImage, File } from "lucide-react";
+import { useMemo, useState } from "react";
+import { FileText, FileImage, File, Loader2 } from "lucide-react";
+import { useDownloadsStore } from "../../store/downloadsStore";
 
 function RecentDownloadSkeletonRow() {
     return (
@@ -25,17 +26,82 @@ const getExt = (name = "") => {
 
 const isImage = (ext) => IMAGE_EXTS.has((ext || "").toUpperCase());
 
+const downloadFromFunction = (storagePath, filename) => {
+    const base = import.meta.env.VITE_DOWNLOAD_FILE_URL;
+    if (!base) throw new Error("Missing VITE_DOWNLOAD_FILE_URL");
+    const url = `${base}?path=${encodeURIComponent(storagePath)}&name=${encodeURIComponent(
+        filename || "download"
+    )}`;
+    window.location.assign(url);
+};
+
 export default function RecentDownloadsPanel({
     items = [],
     loading = false,
     error = null,
     skeletonCount = 5
 }) {
+    const upsertDownload = useDownloadsStore((s) => s.upsertDownload);
+    const [downloadingId, setDownloadingId] = useState(null);
+
+    const idOf = useMemo(
+        () => (f) => f?.id || f?.storagePath || f?.fileURL || f?.fileName || "",
+        []
+    );
+
+    const buildDownloadUrl = (storagePath, filename) => {
+        const base = import.meta.env.VITE_DOWNLOAD_FILE_URL;
+        if (!base) throw new Error("Missing VITE_DOWNLOAD_FILE_URL");
+        return `${base}?path=${encodeURIComponent(storagePath)}&name=${encodeURIComponent(
+            filename || "download"
+        )}`;
+    };
+
+    const openDownload = (url) => {
+        const a = document.createElement("a");
+        a.href = url;
+        a.target = "_blank";
+        a.rel = "noreferrer";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+    };
+
+    const handleDownload = async (f) => {
+        const name = f.fileName || "download";
+        const storagePath = f.storagePath;
+
+        const rowId = idOf(f);
+        setDownloadingId(rowId);
+
+        try {
+            if (!storagePath) {
+                alert("Missing storagePath in this item. You must save snapshot.ref.fullPath when uploading.");
+                return;
+            }
+
+            await upsertDownload({
+                userId: f.userId,
+                fileName: f.fileName,
+                fileURL: f.fileURL || null,
+                storagePath: f.storagePath,
+                thumbURL: f.thumbURL || f.thumb || f.thumbnail || null,
+                sectionTitle: f.sectionTitle || f._sectionTitle || "",
+                fileKey: f.storagePath
+            });
+
+            const url = buildDownloadUrl(storagePath, name);
+            openDownload(url);
+        } catch (e) {
+            alert(e?.message || "Download failed");
+        } finally {
+            setDownloadingId((cur) => (cur === rowId ? null : cur));
+        }
+    };
+ 
     return (
         <div className="bg-card border border-border rounded-2xl p-5 md:p-6">
-            <div className="text-lg font-semibold mb-4 text-white">
-                Recent Downloads
-            </div>
+            <div className="text-lg font-semibold mb-4 text-white">Recent Downloads</div>
 
             <div className="rounded-xl overflow-hidden border border-white/10 bg-background/10">
                 <div className="grid grid-cols-[56px_minmax(0,1fr)_150px_90px] items-center gap-3 px-4 py-3 text-xs font-bold text-white/80 bg-white/5">
@@ -46,35 +112,26 @@ export default function RecentDownloadsPanel({
                 </div>
 
                 {loading &&
-                    Array.from({ length: skeletonCount }).map((_, i) => (
-                        <RecentDownloadSkeletonRow key={i} />
-                    ))}
+                    Array.from({ length: skeletonCount }).map((_, i) => <RecentDownloadSkeletonRow key={i} />)}
 
-                {!loading && error && (
-                    <div className="text-sm text-red-400 py-6 text-center">
-                        {error}
-                    </div>
-                )}
+                {!loading && error && <div className="text-sm text-red-400 py-6 text-center">{error}</div>}
 
                 {!loading && !error && items.length === 0 && (
-                    <div className="text-sm text-white/60 py-6 text-center">
-                        No downloads yet.
-                    </div>
+                    <div className="text-sm text-white/60 py-6 text-center">No downloads yet.</div>
                 )}
 
-                {!loading && !error &&
+                {!loading &&
+                    !error &&
                     items.map((f, idx) => {
                         const name = f.fileName || "Untitled";
                         const ext = getExt(name);
-                        const thumb =
-                            f.thumbURL ||
-                            f.thumb ||
-                            f.thumbnail ||
-                            (isImage(ext) ? f.fileURL : null);
+                        const thumb = f.thumbURL || f.thumb || f.thumbnail || (isImage(ext) ? f.fileURL : null);
+                        const rowId = idOf(f);
+                        const isDownloading = downloadingId === rowId;
 
                         return (
                             <div
-                                key={f.id}
+                                key={rowId}
                                 className={[
                                     "grid grid-cols-[56px_minmax(0,1fr)_150px_90px] items-center gap-3 px-4 py-3",
                                     idx % 2 === 0 ? "bg-white/[0.02]" : "bg-white/[0.06]"
@@ -111,18 +168,31 @@ export default function RecentDownloadsPanel({
                                 </div>
 
                                 <div className="text-xs text-white/80 whitespace-nowrap">
-                                    {f.downloadedAt?.toDate
-                                        ? f.downloadedAt.toDate().toLocaleString()
-                                        : ""}
+                                    {f.downloadedAt?.toDate ? f.downloadedAt.toDate().toLocaleString() : ""}
                                 </div>
 
                                 <div className="text-right">
-                                    <Link
-                                        to={f.fileURL || "#"}
-                                        className="text-sm font-semibold text-primary hover:underline"
+                                    <button
+                                        type="button"
+                                        disabled={isDownloading}
+                                        onMouseDown={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                        }}
+                                        onClick={async (e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            if (isDownloading) return;
+                                            await handleDownload(f);
+                                        }}
+                                        className={[
+                                            "text-sm font-semibold text-primary hover:underline inline-flex items-center justify-end gap-2",
+                                            isDownloading ? "opacity-70 cursor-not-allowed" : ""
+                                        ].join(" ")}
                                     >
-                                        Download
-                                    </Link>
+                                        {isDownloading && <Loader2 size={16} className="animate-spin" />}
+                                        {isDownloading ? "Downloading" : "Download"}
+                                    </button>
                                 </div>
                             </div>
                         );

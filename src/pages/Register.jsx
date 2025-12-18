@@ -1,24 +1,18 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Fieldset, Field, Input, Label } from "@headlessui/react";
 import { useMutation } from "@tanstack/react-query";
 import { auth, db } from "../firebase";
 import { createUserWithEmailAndPassword, updateProfile, signOut } from "firebase/auth";
-import {
-    doc,
-    setDoc,
-    getDocs,
-    collection,
-    query,
-    orderBy,
-    limit
-} from "firebase/firestore";
+import { doc, setDoc, getDocs, collection, query, orderBy, limit } from "firebase/firestore";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useDialog } from "../contexts/DialogContext";
+import { useToast } from "../contexts/ToastContext";
 import CookiePolicy from "../components/CookiePolicy";
 import PrivacyPolicy from "../components/PrivacyPolicy";
+import ReCAPTCHA from "react-google-recaptcha";
 
 const schema = z
     .object({
@@ -41,12 +35,42 @@ const schema = z
         path: ["privacy"]
     });
 
+function isValidRecaptchaToken(token) {
+    if (!token || typeof token !== "string") return false;
+    if (token.length < 20) return false;
+    if (/[^\x00-\x7F]/.test(token)) return false;
+    return true;
+}
+
+async function verifyRecaptchaServer(token) {
+    const url = import.meta.env.VITE_VERIFY_RECAPTCHA_URL;
+    if (!url) throw new Error("Missing VITE_VERIFY_RECAPTCHA_URL");
+
+    const resp = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token })
+    });
+
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok || !data?.success) {
+        throw new Error(data?.message || "reCAPTCHA verification failed");
+    }
+    return true;
+}
+
 export default function Register() {
     const nav = useNavigate();
-    const [err, setErr] = useState("");
     const { openDialog } = useDialog();
-    const [captchaOk] = useState(true);
+    const { showToast } = useToast();
+
+    const recaptchaRef = useRef(null);
+
+    const [err, setErr] = useState("");
+    const [captchaToken, setCaptchaToken] = useState("");
     const [userIPInfo, setUserIPInfo] = useState(null);
+
+    const recaptchaSiteKey = useMemo(() => import.meta.env.VITE_RECAPTCHA_SITE_KEY, []);
 
     useEffect(() => {
         const fetchIPInfo = async () => {
@@ -60,7 +84,7 @@ export default function Register() {
                     country: data.country_name || null,
                     loc: data.loc || null
                 });
-            } catch (e) {
+            } catch {
                 setUserIPInfo(null);
             }
         };
@@ -88,15 +112,18 @@ export default function Register() {
 
     const registerMutation = useMutation({
         mutationFn: async (form) => {
+            if (!isValidRecaptchaToken(captchaToken)) {
+                throw new Error("Please complete the CAPTCHA.");
+            }
+
+            await verifyRecaptchaServer(captchaToken);
+
             const usersRef = collection(db, "users");
             const q = query(usersRef, orderBy("opid", "desc"), limit(1));
             const snap = await getDocs(q);
 
             let latestOpid = 0;
-            if (!snap.empty) {
-                const lastDoc = snap.docs[0];
-                latestOpid = lastDoc.data()?.opid || 0;
-            }
+            if (!snap.empty) latestOpid = snap.docs[0].data()?.opid || 0;
             const newOpid = latestOpid + 1;
 
             const cred = await createUserWithEmailAndPassword(auth, form.email, form.password);
@@ -107,7 +134,7 @@ export default function Register() {
                 company: form.company,
                 department: form.department,
                 email: form.email,
-                role: 'user',
+                role: "user",
                 access: false,
                 newsletter: !!form.newsletter,
                 createdAt: new Date().toISOString(),
@@ -125,11 +152,38 @@ export default function Register() {
             });
 
             await signOut(auth);
-
             return cred.user;
         },
-        onSuccess: () => nav("/login"),
-        onError: () => setErr("Unable to register. Try another email.")
+        onSuccess: () => {
+            showToast({
+                title: "Registration submitted",
+                description: "Your account is pending admin approval.",
+                variant: "success"
+            });
+            nav("/login");
+        },
+        onError: (error) => {
+            try {
+                recaptchaRef.current?.reset();
+            } catch { }
+
+            setCaptchaToken("");
+
+            const msg =
+                error?.message === "Please complete the CAPTCHA."
+                    ? "Please complete the CAPTCHA."
+                    : error?.code === "auth/email-already-in-use"
+                        ? "This email is already in use. Please use another email or log in."
+                        : "Unable to register. Try another email.";
+
+            setErr(msg);
+
+            showToast({
+                title: "Registration failed",
+                description: msg,
+                variant: "error"
+            });
+        }
     });
 
     const onSubmit = (data) => {
@@ -147,6 +201,16 @@ export default function Register() {
         openDialog("Privacy Policy", <PrivacyPolicy />);
     };
 
+    const handleCaptchaChange = (token) => setCaptchaToken(token || "");
+    const handleCaptchaExpired = () => {
+        setCaptchaToken("");
+        showToast({ title: "CAPTCHA expired", description: "Please check the CAPTCHA again.", variant: "warning" });
+    };
+    const handleCaptchaErrored = () => {
+        setCaptchaToken("");
+        showToast({ title: "CAPTCHA error", description: "CAPTCHA failed to load.", variant: "error" });
+    };
+
     return (
         <div className="min-h-screen flex items-center justify-center relative overflow-hidden text-foreground">
             <div className="absolute inset-0 bg-[url('/image/bg.jpg')] bg-cover bg-center scale-110 blur-xl opacity-60" />
@@ -154,12 +218,10 @@ export default function Register() {
 
             <div className="relative w-[94%] max-w-3xl rounded-2xl border border-border bg-card shadow-2xl p-8 md:p-10 lg:p-12">
                 <div className="flex flex-col items-center gap-3 mb-6">
-                    <img src="/image/logo-black.png" alt="Logo" className="h-[90px]" />
+                    <img src="/image/logo-white.png" alt="Logo" className="h-[90px]" />
                 </div>
 
-                <h1 className="text-center text-xl font-semibold text-white mb-5">
-                    Please read before signing up
-                </h1>
+                <h1 className="text-center text-xl font-semibold text-white mb-5">Please read before signing up</h1>
 
                 <div className="text-sm leading-relaxed text-white/80 space-y-3 mb-7 max-h-56 overflow-auto pr-2 scrollbar-hide">
                     <p>The Client Area contains marketing assets, demos and other useful data for our games and brands.</p>
@@ -177,9 +239,7 @@ export default function Register() {
                                 {...register("fullName")}
                                 className="w-full rounded-md border border-input bg-background/10 px-4 py-3 text-base text-white placeholder:text-white/50 outline-none focus:ring-2 focus:ring-ring"
                             />
-                            {errors.fullName && (
-                                <div className="text-sm text-red-400 mt-1">{errors.fullName.message}</div>
-                            )}
+                            {errors.fullName && <div className="text-sm text-red-400 mt-1">{errors.fullName.message}</div>}
                         </Field>
 
                         <Field>
@@ -189,9 +249,7 @@ export default function Register() {
                                 {...register("company")}
                                 className="w-full rounded-md border border-input bg-background/10 px-4 py-3 text-base text-white placeholder:text-white/50 outline-none focus:ring-2 focus:ring-ring"
                             />
-                            {errors.company && (
-                                <div className="text-sm text-red-400 mt-1">{errors.company.message}</div>
-                            )}
+                            {errors.company && <div className="text-sm text-red-400 mt-1">{errors.company.message}</div>}
                         </Field>
 
                         <Field>
@@ -201,9 +259,7 @@ export default function Register() {
                                 {...register("department")}
                                 className="w-full rounded-md border border-input bg-background/10 px-4 py-3 text-base text-white placeholder:text-white/50 outline-none focus:ring-2 focus:ring-ring"
                             />
-                            {errors.department && (
-                                <div className="text-sm text-red-400 mt-1">{errors.department.message}</div>
-                            )}
+                            {errors.department && <div className="text-sm text-red-400 mt-1">{errors.department.message}</div>}
                         </Field>
 
                         <Field className="md:col-span-2">
@@ -213,9 +269,7 @@ export default function Register() {
                                 {...register("email")}
                                 className="w-full rounded-md border border-input bg-background/10 px-4 py-3 text-base text-white placeholder:text-white/50 outline-none focus:ring-2 focus:ring-ring"
                             />
-                            {errors.email && (
-                                <div className="text-sm text-red-400 mt-1">{errors.email.message}</div>
-                            )}
+                            {errors.email && <div className="text-sm text-red-400 mt-1">{errors.email.message}</div>}
                         </Field>
 
                         <Field>
@@ -226,9 +280,7 @@ export default function Register() {
                                 {...register("password")}
                                 className="w-full rounded-md border border-input bg-background/10 px-4 py-3 text-base text-white placeholder:text-white/50 outline-none focus:ring-2 focus:ring-ring"
                             />
-                            {errors.password && (
-                                <div className="text-sm text-red-400 mt-1">{errors.password.message}</div>
-                            )}
+                            {errors.password && <div className="text-sm text-red-400 mt-1">{errors.password.message}</div>}
                         </Field>
 
                         <Field>
@@ -239,11 +291,7 @@ export default function Register() {
                                 {...register("confirmPassword")}
                                 className="w-full rounded-md border border-input bg-background/10 px-4 py-3 text-base text-white placeholder:text-white/50 outline-none focus:ring-2 focus:ring-ring"
                             />
-                            {errors.confirmPassword && (
-                                <div className="text-sm text-red-400 mt-1">
-                                    {errors.confirmPassword.message}
-                                </div>
-                            )}
+                            {errors.confirmPassword && <div className="text-sm text-red-400 mt-1">{errors.confirmPassword.message}</div>}
                         </Field>
 
                         <div className="md:col-span-2 space-y-3 pt-1">
@@ -269,30 +317,34 @@ export default function Register() {
                                 </button>
                             </label>
 
-                            {(errors.privacy || err) && (
-                                <div className="text-sm text-red-400 pt-1">
-                                    {errors.privacy?.message || err}
-                                </div>
-                            )}
+                            {(errors.privacy || err) && <div className="text-sm text-red-400 pt-1">{errors.privacy?.message || err}</div>}
                         </div>
 
-                        <div className="md:col-span-2 pt-2">
+                        <div className="md:col-span-2 pt-2 flex flex-col items-center gap-4">
+                            <div className="flex justify-center">
+                                <ReCAPTCHA
+                                    ref={recaptchaRef}
+                                    sitekey={recaptchaSiteKey}
+                                    onChange={handleCaptchaChange}
+                                    onExpired={handleCaptchaExpired}
+                                    onErrored={handleCaptchaErrored}
+                                />
+                            </div>
+
                             <button
-                                disabled={registerMutation.isPending || !captchaOk}
+                                disabled={registerMutation.isPending || !isValidRecaptchaToken(captchaToken)}
                                 className="w-fit mx-auto block rounded-md bg-primary px-9 py-3 text-base font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
                             >
-                                {registerMutation.isPending ? "Registering..." : "Register"}
+                                {registerMutation.isPending ? "Registering..." : "Request access"}
                             </button>
                         </div>
                     </Fieldset>
                 </form>
 
-                <div className="text-center text-sm mt-8 text-white/80">
-                    Already have an account?
-                </div>
+                <div className="text-center text-sm mt-8 text-white/80">Already have an account?</div>
                 <div className="text-center mt-2">
                     <Link to="/login" className="text-sm text-primary hover:underline">
-                        Return to login page
+                        Sign in
                     </Link>
                 </div>
             </div>
