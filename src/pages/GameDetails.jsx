@@ -13,8 +13,11 @@ import {
     ChevronLeft,
     ChevronRight,
     FolderPlus,
-    Check
+    Check,
+    Loader2
 } from "lucide-react";
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
 import { useAuthStore } from "../store/authStore";
 import { useGameDetailsStore } from "../store/gameDetailsStore";
 import { useDownloadsStore } from "../store/downloadsStore";
@@ -33,6 +36,42 @@ import {
 } from "../utils/fileUtils";
 
 const TABLE_COLS = "44px 160px minmax(260px, 1fr) 160px minmax(240px, 280px)";
+
+const buildDownloadUrl = (storagePath, filename) => {
+    const base = import.meta.env.VITE_DOWNLOAD_FILE_URL;
+    if (!base) throw new Error("Missing VITE_DOWNLOAD_FILE_URL");
+    return `${base}?path=${encodeURIComponent(storagePath)}&name=${encodeURIComponent(filename || "download")}`;
+};
+
+const storagePathFromFirebaseUrl = (fileURL) => {
+    try {
+        const u = new URL(fileURL);
+        const m = u.pathname.match(/\/o\/(.+)$/);
+        if (!m) return null;
+        return decodeURIComponent(m[1]);
+    } catch {
+        return null;
+    }
+};
+
+const downloadViaIframe = (url) => {
+    const iframe = document.createElement("iframe");
+    iframe.style.display = "none";
+    iframe.src = url;
+    document.body.appendChild(iframe);
+    setTimeout(() => {
+        try {
+            iframe.remove();
+        } catch { }
+    }, 30000);
+};
+
+const fetchBlobFromCloudDownload = async (storagePath, filename) => {
+    const url = buildDownloadUrl(storagePath, filename);
+    const res = await fetch(url, { credentials: "omit" });
+    if (!res.ok) throw new Error(`Download failed (${res.status})`);
+    return await res.blob();
+};
 
 export default function GameDetails() {
     const { gameId } = useParams();
@@ -69,6 +108,8 @@ export default function GameDetails() {
     const [previewIndex, setPreviewIndex] = useState(0);
     const [creatingForFile, setCreatingForFile] = useState(null);
     const [newCollectionName, setNewCollectionName] = useState("");
+    const [selectedKeys, setSelectedKeys] = useState(() => new Set());
+    const [zipping, setZipping] = useState(false);
 
     useEffect(() => window.scrollTo(0, 0), []);
 
@@ -134,15 +175,46 @@ export default function GameDetails() {
 
     useEffect(() => setPage(1), [searchTerm, sortBy, selectedSectionNames, selectedExts]);
 
+    useEffect(() => {
+        setSelectedKeys(new Set());
+    }, [searchTerm, sortBy, selectedSectionNames, selectedExts, page]);
+
     const openPreviewAt = useCallback((globalIndex) => {
         setPreviewIndex(globalIndex);
         setPreviewOpen(true);
     }, []);
 
+    const fileKey = (f, idx) => String(f?.id || `${f?._sectionId || "sec"}::${f?._name || "file"}::${idx}`);
+
+    const isSelected = (k) => selectedKeys.has(k);
+
+    const toggleSelected = (k) => {
+        setSelectedKeys((prev) => {
+            const next = new Set(prev);
+            if (next.has(k)) next.delete(k);
+            else next.add(k);
+            return next;
+        });
+    };
+
+    const clearSelected = () => setSelectedKeys(new Set());
+
+    const selectedFiles = useMemo(() => {
+        if (!selectedKeys.size) return [];
+        const keysSet = selectedKeys;
+        const currentList = filteredFiles;
+        const arr = [];
+        for (let i = 0; i < currentList.length; i += 1) {
+            const f = currentList[i];
+            const k = fileKey(f, i);
+            if (keysSet.has(k)) arr.push({ f, i, k });
+        }
+        return arr;
+    }, [selectedKeys, filteredFiles]);
+
     const handleDownload = async (file) => {
-        const url = file?._url || file?.url;
-        const name = file?._name || file?.name || "download";
-        if (!url) return;
+        const url = file?._url || file?.url || file?.fileURL;
+        const name = file?._name || file?.name || file?.fileName || "download";
 
         if (user?.uid) {
             addDownload({
@@ -151,25 +223,65 @@ export default function GameDetails() {
                 sectionId: file?._sectionId || null,
                 sectionTitle: file?._sectionTitle || null,
                 fileName: name,
-                fileURL: url,
+                fileURL: url || null,
                 ext: file?._ext || getExt(name),
                 size: file?._size || null,
-                thumbURL: file?._thumb || null
+                thumbURL: file?._thumb || null,
+                storagePath: file?.storagePath || file?._storagePath || null
             });
         }
 
+        const storagePath =
+            file?.storagePath ||
+            file?._storagePath ||
+            (url ? storagePathFromFirebaseUrl(url) : null);
+
+        if (!storagePath) {
+            alert("Missing storagePath (and cannot extract from URL). Save snapshot.ref.fullPath during upload.");
+            return;
+        }
+
+        const dlUrl = buildDownloadUrl(storagePath, name);
+        downloadViaIframe(dlUrl);
+    };
+
+    const downloadSelectedAsZip = async () => {
+        if (!selectedFiles.length || zipping) return;
+
+        setZipping(true);
         try {
-            const response = await fetch(url);
-            const blob = await response.blob();
-            const blobUrl = window.URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = blobUrl;
-            a.download = name;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            window.URL.revokeObjectURL(blobUrl);
-        } catch { }
+            const zip = new JSZip();
+            const folderName = (game?.name || "assets").replace(/[^\w.\-]+/g, "_").slice(0, 50);
+            const folder = zip.folder(folderName) || zip;
+
+            for (let idx = 0; idx < selectedFiles.length; idx += 1) {
+                const { f } = selectedFiles[idx];
+                const url = f?._url || f?.url || f?.fileURL || null;
+                const baseName = f?._name || f?.name || f?.fileName || `file-${idx + 1}`;
+                const ext = getExt(baseName, f?._ext).toLowerCase();
+                const safeBase = String(baseName).replace(/[^\w.\-]+/g, "_");
+                const finalName =
+                    ext && !safeBase.toLowerCase().endsWith(`.${ext}`) ? `${safeBase}.${ext}` : safeBase;
+
+                const storagePath =
+                    f?.storagePath ||
+                    f?._storagePath ||
+                    (url ? storagePathFromFirebaseUrl(url) : null);
+
+                if (!storagePath) continue;
+
+                const blob = await fetchBlobFromCloudDownload(storagePath, finalName);
+                folder.file(finalName, blob);
+            }
+
+            const content = await zip.generateAsync({ type: "blob" });
+            saveAs(content, `${folderName}.zip`);
+            clearSelected();
+        } catch (e) {
+            alert(e?.message || "ZIP download failed");
+        } finally {
+            setZipping(false);
+        }
     };
 
     const fileToCollectionPayload = (f) => ({
@@ -180,7 +292,8 @@ export default function GameDetails() {
         size: f._size || null,
         gameId,
         sectionId: f._sectionId || null,
-        sectionTitle: f._sectionTitle || null
+        sectionTitle: f._sectionTitle || null,
+        storagePath: f.storagePath || f._storagePath || null
     });
 
     const addToExistingCollection = async (collectionId, file) => {
@@ -256,34 +369,61 @@ export default function GameDetails() {
                                 )}
 
                                 <div className={showLeftFilters ? "lg:col-span-9 min-w-0" : "lg:col-span-12 min-w-0"}>
-                                    <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3 mb-3 min-w-0">
-                                        <div className="relative w-full md:max-w-xs min-w-0">
-                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-black/60" size={16} />
-                                            <input
-                                                value={inputValue}
-                                                onChange={(e) => setInputValue(e.target.value)}
-                                                placeholder="Search"
-                                                className="w-full pl-9 pr-3 py-2 text-sm rounded-md bg-white text-black outline-none"
-                                            />
-                                        </div>
+                                    <div className="flex flex-col gap-2 mb-3 min-w-0">
+                                        <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3 min-w-0">
+                                            <div className="relative w-full md:max-w-xs min-w-0">
+                                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-black/60" size={16} />
+                                                <input
+                                                    value={inputValue}
+                                                    onChange={(e) => setInputValue(e.target.value)}
+                                                    placeholder="Search"
+                                                    className="w-full pl-9 pr-3 py-2 text-sm rounded-md bg-white text-black outline-none"
+                                                />
+                                            </div>
 
-                                        <button
-                                            onClick={() => setShowLeftFilters((v) => !v)}
-                                            className="text-sm text-white/80 hover:text-white w-fit"
-                                        >
-                                            {showLeftFilters ? "Hide Filters" : "Show Filters"}
-                                        </button>
-
-                                        <div className="md:ml-auto">
-                                            <select
-                                                value={sortBy}
-                                                onChange={(e) => setSortBy(e.target.value)}
-                                                className="bg-[#111318] border border-white/20 rounded-md px-3 py-2 text-sm outline-none"
+                                            <button
+                                                onClick={() => setShowLeftFilters((v) => !v)}
+                                                className="text-sm text-white/80 hover:text-white w-fit"
                                             >
-                                                <option value="recent">Recently Updated</option>
-                                                <option value="alpha">Alphabetical</option>
-                                            </select>
+                                                {showLeftFilters ? "Hide Filters" : "Show Filters"}
+                                            </button>
+
+                                            <div className="md:ml-auto flex items-center gap-2">
+                                                <select
+                                                    value={sortBy}
+                                                    onChange={(e) => setSortBy(e.target.value)}
+                                                    className="bg-[#111318] border border-white/20 rounded-md px-3 py-2 text-sm outline-none"
+                                                >
+                                                    <option value="recent">Recently Updated</option>
+                                                    <option value="alpha">Alphabetical</option>
+                                                </select>
+
+                                                <button
+                                                    type="button"
+                                                    disabled={!selectedFiles.length || zipping}
+                                                    onClick={downloadSelectedAsZip}
+                                                    className="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-primary text-black text-sm font-extrabold disabled:opacity-50"
+                                                >
+                                                    {zipping ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download size={16} />}
+                                                    ZIP ({selectedFiles.length || 0})
+                                                </button>
+
+                                                <button
+                                                    type="button"
+                                                    disabled={!selectedFiles.length || zipping}
+                                                    onClick={clearSelected}
+                                                    className="inline-flex items-center gap-2 px-3 py-2 rounded-md border border-white/25 text-white text-sm font-semibold disabled:opacity-50 hover:bg-white/5"
+                                                >
+                                                    Clear
+                                                </button>
+                                            </div>
                                         </div>
+
+                                        {!!selectedFiles.length && (
+                                            <div className="text-xs text-white/70">
+                                                Selected {selectedFiles.length} file{selectedFiles.length === 1 ? "" : "s"}.
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div className="border border-white/10 bg-[#111318] rounded-xl overflow-hidden min-w-0">
@@ -317,6 +457,7 @@ export default function GameDetails() {
                                                     const ext = getExt(f._name, f._ext);
                                                     const showImg = isImage(ext) && (f._thumb || f._url);
                                                     const showPdf = isPDF(ext);
+                                                    const k = fileKey(f, globalIndex);
 
                                                     return (
                                                         <div
@@ -325,7 +466,12 @@ export default function GameDetails() {
                                                             style={{ gridTemplateColumns: TABLE_COLS }}
                                                         >
                                                             <div className="flex items-center justify-center">
-                                                                <input type="checkbox" className="accent-primary" />
+                                                                <input
+                                                                    type="checkbox"
+                                                                    className="accent-primary"
+                                                                    checked={isSelected(k)}
+                                                                    onChange={() => toggleSelected(k)}
+                                                                />
                                                             </div>
 
                                                             <button

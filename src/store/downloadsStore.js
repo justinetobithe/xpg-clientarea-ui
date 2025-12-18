@@ -31,10 +31,11 @@ export const useDownloadsStore = create((set, get) => ({
             set({ error: null });
 
             const userId = payload?.userId;
-            const fileKey = payload?.fileKey || payload?.fileURL || payload?.fileName || "";
+            const fileKey = payload?.fileKey || payload?.storagePath || payload?.fileURL || payload?.fileName || "";
             if (!userId || !fileKey) throw new Error("Missing userId or fileKey");
 
             const id = makeDownloadDocId(userId, fileKey);
+
             await setDoc(
                 doc(db, "downloads", id),
                 {
@@ -47,6 +48,10 @@ export const useDownloadsStore = create((set, get) => ({
         } catch (e) {
             set({ error: e?.message || "Failed to store download" });
         }
+    },
+
+    addDownload: async (payload) => {
+        return await get().upsertDownload(payload);
     },
 
     startUserDownloadsListener: (userId, pageSize = 5) => {

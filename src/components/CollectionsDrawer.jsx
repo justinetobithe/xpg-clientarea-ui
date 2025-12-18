@@ -153,6 +153,30 @@ export default function CollectionsDrawer() {
         }
     };
 
+    const buildDownloadUrl = (storagePath, filename) => {
+        const base = import.meta.env.VITE_DOWNLOAD_FILE_URL;
+        if (!base) throw new Error("Missing VITE_DOWNLOAD_FILE_URL");
+        return `${base}?path=${encodeURIComponent(storagePath)}&name=${encodeURIComponent(filename || "download")}`;
+    };
+
+    const storagePathFromFirebaseUrl = (fileURL) => {
+        try {
+            const u = new URL(fileURL);
+            const m = u.pathname.match(/\/o\/(.+)$/);
+            if (!m) return null;
+            return decodeURIComponent(m[1]);
+        } catch {
+            return null;
+        }
+    };
+
+    const fetchBlobFromCloudDownload = async (storagePath, filename) => {
+        const url = buildDownloadUrl(storagePath, filename);
+        const res = await fetch(url, { credentials: "omit" });
+        if (!res.ok) throw new Error(`Download failed (${res.status})`);
+        return await res.blob();
+    };
+
     const handlePrepareDownload = async (collection) => {
         const items = collectionItems[collection.id] || [];
         if (!items.length || downloadingId) return;
@@ -165,25 +189,24 @@ export default function CollectionsDrawer() {
 
             for (let i = 0; i < items.length; i += 1) {
                 const item = items[i];
-                if (!item.fileURL) continue;
-
                 const baseName = item.fileName || `file-${i + 1}`;
                 const ext = getExt(baseName, item.ext).toLowerCase();
-                const safeBase = baseName.replace(/[^\w.\-]+/g, "_");
+                const safeBase = String(baseName).replace(/[^\w.\-]+/g, "_");
                 const fileName =
-                    ext && !safeBase.toLowerCase().endsWith(`.${ext}`)
-                        ? `${safeBase}.${ext}`
-                        : safeBase;
+                    ext && !safeBase.toLowerCase().endsWith(`.${ext}`) ? `${safeBase}.${ext}` : safeBase;
 
-                const res = await fetch(item.fileURL);
-                const blob = await res.blob();
+                const storagePath =
+                    item.storagePath ||
+                    (item.fileURL ? storagePathFromFirebaseUrl(item.fileURL) : null);
+
+                if (!storagePath) continue;
+
+                const blob = await fetchBlobFromCloudDownload(storagePath, fileName);
                 folder.file(fileName, blob);
             }
 
             const content = await zip.generateAsync({ type: "blob" });
-            const zipName = `${(collection.name || "collection")
-                .replace(/[^\w.\-]+/g, "_")
-                .slice(0, 50)}.zip`;
+            const zipName = `${String(collection.name || "collection").replace(/[^\w.\-]+/g, "_").slice(0, 50)}.zip`;
             saveAs(content, zipName);
         } catch (e) {
             console.error("prepare download error", e);
