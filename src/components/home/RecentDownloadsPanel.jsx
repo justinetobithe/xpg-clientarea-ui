@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { FileText, FileImage, File, Loader2 } from "lucide-react";
+import { FileText, FileImage, File, Loader2, DownloadCloud } from "lucide-react";
 import { useDownloadsStore } from "../../store/downloadsStore";
 
 function RecentDownloadSkeletonRow() {
@@ -28,7 +28,7 @@ const isImage = (ext) => IMAGE_EXTS.has((ext || "").toUpperCase());
 
 const buildDownloadUrl = (storagePath, filename) => {
     const base = import.meta.env.VITE_DOWNLOAD_FILE_URL;
-    if (!base) throw new Error("Missing VITE_DOWNLOAD_FILE_URL");
+    if (!base) return null;
     return `${base}?path=${encodeURIComponent(storagePath)}&name=${encodeURIComponent(filename || "download")}`;
 };
 
@@ -55,28 +55,30 @@ const downloadViaIframe = (url) => {
     }, 60000);
 };
 
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
 export default function RecentDownloadsPanel({ items = [], loading = false, error = null, skeletonCount = 5 }) {
     const upsertDownload = useDownloadsStore((s) => s.upsertDownload);
-    const [downloadingId, setDownloadingId] = useState(null);
+    const [downloadingKey, setDownloadingKey] = useState(null);
 
-    const idOf = useMemo(() => (f) => f?.id || f?.storagePath || f?.fileURL || f?.fileName || "", []);
+    const stableKeyOf = useMemo(
+        () => (f) =>
+            f?.fileKey ||
+            f?.storagePath ||
+            (f?.fileURL ? storagePathFromFirebaseUrl(f.fileURL) || f.fileURL : "") ||
+            f?.fileName ||
+            "",
+        []
+    );
 
     const handleDownload = async (f) => {
         const name = f.fileName || "download";
-        const rowId = idOf(f);
-        setDownloadingId(rowId);
+        const stableKey = stableKeyOf(f);
+        if (!stableKey) return;
+
+        setDownloadingKey(stableKey);
 
         try {
-            await upsertDownload({
-                userId: f.userId,
-                fileName: f.fileName,
-                fileURL: f.fileURL || null,
-                storagePath: f.storagePath || null,
-                thumbURL: f.thumbURL || f.thumb || f.thumbnail || null,
-                sectionTitle: f.sectionTitle || f._sectionTitle || "",
-                fileKey: f.storagePath || f.fileURL || name
-            });
-
             const storagePath = f.storagePath || (f.fileURL ? storagePathFromFirebaseUrl(f.fileURL) : null);
 
             if (!storagePath) {
@@ -84,18 +86,48 @@ export default function RecentDownloadsPanel({ items = [], loading = false, erro
                 return;
             }
 
+            await upsertDownload({
+                userId: f.userId,
+                fileName: f.fileName,
+                fileURL: f.fileURL || null,
+                storagePath,
+                thumbURL: f.thumbURL || f.thumb || f.thumbnail || null,
+                sectionTitle: f.sectionTitle || f._sectionTitle || "",
+                fileKey: storagePath
+            });
+
             const url = buildDownloadUrl(storagePath, name);
+            if (!url) {
+                alert("Missing VITE_DOWNLOAD_FILE_URL");
+                return;
+            }
+
             downloadViaIframe(url);
+            await sleep(800);
         } catch (e) {
             alert(e?.message || "Download failed");
         } finally {
-            setDownloadingId((cur) => (cur === rowId ? null : cur));
+            setDownloadingKey((cur) => (cur === stableKey ? null : cur));
         }
     };
 
     return (
         <div className="bg-card border border-border rounded-2xl p-5 md:p-6">
-            <div className="text-lg font-semibold mb-4 text-white">Recent Downloads</div>
+            <div className="flex items-center justify-between mb-4">
+                <div>
+                    <div className="text-lg font-semibold text-white flex items-center gap-2">
+                        <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-primary/15 border border-primary/30">
+                            <DownloadCloud className="h-4 w-4 text-primary" />
+                        </span>
+                        Recent Downloads
+                    </div>
+                    <div className="text-xs text-white/60 mt-1">Quick access to your latest downloaded assets</div>
+                </div>
+
+                {/* <div className="text-xs text-white/60 font-semibold">
+                    {Array.isArray(items) ? items.length : 0}
+                </div> */}
+            </div>
 
             <div className="rounded-xl overflow-hidden border border-white/10 bg-background/10">
                 <div className="grid grid-cols-[56px_minmax(0,1fr)_150px_90px] items-center gap-3 px-4 py-3 text-xs font-bold text-white/80 bg-white/5">
@@ -119,12 +151,13 @@ export default function RecentDownloadsPanel({ items = [], loading = false, erro
                         const name = f.fileName || "Untitled";
                         const ext = getExt(name);
                         const thumb = f.thumbURL || f.thumb || f.thumbnail || (isImage(ext) ? f.fileURL : null);
-                        const rowId = idOf(f);
-                        const isDownloading = downloadingId === rowId;
+
+                        const stableKey = stableKeyOf(f);
+                        const isDownloading = !!stableKey && downloadingKey === stableKey;
 
                         return (
                             <div
-                                key={rowId}
+                                key={stableKey || `${name}-${idx}`}
                                 className={[
                                     "grid grid-cols-[56px_minmax(0,1fr)_150px_90px] items-center gap-3 px-4 py-3",
                                     idx % 2 === 0 ? "bg-white/[0.02]" : "bg-white/[0.06]"
@@ -143,7 +176,10 @@ export default function RecentDownloadsPanel({ items = [], loading = false, erro
                                 </div>
 
                                 <div className="min-w-0 pr-2">
-                                    <div className="text-sm font-semibold text-white leading-snug break-words whitespace-normal line-clamp-3" title={name}>
+                                    <div
+                                        className="text-sm font-semibold text-white leading-snug break-words whitespace-normal line-clamp-3"
+                                        title={name}
+                                    >
                                         {name}
                                     </div>
                                     <div className="text-xs text-white/60 truncate mt-0.5">

@@ -1,9 +1,8 @@
-import { useState } from 'react';
-import { useAuthStore } from '../../store/authStore';
-import { Listbox, Fieldset, Field, Input, Label, Switch } from '@headlessui/react';
-import { ChevronDown } from 'lucide-react';
-
-import allTimezones from '../../timezone.json';
+import { useMemo, useState } from "react";
+import { useAuthStore } from "../../store/authStore";
+import { Listbox, Fieldset, Field, Input, Label, Switch } from "@headlessui/react";
+import { ChevronDown, Loader2 } from "lucide-react";
+import allTimezones from "../../timezone.json";
 
 const departments = [
     "Operations",
@@ -20,48 +19,57 @@ const departments = [
     "Other"
 ];
 
-const formatTimezone = (tz) => {
-    return tz.replace(/_/g, ' ');
-};
-
+const formatTimezone = (tz) => String(tz || "").replace(/_/g, " ");
 const formattedTimezones = allTimezones.map(formatTimezone);
 
 export default function GeneralSettings() {
     const user = useAuthStore((s) => s.user);
     const updateUserDetails = useAuthStore((s) => s.updateUserDetails);
 
-    const [name, setName] = useState(user?.name || '');
-    const [email, setEmail] = useState(user?.email || '');
-    const [company, setCompany] = useState(user?.company || '');
-    const initialDepartment = departments.includes(user?.department) ? user.department : departments[departments.length - 1];
-    const [department, setDepartment] = useState(initialDepartment);
+    const initialDepartment = useMemo(() => {
+        const d = user?.department || "";
+        return departments.includes(d) ? d : departments[departments.length - 1];
+    }, [user?.department]);
 
-    const initialTimezone = formattedTimezones.includes(user?.timezone) ? user.timezone : formattedTimezones[0];
+    const initialTimezone = useMemo(() => {
+        const tz = user?.timezone || "";
+        return formattedTimezones.includes(tz) ? tz : formattedTimezones[0];
+    }, [user?.timezone]);
+
+    const [name, setName] = useState(user?.name || user?.displayName || "");
+    const [email] = useState(user?.email || "");
+    const [company, setCompany] = useState(user?.company || "");
+    const [department, setDepartment] = useState(initialDepartment);
     const [timezone, setTimezone] = useState(initialTimezone);
-    const [subscribed, setSubscribed] = useState(user?.subscribedToNewsletter || false);
+    const [subscribed, setSubscribed] = useState(!!user?.subscribedToNewsletter);
     const [isSaving, setIsSaving] = useState(false);
     const [saveMessage, setSaveMessage] = useState("");
+    const [isError, setIsError] = useState(false);
 
-    const handleSave = () => {
+    const handleSave = async () => {
         setIsSaving(true);
         setSaveMessage("");
-        setTimeout(() => {
-            updateUserDetails({
+        setIsError(false);
+        try {
+            await updateUserDetails({
                 name,
-                email,
                 company,
                 department,
                 timezone,
                 subscribedToNewsletter: subscribed
             });
-            setIsSaving(false);
             setSaveMessage("Details updated successfully!");
-            setTimeout(() => setSaveMessage(""), 3000);
-        }, 1000);
+        } catch (e) {
+            setSaveMessage(e?.message || String(e) || "Failed to update details");
+            setIsError(true);
+        } finally {
+            setIsSaving(false);
+            setTimeout(() => setSaveMessage(""), 4000);
+        }
     };
 
     const InputField = ({ label, value, onChange, type = "text", disabled = false }) => (
-        <Field className="flex flex-col mb-4">
+        <Field className="flex flex-col">
             <Label className="text-sm font-medium text-white mb-1">{label}</Label>
             <Input
                 type={type}
@@ -74,24 +82,23 @@ export default function GeneralSettings() {
     );
 
     const SelectDropdown = ({ label, selected, setSelected, options }) => (
-        <Field className="flex flex-col mb-4">
+        <Field className="flex flex-col">
             <Label className="text-sm font-medium text-white mb-1">{label}</Label>
             <Listbox value={selected} onChange={setSelected}>
                 <div className="relative w-full">
-                    <Listbox.Button
-                        className="relative w-full cursor-default rounded-lg bg-input py-2 pl-3 pr-10 text-left text-sm text-white border border-border focus:outline-none focus-visible:ring-2 focus-visible:ring-primary transition h-[40px]"
-                    >
-                        <span className="block">{selected}</span>
+                    <Listbox.Button className="relative w-full cursor-default rounded-lg bg-input py-2 pl-3 pr-10 text-left text-sm text-white border border-border focus:outline-none focus-visible:ring-2 focus-visible:ring-primary transition h-[40px]">
+                        <span className="block truncate">{selected}</span>
                         <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                             <ChevronDown className="h-5 w-5 text-gray-400" aria-hidden="true" />
                         </span>
                     </Listbox.Button>
-                    <Listbox.Options className="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-background py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm border border-border z-20">
+
+                    <Listbox.Options className="absolute mt-2 max-h-64 w-full overflow-auto rounded-xl bg-[#0f1118] py-1 text-base shadow-lg ring-1 ring-black/30 focus:outline-none sm:text-sm border border-white/10 z-20">
                         {options.map((option) => (
                             <Listbox.Option
                                 key={option}
                                 className={({ active }) =>
-                                    `relative cursor-default select-none py-2 px-3 text-sm ${active ? 'bg-primary/50 text-white' : 'text-white'
+                                    `relative cursor-default select-none py-2 px-3 text-sm ${active ? "bg-primary/25 text-white" : "text-white/85"
                                     }`
                                 }
                                 value={option}
@@ -106,13 +113,17 @@ export default function GeneralSettings() {
     );
 
     return (
-        <Fieldset className="bg-card p-6 rounded-lg">
+        <Fieldset className="bg-card p-6 rounded-2xl border border-border">
+            <div className="text-white font-semibold text-lg mb-1">General Settings</div>
+            <div className="text-white/60 text-sm mb-6">Update your profile details and preferences.</div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-x-8">
                 <InputField label="Name" value={name} onChange={(e) => setName(e.target.value)} />
-                <InputField label="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                <InputField label="Email" value={email} onChange={() => { }} disabled />
 
                 <SelectDropdown label="Timezone" selected={timezone} setSelected={setTimezone} options={formattedTimezones} />
                 <InputField label="Company" value={company} onChange={(e) => setCompany(e.target.value)} />
+
                 <SelectDropdown label="Department" selected={department} setSelected={setDepartment} options={departments} />
 
                 <Field className="flex flex-col justify-end">
@@ -121,28 +132,32 @@ export default function GeneralSettings() {
                         <Switch
                             checked={subscribed}
                             onChange={setSubscribed}
-                            className={`${subscribed ? 'bg-primary' : 'bg-gray-600'} 
-                            relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-card mr-3`}
+                            className={`${subscribed ? "bg-primary" : "bg-gray-600"
+                                } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-card mr-3`}
                         >
                             <span
-                                className={`${subscribed ? 'translate-x-6' : 'translate-x-1'}
-                                inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
+                                className={`${subscribed ? "translate-x-6" : "translate-x-1"
+                                    } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
                             />
                         </Switch>
-                        <span className='text-sm text-white/70'>{subscribed ? 'Yes' : 'No'}</span>
+                        <span className="text-sm text-white/70">{subscribed ? "Yes" : "No"}</span>
                     </div>
                 </Field>
             </div>
 
-            <p className="text-xs text-white/70 mt-6 mb-4">Please note if you change your email address, you will be logged out until you have verified the new email address.</p>
+            <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3">
+                {saveMessage && (
+                    <span className={`text-sm ${isError ? "text-red-400" : "text-emerald-400"}`}>
+                        {saveMessage}
+                    </span>
+                )}
 
-            <div className="flex justify-end items-center">
-                {saveMessage && <span className="text-sm text-green-400 mr-4">{saveMessage}</span>}
                 <button
                     onClick={handleSave}
                     disabled={isSaving}
-                    className="bg-primary hover:bg-primary/90 text-white font-semibold py-2 px-6 rounded-lg transition disabled:opacity-50"
+                    className="inline-flex items-center justify-center gap-2 bg-primary hover:opacity-90 text-black font-bold py-2.5 px-6 rounded-xl transition disabled:opacity-50"
                 >
+                    {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
                     {isSaving ? "Saving..." : "Save Changes"}
                 </button>
             </div>

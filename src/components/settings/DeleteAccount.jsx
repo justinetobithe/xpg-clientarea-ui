@@ -1,40 +1,96 @@
-import { useState } from 'react';
-import { useAuthStore } from '../../store/authStore';
-import { useNavigate } from 'react-router-dom';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Field, Fieldset, Input, Label } from "@headlessui/react";
+import { Loader2, AlertTriangle } from "lucide-react";
+import { useAuthStore } from "../../store/authStore";
 
 export default function DeleteAccount() {
     const deleteAccount = useAuthStore((s) => s.deleteAccount);
     const navigate = useNavigate();
+
+    const [password, setPassword] = useState("");
+    const [deleteStorage, setDeleteStorage] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [msg, setMsg] = useState("");
+    const [isError, setIsError] = useState(false);
 
     const handleDelete = async () => {
-        if (!window.confirm("Are you sure you want to delete your account? This action is irreversible.")) {
+        setMsg("");
+        setIsError(false);
+
+        if (!password) {
+            setMsg("Password is required.");
+            setIsError(true);
             return;
         }
 
+        const ok = window.confirm("Delete your account permanently? This cannot be undone.");
+        if (!ok) return;
+
         setIsDeleting(true);
-        await deleteAccount();
-        navigate("/login");
+        try {
+            await deleteAccount(password, { deleteStorage });
+            navigate("/login");
+        } catch (e) {
+            setMsg(e?.message || String(e) || "Failed to delete account");
+            setIsError(true);
+        } finally {
+            setIsDeleting(false);
+            setTimeout(() => setMsg(""), 6000);
+        }
     };
 
     return (
-        <div className="bg-card p-6 rounded-lg">
-            <p className="text-white/70 text-sm mb-6">
-                You can delete your account by clicking the button below. This will remove all user data currently associated with your profile.
-            </p>
-            <p className="text-white/80 text-sm font-semibold mb-8">
-                This action is <span className="text-red-400">irreversible</span>, and you will need to re-register if you wish to access the client area again.
-            </p>
+        <Fieldset className="bg-card p-6 rounded-2xl border border-border">
+            <div className="flex items-start gap-3 mb-4">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/15 border border-red-500/30">
+                    <AlertTriangle className="h-5 w-5 text-red-300" />
+                </span>
+                <div>
+                    <div className="text-white font-semibold text-lg">Delete Account</div>
+                    <div className="text-white/60 text-sm">This will permanently remove your access.</div>
+                </div>
+            </div>
 
-            <div className="flex justify-start">
+            <div className="text-white/70 text-sm mb-6">
+                This action is <span className="text-red-300 font-semibold">irreversible</span>.
+            </div>
+
+            <Field className="flex flex-col mb-4 max-w-md">
+                <Label className="text-sm font-medium text-white mb-1">Confirm with Password</Label>
+                <Input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full bg-input rounded-lg py-2 px-3 text-sm text-white border border-border focus:outline-none focus:ring-1 focus:ring-red-400 h-[40px]"
+                />
+            </Field>
+
+            <div className="flex items-center gap-3 mb-6">
+                <input
+                    id="deleteStorage"
+                    type="checkbox"
+                    checked={deleteStorage}
+                    onChange={(e) => setDeleteStorage(e.target.checked)}
+                    className="h-4 w-4 rounded border-border bg-input"
+                />
+                <label htmlFor="deleteStorage" className="text-sm text-white/70">
+                    Also delete my storage files (optional)
+                </label>
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                 <button
                     onClick={handleDelete}
                     disabled={isDeleting}
-                    className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-6 rounded-lg transition disabled:opacity-50"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 px-6 transition disabled:opacity-50"
                 >
+                    {isDeleting && <Loader2 className="h-4 w-4 animate-spin" />}
                     {isDeleting ? "Deleting..." : "Delete Account"}
                 </button>
+
+                {msg && <div className={`text-sm ${isError ? "text-red-400" : "text-emerald-400"}`}>{msg}</div>}
             </div>
-        </div>
+        </Fieldset>
     );
 }

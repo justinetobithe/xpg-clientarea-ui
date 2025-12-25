@@ -23,7 +23,10 @@ export default function Home() {
     const stopAnnouncementsListener = useAnnouncementStore((s) => s.stopAnnouncementsListener);
 
     useEffect(() => {
-        if (!user?.uid) return;
+        if (!user?.uid) {
+            stopUserDownloadsListener();
+            return;
+        }
         startUserDownloadsListener(user.uid, 5);
         return () => stopUserDownloadsListener();
     }, [user?.uid, startUserDownloadsListener, stopUserDownloadsListener]);
@@ -55,16 +58,8 @@ export default function Home() {
 
             <div className="px-4 md:px-8 py-8 max-w-7xl mx-auto w-full">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <RecentDownloadsPanel
-                        items={downloads}
-                        loading={loadingDownloads}
-                        error={downloadsError}
-                    />
-                    <AnnouncementsPanel
-                        items={announcements}
-                        loading={loadingAnnouncements}
-                        error={announcementsError}
-                    />
+                    <RecentDownloadsPanel items={downloads} loading={loadingDownloads} error={downloadsError} />
+                    <AnnouncementsPanel items={announcements} loading={loadingAnnouncements} error={announcementsError} />
                 </div>
 
                 <GamesSection />

@@ -25,13 +25,21 @@ export const useDownloadsStore = create((set, get) => ({
     loading: false,
     error: null,
     unsub: null,
+    activeUserId: null,
+    activeLimit: null,
 
     upsertDownload: async (payload) => {
         try {
             set({ error: null });
 
             const userId = payload?.userId;
-            const fileKey = payload?.fileKey || payload?.storagePath || payload?.fileURL || payload?.fileName || "";
+            const fileKey =
+                payload?.fileKey ||
+                payload?.storagePath ||
+                payload?.fileURL ||
+                payload?.fileName ||
+                "";
+
             if (!userId || !fileKey) throw new Error("Missing userId or fileKey");
 
             const id = makeDownloadDocId(userId, fileKey);
@@ -57,8 +65,12 @@ export const useDownloadsStore = create((set, get) => ({
     startUserDownloadsListener: (userId, pageSize = 5) => {
         if (!userId) return;
 
-        get().stopUserDownloadsListener();
-        set({ loading: true, error: null });
+        const { unsub, activeUserId, activeLimit } = get();
+        if (unsub && activeUserId === userId && activeLimit === pageSize) return;
+
+        if (unsub) unsub();
+
+        set({ loading: true, error: null, unsub: null, activeUserId: userId, activeLimit: pageSize });
 
         const orderedQuery = query(
             collection(db, "downloads"),
@@ -67,43 +79,45 @@ export const useDownloadsStore = create((set, get) => ({
             limit(pageSize)
         );
 
-        const simpleQuery = query(
+        const fallbackQuery = query(
             collection(db, "downloads"),
             where("userId", "==", userId),
             limit(pageSize)
         );
 
-        const attachListener = (q, sortClient = false) =>
+        const attach = (q, clientSort) =>
             onSnapshot(
                 q,
                 (snap) => {
                     let rows = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-                    if (sortClient) {
+
+                    if (clientSort) {
                         rows.sort((a, b) => {
                             const ad = a.downloadedAt?.toMillis?.() || 0;
                             const bd = b.downloadedAt?.toMillis?.() || 0;
                             return bd - ad;
                         });
                     }
-                    set({ downloads: rows, loading: false });
+
+                    set({ downloads: rows, loading: false, error: null });
                 },
                 (err) => {
                     if (err?.code === "failed-precondition") {
-                        const unsubFallback = attachListener(simpleQuery, true);
-                        set({ unsub: unsubFallback, error: null });
+                        const u = attach(fallbackQuery, true);
+                        set({ unsub: u, error: null });
                         return;
                     }
                     set({ error: err?.message || "Failed to load downloads", loading: false });
                 }
             );
 
-        const unsub = attachListener(orderedQuery);
-        set({ unsub });
+        const nextUnsub = attach(orderedQuery, false);
+        set({ unsub: nextUnsub });
     },
 
     stopUserDownloadsListener: () => {
         const { unsub } = get();
         if (unsub) unsub();
-        set({ unsub: null });
+        set({ unsub: null, activeUserId: null, activeLimit: null, loading: false });
     }
 }));

@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import {
     X,
@@ -11,21 +11,66 @@ import {
     FileImage,
     FileText,
     File,
-    Download
+    Download,
+    Check
 } from "lucide-react";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import { useCollectionsStore } from "../store/collectionsStore";
 import { useAuthStore } from "../store/authStore";
-import {
-    getExt,
-    isImage,
-    isPDF,
-    parseSizeToBytes,
-    formatBytes
-} from "../utils/fileUtils";
+import { getExt, isImage, isPDF, parseSizeToBytes, formatBytes } from "../utils/fileUtils";
 
 const MAX_BYTES = 3 * 1024 * 1024 * 1024;
+
+function ProgressBar({ value }) {
+    const v = Math.max(0, Math.min(100, Number(value) || 0));
+    return (
+        <div className="h-1.5 w-full rounded-full bg-white/10 overflow-hidden">
+            <div
+                className="h-full rounded-full bg-primary transition-[width] duration-150"
+                style={{ width: `${v}%` }}
+            />
+        </div>
+    );
+}
+
+function useFakeProgress(active) {
+    const [pct, setPct] = useState(0);
+    const tRef = useRef(null);
+
+    useEffect(() => {
+        if (!active) {
+            setPct(0);
+            if (tRef.current) clearInterval(tRef.current);
+            tRef.current = null;
+            return;
+        }
+
+        setPct(8);
+        if (tRef.current) clearInterval(tRef.current);
+
+        tRef.current = setInterval(() => {
+            setPct((p) => {
+                if (p >= 92) return p;
+                const bump = p < 40 ? 6 : p < 70 ? 3 : 1;
+                return Math.min(92, p + bump);
+            });
+        }, 140);
+
+        return () => {
+            if (tRef.current) clearInterval(tRef.current);
+            tRef.current = null;
+        };
+    }, [active]);
+
+    const finish = async () => {
+        setPct(100);
+        await new Promise((r) => setTimeout(r, 250));
+        setPct(0);
+    };
+
+    return { pct, setPct, finish };
+}
 
 export default function CollectionsDrawer() {
     const {
@@ -47,11 +92,14 @@ export default function CollectionsDrawer() {
 
     const [editingId, setEditingId] = useState(null);
     const [editingName, setEditingName] = useState("");
+    const [editingOriginal, setEditingOriginal] = useState("");
     const [processingId, setProcessingId] = useState(null);
     const [creating, setCreating] = useState(false);
     const [confirmDeleteId, setConfirmDeleteId] = useState(null);
     const [expanded, setExpanded] = useState({});
     const [downloadingId, setDownloadingId] = useState(null);
+
+    const createProg = useFakeProgress(creating);
 
     const sortedCollections = useMemo(() => {
         return [...(collections || [])].sort((a, b) => {
@@ -64,9 +112,7 @@ export default function CollectionsDrawer() {
     useEffect(() => {
         if (!drawerOpen) return;
         sortedCollections.forEach((c) => {
-            if (c.id && !collectionItems[c.id]) {
-                loadCollectionItems(c.id);
-            }
+            if (c.id && !collectionItems[c.id]) loadCollectionItems(c.id);
         });
     }, [drawerOpen, sortedCollections, collectionItems, loadCollectionItems]);
 
@@ -88,9 +134,11 @@ export default function CollectionsDrawer() {
         try {
             setCreating(true);
             const newId = await createCollection(user.uid, "New Collection");
+            await createProg.finish();
             if (newId) {
                 setEditingId(newId);
                 setEditingName("New Collection");
+                setEditingOriginal("New Collection");
             }
         } finally {
             setCreating(false);
@@ -98,25 +146,51 @@ export default function CollectionsDrawer() {
     };
 
     const startEdit = (c) => {
+        const current = c?.name || "";
         setEditingId(c.id);
-        setEditingName(c.name || "");
+        setEditingName(current);
+        setEditingOriginal(current);
     };
 
     const cancelEdit = () => {
         setEditingId(null);
         setEditingName("");
+        setEditingOriginal("");
     };
 
     const saveEdit = async (id) => {
-        if (!id || !editingName.trim()) return;
+        if (!id) return;
+        const next = (editingName || "").trim();
+        if (!next) return;
+
+        if (next === (editingOriginal || "").trim()) {
+            cancelEdit();
+            return;
+        }
+
         setProcessingId(id);
         try {
-            await renameCollection(id, editingName.trim());
-            setEditingId(null);
-            setEditingName("");
+            await renameCollection(id, next);
+            cancelEdit();
         } finally {
             setProcessingId(null);
         }
+    };
+
+    const onBlurEdit = async (id) => {
+        if (!id) return;
+        if (processingId === id) return;
+        if (editingId !== id) return;
+
+        const next = (editingName || "").trim();
+        if (!next) return;
+
+        if (next === (editingOriginal || "").trim()) {
+            cancelEdit();
+            return;
+        }
+
+        await saveEdit(id);
     };
 
     const toggleCompleted = async (c) => {
@@ -144,19 +218,16 @@ export default function CollectionsDrawer() {
     };
 
     const toggleFiles = (id) => {
-        setExpanded((prev) => ({
-            ...prev,
-            [id]: !prev[id]
-        }));
-        if (!collectionItems[id]) {
-            loadCollectionItems(id);
-        }
+        setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
+        if (!collectionItems[id]) loadCollectionItems(id);
     };
 
     const buildDownloadUrl = (storagePath, filename) => {
         const base = import.meta.env.VITE_DOWNLOAD_FILE_URL;
         if (!base) throw new Error("Missing VITE_DOWNLOAD_FILE_URL");
-        return `${base}?path=${encodeURIComponent(storagePath)}&name=${encodeURIComponent(filename || "download")}`;
+        return `${base}?path=${encodeURIComponent(storagePath)}&name=${encodeURIComponent(
+            filename || "download"
+        )}`;
     };
 
     const storagePathFromFirebaseUrl = (fileURL) => {
@@ -196,8 +267,7 @@ export default function CollectionsDrawer() {
                     ext && !safeBase.toLowerCase().endsWith(`.${ext}`) ? `${safeBase}.${ext}` : safeBase;
 
                 const storagePath =
-                    item.storagePath ||
-                    (item.fileURL ? storagePathFromFirebaseUrl(item.fileURL) : null);
+                    item.storagePath || (item.fileURL ? storagePathFromFirebaseUrl(item.fileURL) : null);
 
                 if (!storagePath) continue;
 
@@ -206,7 +276,9 @@ export default function CollectionsDrawer() {
             }
 
             const content = await zip.generateAsync({ type: "blob" });
-            const zipName = `${String(collection.name || "collection").replace(/[^\w.\-]+/g, "_").slice(0, 50)}.zip`;
+            const zipName = `${String(collection.name || "collection")
+                .replace(/[^\w.\-]+/g, "_")
+                .slice(0, 50)}.zip`;
             saveAs(content, zipName);
         } catch (e) {
             console.error("prepare download error", e);
@@ -242,13 +314,17 @@ export default function CollectionsDrawer() {
                     >
                         <Dialog.Panel className="relative h-full w-full max-w-md bg-[#151620] border-l border-border shadow-xl flex flex-col">
                             <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-                                <div>
-                                    <Dialog.Title className="text-lg font-semibold text-white">
-                                        Collections
-                                    </Dialog.Title>
-                                    <p className="text-xs text-white/60">
-                                        Organise and download your selected assets
-                                    </p>
+                                <div className="min-w-0">
+                                    <Dialog.Title className="text-lg font-semibold text-white">Collections</Dialog.Title>
+                                    <p className="text-xs text-white/60">Organise and download your selected assets</p>
+                                    {creating && (
+                                        <div className="mt-2">
+                                            <ProgressBar value={createProg.pct} />
+                                            <div className="mt-1 text-[11px] text-white/60">
+                                                Creating collection… {Math.min(99, Math.round(createProg.pct))}%
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                                 <button
                                     type="button"
@@ -261,30 +337,22 @@ export default function CollectionsDrawer() {
 
                             <div className="px-5 py-3 border-b border-border flex items-center justify-between gap-3">
                                 <div className="text-xs md:text-sm text-white/70">
-                                    Total collections{" "}
-                                    <span className="font-semibold text-white">
-                                        {sortedCollections.length}
-                                    </span>
+                                    Total collections <span className="font-semibold text-white">{sortedCollections.length}</span>
                                     {globalStats.fileCount > 0 && (
                                         <span className="ml-2 text-white/60">
-                                            • {globalStats.fileCount} file
-                                            {globalStats.fileCount === 1 ? "" : "s"} •{" "}
-                                            {formatBytes(globalStats.totalBytes)} /{" "}
-                                            {formatBytes(MAX_BYTES)}
+                                            • {globalStats.fileCount} file{globalStats.fileCount === 1 ? "" : "s"} •{" "}
+                                            {formatBytes(globalStats.totalBytes)} / {formatBytes(MAX_BYTES)}
                                         </span>
                                     )}
                                 </div>
+
                                 <button
                                     type="button"
                                     onClick={startCreate}
                                     disabled={creating || !user}
                                     className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
                                 >
-                                    {creating ? (
-                                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                    ) : (
-                                        <Plus className="h-3.5 w-3.5" />
-                                    )}
+                                    {creating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
                                     New Collection
                                 </button>
                             </div>
@@ -306,8 +374,7 @@ export default function CollectionsDrawer() {
 
                                 {!loading && sortedCollections.length === 0 && (
                                     <div className="text-center text-sm text-white/60 py-10">
-                                        No collections yet. Create your first one to start grouping
-                                        files.
+                                        No collections yet. Create your first one to start grouping files.
                                     </div>
                                 )}
 
@@ -329,21 +396,47 @@ export default function CollectionsDrawer() {
                                             className="rounded-xl border border-border bg-white/5 px-4 py-4 flex flex-col gap-3"
                                         >
                                             <div className="flex items-start justify-between gap-3">
-                                                <div className="flex-1 space-y-1">
+                                                <div className="flex-1 space-y-1 min-w-0">
                                                     {isEditing ? (
-                                                        <input
-                                                            className="w-full rounded-md bg-black/60 border border-border px-2.5 py-1.5 text-sm text-white outline-none focus:ring-1 focus:ring-primary"
-                                                            value={editingName}
-                                                            onChange={(e) => setEditingName(e.target.value)}
-                                                            onKeyDown={(e) => {
-                                                                if (e.key === "Enter") saveEdit(c.id);
-                                                                if (e.key === "Escape") cancelEdit();
-                                                            }}
-                                                            autoFocus
-                                                        />
-                                                    ) : (
                                                         <div className="flex items-center gap-2">
-                                                            <div className="text-base font-semibold text-white break-words">
+                                                            <input
+                                                                className="w-full rounded-md bg-black/60 border border-border px-2.5 py-1.5 text-sm text-white outline-none focus:ring-1 focus:ring-primary"
+                                                                value={editingName}
+                                                                onChange={(e) => setEditingName(e.target.value)}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === "Enter") saveEdit(c.id);
+                                                                    if (e.key === "Escape") cancelEdit();
+                                                                }}
+                                                                onBlur={() => onBlurEdit(c.id)}
+                                                                autoFocus
+                                                                disabled={busy}
+                                                            />
+
+                                                            <button
+                                                                type="button"
+                                                                onMouseDown={(e) => e.preventDefault()}
+                                                                onClick={() => saveEdit(c.id)}
+                                                                disabled={busy || !editingName.trim()}
+                                                                className="inline-flex items-center justify-center rounded-md bg-primary px-2.5 py-2 text-xs font-bold text-black disabled:opacity-50"
+                                                                title="Save"
+                                                            >
+                                                                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                                                            </button>
+
+                                                            <button
+                                                                type="button"
+                                                                onMouseDown={(e) => e.preventDefault()}
+                                                                onClick={cancelEdit}
+                                                                disabled={busy}
+                                                                className="inline-flex items-center justify-center rounded-md border border-white/20 px-2.5 py-2 text-xs font-bold text-white/80 hover:bg-white/5 disabled:opacity-50"
+                                                                title="Cancel"
+                                                            >
+                                                                <X className="h-4 w-4" />
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex items-center gap-2 min-w-0">
+                                                            <div className="text-base font-semibold text-white break-words min-w-0">
                                                                 {c.name || "Untitled Collection"}
                                                             </div>
                                                             <button
@@ -359,16 +452,12 @@ export default function CollectionsDrawer() {
                                                     )}
 
                                                     <div className="mt-0.5 text-xs text-white/70 flex flex-wrap items-center gap-2">
-                                                        <span>
-                                                            {c.isCompleted ? "Completed" : "In progress"}
+                                                        <span>{c.isCompleted ? "Completed" : "In progress"}</span>
+                                                        <span className="inline-flex items-center rounded-full bg-black/40 px-2.5 py-0.5 text-[11px] text-white/80">
+                                                            {items.length} file{items.length === 1 ? "" : "s"}
                                                         </span>
                                                         <span className="inline-flex items-center rounded-full bg-black/40 px-2.5 py-0.5 text-[11px] text-white/80">
-                                                            {items.length} file
-                                                            {items.length === 1 ? "" : "s"}
-                                                        </span>
-                                                        <span className="inline-flex items-center rounded-full bg-black/40 px-2.5 py-0.5 text-[11px] text-white/80">
-                                                            {formatBytes(collectionBytes)} /{" "}
-                                                            {formatBytes(MAX_BYTES)}
+                                                            {formatBytes(collectionBytes)} / {formatBytes(MAX_BYTES)}
                                                         </span>
                                                     </div>
 
@@ -378,12 +467,8 @@ export default function CollectionsDrawer() {
                                                         disabled={itemsBusy}
                                                         className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80 disabled:opacity-50"
                                                     >
-                                                        {itemsBusy && (
-                                                            <Loader2 className="h-3 w-3 animate-spin" />
-                                                        )}
-                                                        {isExpanded
-                                                            ? "Hide file details"
-                                                            : "Show file details"}
+                                                        {itemsBusy && <Loader2 className="h-3 w-3 animate-spin" />}
+                                                        {isExpanded ? "Hide file details" : "Show file details"}
                                                     </button>
                                                 </div>
 
@@ -393,11 +478,7 @@ export default function CollectionsDrawer() {
                                                     disabled={busy}
                                                     className="flex-shrink-0 inline-flex items-center justify-center rounded-full p-1.5 text-emerald-400 hover:bg-emerald-500/10 disabled:opacity-50"
                                                 >
-                                                    {c.isCompleted ? (
-                                                        <CheckCircle2 className="h-5 w-5" />
-                                                    ) : (
-                                                        <Circle className="h-5 w-5" />
-                                                    )}
+                                                    {c.isCompleted ? <CheckCircle2 className="h-5 w-5" /> : <Circle className="h-5 w-5" />}
                                                 </button>
                                             </div>
 
@@ -405,18 +486,10 @@ export default function CollectionsDrawer() {
                                                 <button
                                                     type="button"
                                                     onClick={() => handlePrepareDownload(c)}
-                                                    disabled={
-                                                        downloadingId === c.id ||
-                                                        items.length === 0 ||
-                                                        itemsBusy
-                                                    }
+                                                    disabled={downloadingId === c.id || items.length === 0 || itemsBusy}
                                                     className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-primary px-3 py-2 text-xs md:text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50"
                                                 >
-                                                    {downloadingId === c.id ? (
-                                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                                    ) : (
-                                                        <Download className="h-4 w-4" />
-                                                    )}
+                                                    {downloadingId === c.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
                                                     Prepare Download
                                                 </button>
 
@@ -426,11 +499,7 @@ export default function CollectionsDrawer() {
                                                     disabled={busy}
                                                     className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-red-500/70 px-3 py-2 text-xs md:text-sm font-semibold text-red-100 hover:bg-red-500/10 disabled:opacity-60"
                                                 >
-                                                    {busy && confirmDeleteId === c.id ? (
-                                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                                    ) : (
-                                                        <Trash2 className="h-4 w-4" />
-                                                    )}
+                                                    {busy && confirmDeleteId === c.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                                                     Delete
                                                 </button>
                                             </div>
@@ -438,52 +507,31 @@ export default function CollectionsDrawer() {
                                             {isExpanded && (
                                                 <div className="mt-2 rounded-md bg-black/40 px-3 py-2">
                                                     <div className="flex items-center justify-between mb-2">
+                                                        <div className="text-xs text-white/70">Files ({items.length})</div>
                                                         <div className="text-xs text-white/70">
-                                                            Files ({items.length})
-                                                        </div>
-                                                        <div className="text-xs text-white/70">
-                                                            Total size: {formatBytes(collectionBytes)} /{" "}
-                                                            {formatBytes(MAX_BYTES)}
+                                                            Total size: {formatBytes(collectionBytes)} / {formatBytes(MAX_BYTES)}
                                                         </div>
                                                     </div>
 
                                                     {items.length === 0 && !itemsBusy && (
-                                                        <div className="text-xs text-white/50">
-                                                            No files in this collection yet.
-                                                        </div>
+                                                        <div className="text-xs text-white/50">No files in this collection yet.</div>
                                                     )}
 
                                                     {!itemsBusy && items.length > 0 && (
                                                         <ul className="max-h-44 overflow-y-auto text-xs space-y-1.5">
-                                                            {items.map((item) => {
-                                                                const ext = getExt(
-                                                                    item.fileName,
-                                                                    item.ext
-                                                                );
-                                                                const icon = isImage(ext)
-                                                                    ? FileImage
-                                                                    : isPDF(ext)
-                                                                        ? FileText
-                                                                        : File;
+                                                            {items.map((item, i) => {
+                                                                const ext = getExt(item.fileName, item.ext);
+                                                                const icon = isImage(ext) ? FileImage : isPDF(ext) ? FileText : File;
                                                                 const Icon = icon;
-
-                                                                const thumbSrc =
-                                                                    item.thumbURL ||
-                                                                    (isImage(ext) ? item.fileURL : null);
+                                                                const thumbSrc = item.thumbURL || (isImage(ext) ? item.fileURL : null);
 
                                                                 return (
-                                                                    <li
-                                                                        key={item.id}
-                                                                        className="flex items-center gap-3"
-                                                                    >
+                                                                    <li key={item.id || i} className="flex items-center gap-3">
                                                                         <div className="flex-shrink-0 w-10 h-10 rounded-md overflow-hidden bg-black/40 flex items-center justify-center">
                                                                             {thumbSrc ? (
                                                                                 <img
                                                                                     src={thumbSrc}
-                                                                                    alt={
-                                                                                        item.fileName ||
-                                                                                        "File preview"
-                                                                                    }
+                                                                                    alt={item.fileName || "File preview"}
                                                                                     className="w-full h-full object-cover"
                                                                                     loading="lazy"
                                                                                 />
@@ -493,26 +541,15 @@ export default function CollectionsDrawer() {
                                                                         </div>
 
                                                                         <div className="flex-1 min-w-0">
-                                                                            <div className="truncate text-[13px]">
-                                                                                {item.fileName || "Untitled file"}
-                                                                            </div>
-                                                                            <div className="text-[11px] text-white/45 truncate">
-                                                                                {item.sectionTitle || ""}
-                                                                            </div>
+                                                                            <div className="truncate text-[13px]">{item.fileName || "Untitled file"}</div>
+                                                                            <div className="text-[11px] text-white/45 truncate">{item.sectionTitle || ""}</div>
                                                                         </div>
 
                                                                         <div className="flex items-center gap-2 flex-shrink-0">
-                                                                            <span className="text-[11px] text-white/50">
-                                                                                {item.size || ext || ""}
-                                                                            </span>
+                                                                            <span className="text-[11px] text-white/50">{item.size || ext || ""}</span>
                                                                             <button
                                                                                 type="button"
-                                                                                onClick={() =>
-                                                                                    removeItemFromCollection(
-                                                                                        c.id,
-                                                                                        item.id
-                                                                                    )
-                                                                                }
+                                                                                onClick={() => removeItemFromCollection(c.id, item.id)}
                                                                                 className="p-1 rounded-full text-white/70 hover:bg-red-500/20 hover:text-red-200"
                                                                             >
                                                                                 <X className="w-3.5 h-3.5" />
@@ -543,13 +580,8 @@ export default function CollectionsDrawer() {
                                 <div className="absolute inset-x-0 bottom-0 px-4 pb-4">
                                     <div className="rounded-lg border border-red-500/60 bg-red-950/95 px-4 py-3 text-xs text-red-50 flex items-center justify-between gap-3">
                                         <div>
-                                            <div className="font-semibold mb-0.5">
-                                                Delete this collection?
-                                            </div>
-                                            <div className="text-[11px] opacity-90">
-                                                This cannot be undone. Files themselves will not be
-                                                deleted.
-                                            </div>
+                                            <div className="font-semibold mb-0.5">Delete this collection?</div>
+                                            <div className="text-[11px] opacity-90">This cannot be undone. Files themselves will not be deleted.</div>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <button

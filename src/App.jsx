@@ -4,6 +4,7 @@ import Register from "./pages/Register";
 import Home from "./pages/Home";
 import Settings from "./pages/Settings";
 import Announcements from "./pages/Announcements";
+import Search from "./pages/Search";
 import AnnouncementDetails from "./pages/AnnouncementDetails";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -24,9 +25,10 @@ function ProtectedLayout({ children }) {
     </div>
   );
 }
- 
+
 export default function App() {
   useAuthListener();
+
   const user = useAuthStore((s) => s.user);
   const loading = useAuthStore((s) => s.loading);
 
@@ -37,75 +39,22 @@ export default function App() {
       <DialogProvider>
         <BrowserRouter>
           <Routes>
-            <Route
-              path="/"
-              element={
-                user ? (
-                  <ProtectedLayout>
-                    <Home />
-                  </ProtectedLayout>
-                ) : (
-                  <Navigate to="/login" />
-                )
-              }
-            />
-            <Route
-              path="/announcements"
-              element={
-                user ? (
-                  <ProtectedLayout>
-                    <Announcements />
-                  </ProtectedLayout>
-                ) : (
-                  <Navigate to="/login" />
-                )
-              }
-            />
-            <Route
-              path="/announcement/:id"
-              element={
-                user ? (
-                  <ProtectedLayout>
-                    <AnnouncementDetails />
-                  </ProtectedLayout>
-                ) : (
-                  <Navigate to="/login" />
-                )
-              }
-            />
-            <Route
-              path="/game/:gameId"
-              element={
-                user ? (
-                  <ProtectedLayout>
-                    <GameDetails />
-                  </ProtectedLayout>
-                ) : (
-                  <Navigate to="/login" />
-                )
-              }
-            />
-            <Route
-              path="/settings"
-              element={
-                user ? (
-                  <ProtectedLayout>
-                    <Settings />
-                  </ProtectedLayout>
-                ) : (
-                  <Navigate to="/login" />
-                )
-              }
-            />
-            <Route
-              path="/login"
-              element={!user ? <Login /> : <Navigate to="/" />}
-            />
-            <Route
-              path="/register"
-              element={!user ? <Register /> : <Navigate to="/" />}
-            />
+            <Route path="/" element={user ? <ProtectedLayout><Home /></ProtectedLayout> : <Navigate to="/login" />} />
+
+            <Route path="/search" element={user ? <ProtectedLayout><Search /></ProtectedLayout> : <Navigate to="/login" />} />
+
+            <Route path="/announcements" element={user ? <ProtectedLayout><Announcements /></ProtectedLayout> : <Navigate to="/login" />} />
+
+            <Route path="/announcement/:id" element={user ? <ProtectedLayout><AnnouncementDetails /></ProtectedLayout> : <Navigate to="/login" />} />
+
+            <Route path="/game/:gameId" element={user ? <ProtectedLayout><GameDetails /></ProtectedLayout> : <Navigate to="/login" />} />
+
+            <Route path="/settings" element={user ? <ProtectedLayout><Settings /></ProtectedLayout> : <Navigate to="/login" />} />
+
+            <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
+            <Route path="/register" element={!user ? <Register /> : <Navigate to="/" />} />
           </Routes>
+
         </BrowserRouter>
       </DialogProvider>
     </ToastProvider>

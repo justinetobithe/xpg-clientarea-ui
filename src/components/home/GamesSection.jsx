@@ -143,8 +143,8 @@ export default function GamesSection() {
                                             {({ selected }) => (
                                                 <span
                                                     className={`block truncate ${selected
-                                                            ? "font-medium"
-                                                            : "font-normal"
+                                                        ? "font-medium"
+                                                        : "font-normal"
                                                         }`}
                                                 >
                                                     {option.label}

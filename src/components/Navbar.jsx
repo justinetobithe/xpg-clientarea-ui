@@ -1,61 +1,37 @@
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Dialog, Transition, Menu as HMenu } from "@headlessui/react";
-import {
-    Menu,
-    Search,
-    User,
-    X,
-    LogOut,
-    Settings,
-    LayoutGrid,
-    Loader2
-} from "lucide-react";
+import { Menu, Search, User, X, LogOut, Settings, LayoutGrid, Loader2 } from "lucide-react";
 import { useAuthStore } from "../store/authStore";
 import { useCollectionsStore } from "../store/collectionsStore";
 import { signOut } from "firebase/auth";
 import { auth } from "../firebase";
 
-const games = [
-    "Baccarat",
-    "Blackjack",
-    "Roulette",
-    "Andar Bahar",
-    "Teen Patti",
-    "32 Cards",
-    "Sic Bo",
-    "Dragon Tiger"
-];
-
+const games = ["Baccarat", "Blackjack", "Roulette", "Andar Bahar", "Teen Patti", "32 Cards", "Sic Bo", "Dragon Tiger"];
 const other = ["Announcements", "Settings", "What’s New?"];
-
-const brands = [
-    "XPG Live",
-    "XPG Slots",
-    "XPG Virtuals",
-    "XPG White Label",
-    "EU Studios",
-    "HTML5 Client"
-];
+const brands = ["XPG Live", "XPG Slots", "XPG Virtuals", "XPG White Label", "EU Studios", "HTML5 Client"];
 
 export default function Navbar() {
     const [open, setOpen] = useState(false);
     const [scrollY, setScrollY] = useState(0);
     const [logoutLoading, setLogoutLoading] = useState(false);
 
+    const [searchValue, setSearchValue] = useState("");
+    const [searchNavLoading, setSearchNavLoading] = useState(false);
+
+    const timerRef = useRef(null);
+
     const { pathname } = useLocation();
     const nav = useNavigate();
+
     const clearUser = useAuthStore((s) => s.clearUser);
     const user = useAuthStore((s) => s.user);
     const userId = user?.uid;
 
     const collections = useCollectionsStore((s) => s.collections);
-    const startUserCollectionsListener = useCollectionsStore(
-        (s) => s.startUserCollectionsListener
-    );
-    const stopUserCollectionsListener = useCollectionsStore(
-        (s) => s.stopUserCollectionsListener
-    );
+    const startUserCollectionsListener = useCollectionsStore((s) => s.startUserCollectionsListener);
+    const stopUserCollectionsListener = useCollectionsStore((s) => s.stopUserCollectionsListener);
+    const clearCollectionsState = useCollectionsStore((s) => s.clearCollectionsState);
     const toggleDrawer = useCollectionsStore((s) => s.toggleDrawer);
 
     useEffect(() => {
@@ -71,10 +47,22 @@ export default function Navbar() {
     }, [pathname]);
 
     useEffect(() => {
-        if (!userId) return;
-        startUserCollectionsListener(userId);
-        return () => stopUserCollectionsListener();
-    }, [userId, startUserCollectionsListener, stopUserCollectionsListener]);
+        if (userId) {
+            startUserCollectionsListener(userId);
+            return;
+        }
+        stopUserCollectionsListener();
+        clearCollectionsState();
+    }, [userId, startUserCollectionsListener, stopUserCollectionsListener, clearCollectionsState]);
+
+    useEffect(() => {
+        return () => {
+            if (timerRef.current) clearTimeout(timerRef.current);
+        };
+    }, []);
+
+    const collectionsCount = collections?.length || 0;
+    const isTop = scrollY < 10;
 
     const navItem = (to, label) => (
         <Link
@@ -91,6 +79,8 @@ export default function Navbar() {
         setLogoutLoading(true);
         try {
             await signOut(auth);
+            stopUserCollectionsListener();
+            clearCollectionsState();
             clearUser();
             nav("/login");
         } finally {
@@ -98,32 +88,37 @@ export default function Navbar() {
         }
     };
 
-    const isTop = scrollY < 10;
-    const collectionsCount = collections?.length || 0;
+    const goSearch = (closeMobile = false) => {
+        const q = String(searchValue || "").trim();
+        if (!q) return;
+        if (searchNavLoading || logoutLoading) return;
+
+        if (timerRef.current) clearTimeout(timerRef.current);
+
+        setSearchNavLoading(true);
+
+        timerRef.current = setTimeout(() => {
+            if (closeMobile) setOpen(false);
+            nav(`/search?q=${encodeURIComponent(q)}`);
+            setSearchNavLoading(false);
+        }, 450);
+    };
+
+    const mobileGamesList = useMemo(() => games, []);
+    const mobileOtherList = useMemo(() => other, []);
+    const mobileBrandsList = useMemo(() => brands, []);
 
     return (
         <>
-            {logoutLoading && (
-                <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60">
-                    <div className="flex flex-col items-center gap-3 rounded-lg bg-[#1c1d26] px-6 py-5 border border-border">
-                        <Loader2 className="h-6 w-6 animate-spin text-white" />
-                        <span className="text-sm text-white/90">Logging out...</span>
-                    </div>
-                </div>
-            )}
-
             <header
                 className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isTop
-                        ? "bg-transparent border-b border-transparent shadow-none"
-                        : "bg-black/80 backdrop-blur-md border-b border-border shadow-lg"
+                    ? "bg-transparent border-b border-transparent shadow-none"
+                    : "bg-black/80 backdrop-blur-md border-b border-border shadow-lg"
                     }`}
             >
                 <div className="px-4 md:px-10 h-16 md:h-20 flex items-center justify-between">
                     <div className="flex items-center gap-6">
-                        <button
-                            onClick={() => setOpen(true)}
-                            className="md:hidden text-white"
-                        >
+                        <button onClick={() => setOpen(true)} className="md:hidden text-white">
                             <Menu size={26} />
                         </button>
 
@@ -153,19 +148,29 @@ export default function Navbar() {
                             className="hidden md:flex items-center gap-2 bg-primary text-primary-foreground font-semibold px-4 py-2.5 rounded-md text-sm"
                         >
                             Collections
-                            <span className="bg-black text-white text-xs rounded-full px-2">
-                                {collectionsCount}
-                            </span>
+                            <span className="bg-black text-white text-xs rounded-full px-2">{collectionsCount}</span>
                         </button>
 
                         <div className="hidden md:flex items-center bg-white rounded-md overflow-hidden">
                             <input
-                                className="px-3 py-2 text-sm text-black outline-none w-60"
+                                value={searchValue}
+                                onChange={(e) => setSearchValue(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") goSearch(false);
+                                }}
+                                disabled={logoutLoading}
+                                className="px-3 py-2 text-sm text-black outline-none w-60 disabled:opacity-70"
                                 placeholder="Search..."
                             />
-                            <div className="px-2 text-black">
-                                <Search size={16} />
-                            </div>
+
+                            <button
+                                type="button"
+                                onClick={() => goSearch(false)}
+                                disabled={logoutLoading || !String(searchValue || "").trim()}
+                                className="px-2 text-black disabled:opacity-70"
+                            >
+                                {searchNavLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search size={16} />}
+                            </button>
                         </div>
 
                         <HMenu as="div" className="relative hidden md:block">
@@ -207,11 +212,7 @@ export default function Navbar() {
                                                 className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-white ${active ? "bg-white/5" : ""
                                                     } disabled:opacity-60`}
                                             >
-                                                {logoutLoading ? (
-                                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                                ) : (
-                                                    <LogOut size={16} />
-                                                )}
+                                                {logoutLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut size={16} />}
                                                 Logout
                                             </button>
                                         )}
@@ -249,15 +250,33 @@ export default function Navbar() {
                         <Dialog.Panel className="fixed inset-y-0 left-0 w-full max-w-sm bg-[#23232f] text-white shadow-2xl">
                             <div className="px-6 py-5 flex items-center justify-between border-b border-white/10">
                                 <img src="/image/logo-white.png" className="h-8" />
-                                <button
-                                    onClick={() => setOpen(false)}
-                                    className="text-white/80 hover:text-white"
-                                >
+                                <button onClick={() => setOpen(false)} className="text-white/80 hover:text-white">
                                     <X size={24} />
                                 </button>
                             </div>
 
                             <div className="px-6 py-5 space-y-7">
+                                <div className="flex items-center bg-white rounded-md overflow-hidden">
+                                    <input
+                                        value={searchValue}
+                                        onChange={(e) => setSearchValue(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter") goSearch(true);
+                                        }}
+                                        disabled={logoutLoading}
+                                        className="px-3 py-2 text-sm text-black outline-none w-full disabled:opacity-70"
+                                        placeholder="Search..."
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => goSearch(true)}
+                                        disabled={logoutLoading || !String(searchValue || "").trim()}
+                                        className="px-2 text-black disabled:opacity-70"
+                                    >
+                                        {searchNavLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search size={16} />}
+                                    </button>
+                                </div>
+
                                 <div className="space-y-3">
                                     <button
                                         className="w-full text-left font-semibold text-primary text-2xl"
@@ -282,11 +301,9 @@ export default function Navbar() {
                                 <div className="border-t border-white/10" />
 
                                 <div>
-                                    <div className="text-sm font-semibold uppercase tracking-wide text-white/60 mb-3">
-                                        Games
-                                    </div>
+                                    <div className="text-sm font-semibold uppercase tracking-wide text-white/60 mb-3">Games</div>
                                     <div className="space-y-2 text-white/90 text-lg">
-                                        {games.map((g) => (
+                                        {mobileGamesList.map((g) => (
                                             <div key={g}>{g}</div>
                                         ))}
                                     </div>
@@ -295,11 +312,20 @@ export default function Navbar() {
                                 <div className="border-t border-white/10" />
 
                                 <div>
-                                    <div className="text-sm font-semibold uppercase tracking-wide text-white/60 mb-3">
-                                        Other
-                                    </div>
+                                    <div className="text-sm font-semibold uppercase tracking-wide text-white/60 mb-3">Brands</div>
                                     <div className="space-y-2 text-white/90 text-lg">
-                                        {other.map((o) => (
+                                        {mobileBrandsList.map((b) => (
+                                            <div key={b}>{b}</div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="border-t border-white/10" />
+
+                                <div>
+                                    <div className="text-sm font-semibold uppercase tracking-wide text-white/60 mb-3">Other</div>
+                                    <div className="space-y-2 text-white/90 text-lg">
+                                        {mobileOtherList.map((o) => (
                                             <div key={o}>{o}</div>
                                         ))}
 
@@ -321,11 +347,7 @@ export default function Navbar() {
                                             disabled={logoutLoading}
                                             className="w-full text-left flex items-center gap-2 text-white/90 text-lg disabled:opacity-60 mt-3"
                                         >
-                                            {logoutLoading ? (
-                                                <Loader2 className="h-5 w-5 animate-spin" />
-                                            ) : (
-                                                <LogOut size={20} />
-                                            )}
+                                            {logoutLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <LogOut size={20} />}
                                             Logout
                                         </button>
                                     </div>
