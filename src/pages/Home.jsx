@@ -27,12 +27,12 @@ export default function Home() {
             stopUserDownloadsListener();
             return;
         }
-        startUserDownloadsListener(user.uid, 5);
+        startUserDownloadsListener(user.uid, 10);
         return () => stopUserDownloadsListener();
     }, [user?.uid, startUserDownloadsListener, stopUserDownloadsListener]);
 
     useEffect(() => {
-        startAnnouncementsListener(3);
+        startAnnouncementsListener(8);
         return () => stopAnnouncementsListener();
     }, [startAnnouncementsListener, stopAnnouncementsListener]);
 

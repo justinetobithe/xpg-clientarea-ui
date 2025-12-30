@@ -1,15 +1,23 @@
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Dialog, Transition, Menu as HMenu } from "@headlessui/react";
-import { Menu, Search, User, X, LogOut, Settings, LayoutGrid, Loader2 } from "lucide-react";
+import {
+    Menu,
+    Search,
+    User,
+    X,
+    LogOut,
+    Settings,
+    LayoutGrid,
+    Loader2,
+    ExternalLink,
+    ChevronRight
+} from "lucide-react";
 import { useAuthStore } from "../store/authStore";
 import { useCollectionsStore } from "../store/collectionsStore";
+import { useLiveGamesStore } from "../store/liveGamesStore";
 import { signOut } from "firebase/auth";
 import { auth } from "../firebase";
-
-const games = ["Baccarat", "Blackjack", "Roulette", "Andar Bahar", "Teen Patti", "32 Cards", "Sic Bo", "Dragon Tiger"];
-const other = ["Announcements", "Settings", "What’s New?"];
-const brands = ["XPG Live", "XPG Slots", "XPG Virtuals", "XPG White Label", "EU Studios", "HTML5 Client"];
 
 export default function Navbar() {
     const [open, setOpen] = useState(false);
@@ -34,6 +42,13 @@ export default function Navbar() {
     const clearCollectionsState = useCollectionsStore((s) => s.clearCollectionsState);
     const toggleDrawer = useCollectionsStore((s) => s.toggleDrawer);
 
+    const liveGames = useLiveGamesStore((s) => s.items);
+    const liveGamesLoading = useLiveGamesStore((s) => s.loading);
+    const startLiveGamesListener = useLiveGamesStore((s) => s.startLiveGamesListener);
+    const stopLiveGamesListener = useLiveGamesStore((s) => s.stopLiveGamesListener);
+
+    const xpgLiveBase = (import.meta.env.VITE_XPG_LIVE_URL).replace(/\/+$/, "");
+
     useEffect(() => {
         const onScroll = () => setScrollY(window.scrollY || 0);
         onScroll();
@@ -56,6 +71,11 @@ export default function Navbar() {
     }, [userId, startUserCollectionsListener, stopUserCollectionsListener, clearCollectionsState]);
 
     useEffect(() => {
+        startLiveGamesListener(30);
+        return () => stopLiveGamesListener();
+    }, [startLiveGamesListener, stopLiveGamesListener]);
+
+    useEffect(() => {
         return () => {
             if (timerRef.current) clearTimeout(timerRef.current);
         };
@@ -63,16 +83,6 @@ export default function Navbar() {
 
     const collectionsCount = collections?.length || 0;
     const isTop = scrollY < 10;
-
-    const navItem = (to, label) => (
-        <Link
-            to={to}
-            className={`text-base font-semibold tracking-wide transition hover:opacity-80 ${pathname === to ? "text-primary" : "text-white"
-                }`}
-        >
-            {label}
-        </Link>
-    );
 
     const onLogout = async () => {
         if (logoutLoading) return;
@@ -96,7 +106,6 @@ export default function Navbar() {
         if (timerRef.current) clearTimeout(timerRef.current);
 
         setSearchNavLoading(true);
-
         timerRef.current = setTimeout(() => {
             if (closeMobile) setOpen(false);
             nav(`/search?q=${encodeURIComponent(q)}`);
@@ -104,17 +113,57 @@ export default function Navbar() {
         }, 450);
     };
 
-    const mobileGamesList = useMemo(() => games, []);
-    const mobileOtherList = useMemo(() => other, []);
-    const mobileBrandsList = useMemo(() => brands, []);
+    const openLiveGame = useCallback(
+        (id) => {
+            if (!id) return;
+            const url = `${xpgLiveBase}/live-games/${id}`;
+            window.open(url, "_blank", "noopener,noreferrer");
+        },
+        [xpgLiveBase]
+    );
+
+    const mobilePrimaryLinks = useMemo(
+        () => [
+            { label: "Home", to: "/" },
+            { label: "Announcements", to: "/announcements" }
+        ],
+        []
+    );
+
+    const mobileOtherLinks = useMemo(
+        () => [
+            { label: "Announcements", to: "/announcements" },
+            { label: "Settings", to: "/settings" }
+        ],
+        []
+    );
+
+    const MobileRow = ({ label, onClick, right }) => (
+        <button
+            type="button"
+            onClick={onClick}
+            className={[
+                "w-full text-left px-2 py-3 rounded-xl transition",
+                "hover:bg-white/[0.06] active:bg-white/[0.08]",
+                "flex items-center justify-between gap-3"
+            ].join(" ")}
+        >
+            <span className="text-[18px] font-semibold text-white">{label}</span>
+            {right || <ChevronRight className="h-5 w-5 text-white/35" />}
+        </button>
+    );
+
+    const MobileSectionTitle = ({ children }) => (
+        <div className="text-[12px] font-bold uppercase tracking-[0.18em] text-white/45">{children}</div>
+    );
 
     return (
         <>
             <header
-                className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isTop
-                    ? "bg-transparent border-b border-transparent shadow-none"
-                    : "bg-black/80 backdrop-blur-md border-b border-border shadow-lg"
-                    }`}
+                className={[
+                    "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
+                    isTop ? "bg-transparent" : "bg-black/80 backdrop-blur-md shadow-lg"
+                ].join(" ")}
             >
                 <div className="px-4 md:px-10 h-16 md:h-20 flex items-center justify-between">
                     <div className="flex items-center gap-6">
@@ -123,12 +172,25 @@ export default function Navbar() {
                         </button>
 
                         <Link to="/" className="flex items-center gap-3 shrink-0">
-                            <img src="/image/logo-white.png" className="h-8 md:h-11" />
+                            <img src="/image/logo-white.png" className="h-8 md:h-11" alt="logo" />
                         </Link>
 
                         <nav className="hidden md:flex items-center gap-8">
-                            {navItem("/", "Home")}
-                            {navItem("/announcements", "Announcement")}
+                            <Link
+                                to="/"
+                                className={`text-base font-semibold tracking-wide transition hover:opacity-80 ${pathname === "/" ? "text-primary" : "text-white"
+                                    }`}
+                            >
+                                Home
+                            </Link>
+
+                            <Link
+                                to="/announcements"
+                                className={`text-base font-semibold tracking-wide transition hover:opacity-80 ${pathname === "/announcements" ? "text-primary" : "text-white"
+                                    }`}
+                            >
+                                Announcements
+                            </Link>
                         </nav>
                     </div>
 
@@ -187,17 +249,14 @@ export default function Navbar() {
                                 leaveFrom="opacity-100 translate-y-0"
                                 leaveTo="opacity-0 translate-y-1"
                             >
-                                <HMenu.Items className="absolute right-0 mt-3 w-56 rounded-xl border border-border bg-card shadow-xl p-2 focus:outline-none">
-                                    <div className="px-3 py-2 text-sm text-white/70">
-                                        {user?.displayName || user?.email || "Account"}
-                                    </div>
+                                <HMenu.Items className="absolute right-0 mt-3 w-56 rounded-xl bg-card shadow-xl p-2 focus:outline-none">
+                                    <div className="px-3 py-2 text-sm text-white/70">{user?.displayName || user?.email || "Account"}</div>
 
                                     <HMenu.Item>
                                         {({ active }) => (
                                             <Link
                                                 to="/settings"
-                                                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-white ${active ? "bg-white/5" : ""
-                                                    }`}
+                                                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-white ${active ? "bg-white/5" : ""}`}
                                             >
                                                 <Settings size={16} /> Settings
                                             </Link>
@@ -247,108 +306,104 @@ export default function Navbar() {
                         leaveFrom="translate-x-0"
                         leaveTo="-translate-x-full"
                     >
-                        <Dialog.Panel className="fixed inset-y-0 left-0 w-full max-w-sm bg-[#23232f] text-white shadow-2xl">
-                            <div className="px-6 py-5 flex items-center justify-between border-b border-white/10">
-                                <img src="/image/logo-white.png" className="h-8" />
-                                <button onClick={() => setOpen(false)} className="text-white/80 hover:text-white">
-                                    <X size={24} />
+                        <Dialog.Panel className="fixed inset-y-0 left-0 w-full max-w-sm bg-[#1f2230] text-white shadow-2xl">
+                            <div className="px-6 py-5 flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <img src="/image/logo-white.png" className="h-8" alt="logo" />
+                                    <div className="text-white/70 text-sm font-semibold">Client Area</div>
+                                </div>
+
+                                <button onClick={() => setOpen(false)} className="text-white/70 hover:text-white">
+                                    <X size={22} />
                                 </button>
                             </div>
 
-                            <div className="px-6 py-5 space-y-7">
-                                <div className="flex items-center bg-white rounded-md overflow-hidden">
-                                    <input
-                                        value={searchValue}
-                                        onChange={(e) => setSearchValue(e.target.value)}
-                                        onKeyDown={(e) => {
-                                            if (e.key === "Enter") goSearch(true);
-                                        }}
-                                        disabled={logoutLoading}
-                                        className="px-3 py-2 text-sm text-black outline-none w-full disabled:opacity-70"
-                                        placeholder="Search..."
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => goSearch(true)}
-                                        disabled={logoutLoading || !String(searchValue || "").trim()}
-                                        className="px-2 text-black disabled:opacity-70"
-                                    >
-                                        {searchNavLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search size={16} />}
-                                    </button>
+                            <div className="px-6 pb-6 space-y-6">
+                                <div className="space-y-1">
+                                    {mobilePrimaryLinks.map((l) => (
+                                        <MobileRow
+                                            key={l.to}
+                                            label={l.label}
+                                            onClick={() => {
+                                                setOpen(false);
+                                                nav(l.to);
+                                            }}
+                                        />
+                                    ))}
+
                                 </div>
 
-                                <div className="space-y-3">
-                                    <button
-                                        className="w-full text-left font-semibold text-primary text-2xl"
-                                        onClick={() => {
-                                            setOpen(false);
-                                            nav("/");
-                                        }}
-                                    >
-                                        Home
-                                    </button>
-                                    <button
-                                        className="w-full text-left text-white/90 text-xl"
-                                        onClick={() => {
-                                            setOpen(false);
-                                            nav("/announcements");
-                                        }}
-                                    >
-                                        Announcements
-                                    </button>
+                                <div className="h-px bg-white/10" />
+
+                                <div className="space-y-2">
+                                    <MobileSectionTitle>Live Games</MobileSectionTitle>
+
+                                    {liveGamesLoading && <div className="text-white/60 text-sm px-2 py-2">Loading...</div>}
+
+                                    {!liveGamesLoading && (!liveGames || liveGames.length === 0) && (
+                                        <div className="text-white/60 text-sm px-2 py-2">No live games found.</div>
+                                    )}
+
+                                    {!liveGamesLoading && liveGames?.length > 0 && (
+                                        <div className="space-y-1">
+                                            {liveGames.slice(0, 12).map((lg) => (
+                                                <button
+                                                    key={lg.id}
+                                                    type="button"
+                                                    onClick={() => openLiveGame(lg.id)}
+                                                    className="w-full text-left px-2 py-3 rounded-xl hover:bg-white/[0.06] active:bg-white/[0.08] transition flex items-center justify-between gap-3"
+                                                >
+                                                    <span className="text-white font-semibold text-[16px] truncate">{lg.name || "Untitled"}</span>
+                                                    <span className="text-[11px] text-white/55 px-2 py-1 rounded-full bg-black/30 shrink-0">
+                                                        Open
+                                                    </span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
 
-                                <div className="border-t border-white/10" />
+                                <div className="h-px bg-white/10" />
 
-                                <div>
-                                    <div className="text-sm font-semibold uppercase tracking-wide text-white/60 mb-3">Games</div>
-                                    <div className="space-y-2 text-white/90 text-lg">
-                                        {mobileGamesList.map((g) => (
-                                            <div key={g}>{g}</div>
-                                        ))}
-                                    </div>
-                                </div>
+                                <div className="space-y-2">
+                                    <MobileSectionTitle>Other</MobileSectionTitle>
 
-                                <div className="border-t border-white/10" />
-
-                                <div>
-                                    <div className="text-sm font-semibold uppercase tracking-wide text-white/60 mb-3">Brands</div>
-                                    <div className="space-y-2 text-white/90 text-lg">
-                                        {mobileBrandsList.map((b) => (
-                                            <div key={b}>{b}</div>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div className="border-t border-white/10" />
-
-                                <div>
-                                    <div className="text-sm font-semibold uppercase tracking-wide text-white/60 mb-3">Other</div>
-                                    <div className="space-y-2 text-white/90 text-lg">
-                                        {mobileOtherList.map((o) => (
-                                            <div key={o}>{o}</div>
+                                    <div className="space-y-1">
+                                        {mobileOtherLinks.map((l) => (
+                                            <MobileRow
+                                                key={l.to}
+                                                label={l.label}
+                                                onClick={() => {
+                                                    setOpen(false);
+                                                    nav(l.to);
+                                                }}
+                                            />
                                         ))}
 
                                         <button
+                                            type="button"
                                             onClick={() => {
                                                 setOpen(false);
                                                 toggleDrawer();
                                             }}
-                                            className="w-full text-left flex items-center justify-between text-lg mt-1"
+                                            className="w-full text-left px-2 py-3 rounded-xl hover:bg-primary/10 active:bg-primary/15 transition flex items-center justify-between gap-3"
                                         >
-                                            <span>Collections</span>
-                                            <span className="bg-primary text-black text-xs rounded-full px-2 py-0.5">
-                                                {collectionsCount}
-                                            </span>
+                                            <span className="text-primary font-bold text-[16px]">Collections</span>
+                                            <span className="bg-primary text-black text-xs rounded-full px-2.5 py-1">{collectionsCount}</span>
                                         </button>
 
                                         <button
+                                            type="button"
                                             onClick={onLogout}
                                             disabled={logoutLoading}
-                                            className="w-full text-left flex items-center gap-2 text-white/90 text-lg disabled:opacity-60 mt-3"
+                                            className={[
+                                                "w-full text-left px-2 py-3 rounded-xl transition flex items-center gap-3",
+                                                "hover:bg-white/[0.06] active:bg-white/[0.08]",
+                                                logoutLoading ? "opacity-60" : ""
+                                            ].join(" ")}
                                         >
-                                            {logoutLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <LogOut size={20} />}
-                                            Logout
+                                            {logoutLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <LogOut size={18} />}
+                                            <span className="text-white/90 font-semibold text-[16px]">Logout</span>
                                         </button>
                                     </div>
                                 </div>

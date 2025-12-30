@@ -1,6 +1,6 @@
-import { Fragment, useEffect, useMemo, useState, useCallback, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { Tab, Popover, Transition } from "@headlessui/react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { Dialog, Tab, Popover, Transition } from "@headlessui/react";
 import {
     Search,
     Download,
@@ -14,10 +14,12 @@ import {
     ChevronRight,
     FolderPlus,
     Check,
-    Loader2
+    Loader2,
+    X
 } from "lucide-react";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
+import { getAuth } from "firebase/auth";
 import { useAuthStore } from "../store/authStore";
 import { useGameDetailsStore } from "../store/gameDetailsStore";
 import { useDownloadsStore } from "../store/downloadsStore";
@@ -32,7 +34,9 @@ import {
     isPDF,
     flattenSectionsToFiles,
     collectExtensions,
-    collectSectionNames
+    collectSectionNames,
+    parseSizeToBytes,
+    formatBytes
 } from "../utils/fileUtils";
 
 const TABLE_COLS = "44px 160px minmax(260px, 1fr) 160px minmax(240px, 280px)";
@@ -100,24 +104,353 @@ const storagePathFromFirebaseUrl = (fileURL) => {
     }
 };
 
-const downloadViaIframe = (url) => {
-    const iframe = document.createElement("iframe");
-    iframe.style.display = "none";
-    iframe.src = url;
-    document.body.appendChild(iframe);
-    setTimeout(() => {
-        try {
-            iframe.remove();
-        } catch { }
-    }, 30000);
+const downloadViaIframe = async (storagePath, filename) => {
+    const auth = getAuth();
+    const token = await auth.currentUser?.getIdToken?.();
+    if (!token) throw new Error("Not authenticated");
+
+    const url = buildDownloadUrl(storagePath, filename);
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) throw new Error(`Download failed (${res.status})`);
+
+    const blob = await res.blob();
+    saveAs(blob, filename || "download");
 };
 
 const fetchBlobFromCloudDownload = async (storagePath, filename) => {
+    const auth = getAuth();
+    const token = await auth.currentUser?.getIdToken?.();
+    if (!token) throw new Error("Not authenticated");
+
     const url = buildDownloadUrl(storagePath, filename);
-    const res = await fetch(url, { credentials: "omit" });
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
     if (!res.ok) throw new Error(`Download failed (${res.status})`);
     return await res.blob();
 };
+
+function MobileCollectionSheet({
+    open,
+    onClose,
+    collections,
+    file,
+    ensureItemsLoaded,
+    isInCollection,
+    addToExistingCollection,
+    creatingForFile,
+    setCreatingForFile,
+    newCollectionName,
+    setNewCollectionName,
+    creatingCollection,
+    createStage,
+    createProg,
+    createAndAddCollection,
+    addingMap,
+    addedFlash
+}) {
+    const url = file?._url || file?.url || file?.fileURL || "";
+    const isCreatingThis = creatingForFile?.id === file?.id;
+
+    return (
+        <Transition appear show={open} as={Fragment}>
+            <Dialog as="div" className="relative z-50" onClose={onClose}>
+                <Transition.Child
+                    as={Fragment}
+                    enter="ease-out duration-200"
+                    enterFrom="opacity-0"
+                    enterTo="opacity-100"
+                    leave="ease-in duration-150"
+                    leaveFrom="opacity-100"
+                    leaveTo="opacity-0"
+                >
+                    <div className="fixed inset-0 bg-black/60" />
+                </Transition.Child>
+
+                <div className="fixed inset-0 overflow-y-auto">
+                    <div className="min-h-full flex items-end justify-center p-0">
+                        <Transition.Child
+                            as={Fragment}
+                            enter="ease-out duration-200"
+                            enterFrom="opacity-0 translate-y-6"
+                            enterTo="opacity-100 translate-y-0"
+                            leave="ease-in duration-150"
+                            leaveFrom="opacity-100 translate-y-0"
+                            leaveTo="opacity-0 translate-y-6"
+                        >
+                            <Dialog.Panel className="w-full rounded-t-2xl border border-white/10 bg-[#0f121a] px-4 pt-4 pb-6">
+                                <div className="flex items-center justify-between">
+                                    <Dialog.Title className="text-base font-extrabold text-white">Add to Collection</Dialog.Title>
+                                    <button
+                                        type="button"
+                                        onClick={onClose}
+                                        className="h-9 w-9 rounded-full bg-white/[0.06] hover:bg-white/[0.1] grid place-items-center"
+                                    >
+                                        <X className="h-5 w-5 text-white/80" />
+                                    </button>
+                                </div>
+
+                                <div className="mt-2 text-xs text-white/60">Pick a collection below, or create a new one.</div>
+
+                                <div className="mt-4 max-h-[45vh] overflow-y-auto">
+                                    {collections.length === 0 && (
+                                        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm text-white/70">
+                                            No collections yet.
+                                        </div>
+                                    )}
+
+                                    <div className="space-y-2">
+                                        {collections.map((c) => {
+                                            const busyKey = `${c.id}::${url}`;
+                                            const inCol = isInCollection(c.id, file);
+                                            const busy = !!addingMap[busyKey];
+                                            const flash = addedFlash[busyKey];
+
+                                            return (
+                                                <button
+                                                    key={c.id}
+                                                    type="button"
+                                                    onClick={() => addToExistingCollection(c.id, file)}
+                                                    disabled={busy}
+                                                    className={[
+                                                        "w-full rounded-xl border px-4 py-3 text-left transition",
+                                                        "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]",
+                                                        busy ? "opacity-60" : ""
+                                                    ].join(" ")}
+                                                >
+                                                    <div className="flex items-center justify-between gap-3">
+                                                        <div className="min-w-0">
+                                                            <div className="text-sm font-semibold text-white truncate">{c.name}</div>
+                                                            <div className="text-[11px] text-white/55 mt-0.5">
+                                                                {inCol ? "Already in this collection" : "Tap to add"}
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="flex items-center gap-2 shrink-0">
+                                                            {busy ? <Loader2 className="h-4 w-4 animate-spin text-white/80" /> : null}
+                                                            {inCol ? <Check className="h-5 w-5 text-emerald-400" /> : <PlusSquare className="h-5 w-5 text-white/60" />}
+                                                            {flash === "added" ? <span className="text-[10px] text-emerald-300">Added</span> : null}
+                                                            {flash === "already" ? <span className="text-[10px] text-white/60">Already</span> : null}
+                                                        </div>
+                                                    </div>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                <div className="mt-4 border-t border-white/10 pt-4">
+                                    {!isCreatingThis ? (
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setCreatingForFile(file);
+                                                setNewCollectionName("");
+                                            }}
+                                            className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-black font-extrabold py-3"
+                                        >
+                                            <FolderPlus className="h-5 w-5" />
+                                            Create New Collection
+                                        </button>
+                                    ) : (
+                                        <div className="space-y-2">
+                                            <input
+                                                autoFocus
+                                                value={newCollectionName}
+                                                onChange={(e) => setNewCollectionName(e.target.value)}
+                                                placeholder="Collection name"
+                                                className="w-full px-4 py-3 text-sm rounded-xl bg-white text-black outline-none"
+                                                disabled={creatingCollection}
+                                            />
+
+                                            {creatingCollection && (
+                                                <div className="space-y-1">
+                                                    <ProgressBar value={createProg.pct} />
+                                                    <div className="text-[11px] text-white/60 flex items-center justify-between">
+                                                        <span>{createStage || "Processing"}</span>
+                                                        <span>{Math.min(99, Math.round(createProg.pct))}%</span>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            <div className="grid grid-cols-2 gap-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => createAndAddCollection(file)}
+                                                    disabled={creatingCollection}
+                                                    className="rounded-xl bg-primary text-black font-extrabold py-3 inline-flex items-center justify-center gap-2 disabled:opacity-60"
+                                                >
+                                                    {creatingCollection ? <Loader2 className="h-5 w-5 animate-spin" /> : null}
+                                                    Create
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        if (creatingCollection) return;
+                                                        setCreatingForFile(null);
+                                                        setNewCollectionName("");
+                                                    }}
+                                                    disabled={creatingCollection}
+                                                    className="rounded-xl border border-white/20 text-white font-semibold py-3 disabled:opacity-60 hover:bg-white/5"
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </Dialog.Panel>
+                        </Transition.Child>
+                    </div>
+                </div>
+            </Dialog>
+        </Transition>
+    );
+}
+
+function AddToCollectionInline({
+    file,
+    collections,
+    ensureItemsLoaded,
+    isInCollection,
+    addToExistingCollection,
+    creatingForFile,
+    setCreatingForFile,
+    newCollectionName,
+    setNewCollectionName,
+    creatingCollection,
+    createStage,
+    createProg,
+    createAndAddCollection,
+    addingMap,
+    addedFlash
+}) {
+    return (
+        <Popover className="relative w-full">
+            {({ open }) => (
+                <>
+                    <Popover.Button
+                        onClick={() => {
+                            if (!open) {
+                                collections.forEach((c) => {
+                                    if (c?.id) ensureItemsLoaded(c.id);
+                                });
+                            }
+                        }}
+                        className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-white/30 text-white text-xs font-semibold hover:bg-white/5 w-full"
+                    >
+                        <PlusSquare size={14} />
+                        Add to Collection
+                    </Popover.Button>
+
+                    <Transition
+                        as={Fragment}
+                        enter="transition duration-150 ease-out"
+                        enterFrom="opacity-0 translate-y-1"
+                        enterTo="opacity-100 translate-y-0"
+                        leave="transition duration-100 ease-in"
+                        leaveFrom="opacity-100 translate-y-0"
+                        leaveTo="opacity-0 translate-y-1"
+                    >
+                        <Popover.Panel className="absolute right-0 mt-2 w-[260px] rounded-xl border border-border bg-card shadow-xl p-2 z-20">
+                            <div className="px-2 py-1 text-xs font-bold text-white/70">Add to:</div>
+
+                            <div className="max-h-48 overflow-y-auto scrollbar-hide">
+                                {collections.length === 0 && <div className="px-3 py-2 text-xs text-white/60">No collections yet.</div>}
+
+                                {collections.map((c) => {
+                                    const url = file?._url || file?.url || file?.fileURL || "";
+                                    const busyKey = `${c.id}::${url}`;
+                                    const inCol = isInCollection(c.id, file);
+                                    const busy = !!addingMap[busyKey];
+                                    const flash = addedFlash[busyKey];
+
+                                    return (
+                                        <button
+                                            key={c.id}
+                                            onClick={() => addToExistingCollection(c.id, file)}
+                                            disabled={busy}
+                                            className={[
+                                                "w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm hover:bg-white/5",
+                                                inCol ? "text-emerald-200" : "text-white",
+                                                busy ? "opacity-60" : ""
+                                            ].join(" ")}
+                                        >
+                                            <span className="truncate">{c.name}</span>
+
+                                            <span className="flex items-center gap-2">
+                                                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                                                {inCol ? <Check size={16} className="text-emerald-400" /> : <PlusSquare size={16} className="opacity-60" />}
+                                                {flash === "added" ? <span className="text-[10px] text-emerald-300">Added</span> : null}
+                                                {flash === "already" ? <span className="text-[10px] text-white/60">Already</span> : null}
+                                            </span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            <div className="border-t border-white/10 my-2" />
+
+                            {creatingForFile?.id !== file.id ? (
+                                <button
+                                    onClick={() => {
+                                        setCreatingForFile(file);
+                                        setNewCollectionName("");
+                                    }}
+                                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-white hover:bg-white/5"
+                                >
+                                    <FolderPlus size={16} />
+                                    Create Collection
+                                </button>
+                            ) : (
+                                <div className="p-2 space-y-2">
+                                    <input
+                                        autoFocus
+                                        value={newCollectionName}
+                                        onChange={(e) => setNewCollectionName(e.target.value)}
+                                        placeholder="Collection name"
+                                        className="w-full px-3 py-2 text-sm rounded-md bg-white text-black outline-none"
+                                        disabled={creatingCollection}
+                                    />
+
+                                    {creatingCollection && (
+                                        <div className="space-y-1">
+                                            <ProgressBar value={createProg.pct} />
+                                            <div className="text-[11px] text-white/60 flex items-center justify-between">
+                                                <span>{createStage || "Processing"}</span>
+                                                <span>{Math.min(99, Math.round(createProg.pct))}%</span>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <button
+                                            onClick={() => createAndAddCollection(file)}
+                                            disabled={creatingCollection}
+                                            className="px-3 py-2 rounded-md bg-primary text-black text-xs font-bold disabled:opacity-60 inline-flex items-center justify-center gap-2"
+                                        >
+                                            {creatingCollection ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                                            Create
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                if (creatingCollection) return;
+                                                setCreatingForFile(null);
+                                                setNewCollectionName("");
+                                            }}
+                                            disabled={creatingCollection}
+                                            className="px-3 py-2 rounded-md border border-white/30 text-white text-xs font-semibold disabled:opacity-60"
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </Popover.Panel>
+                    </Transition>
+                </>
+            )}
+        </Popover>
+    );
+}
 
 export default function GameDetails() {
     const { gameId } = useParams();
@@ -166,6 +499,8 @@ export default function GameDetails() {
 
     const [addingMap, setAddingMap] = useState({});
     const [addedFlash, setAddedFlash] = useState({});
+    const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
+    const [sheetFile, setSheetFile] = useState(null);
 
     useEffect(() => window.scrollTo(0, 0), []);
 
@@ -180,10 +515,11 @@ export default function GameDetails() {
     }, [gameId, user, fetchSections]);
 
     useEffect(() => {
-        if (!user) return;
-        startRelatedListener(gameId, user);
+        if (!user || !gameId) return;
+        const currentName = game?.name || "";
+        startRelatedListener(gameId, user, currentName);
         return () => stopRelatedListener();
-    }, [user, gameId, startRelatedListener, stopRelatedListener]);
+    }, [user, gameId, game?.name, startRelatedListener, stopRelatedListener]);
 
     useEffect(() => {
         const t = inputValue.trim();
@@ -239,7 +575,6 @@ export default function GameDetails() {
     }, []);
 
     const fileKey = (f, idx) => String(f?.id || `${f?._sectionId || "sec"}::${f?._name || "file"}::${idx}`);
-
     const isSelected = (k) => selectedKeys.has(k);
 
     const toggleSelected = (k) => {
@@ -265,71 +600,6 @@ export default function GameDetails() {
         }
         return arr;
     }, [selectedKeys, filteredFiles]);
-
-    const handleDownload = async (file) => {
-        const url = file?._url || file?.url || file?.fileURL;
-        const name = file?._name || file?.name || file?.fileName || "download";
-
-        if (user?.uid) {
-            addDownload({
-                userId: user.uid,
-                gameId,
-                sectionId: file?._sectionId || null,
-                sectionTitle: file?._sectionTitle || null,
-                fileName: name,
-                fileURL: url || null,
-                ext: file?._ext || getExt(name),
-                size: file?._size || null,
-                thumbURL: file?._thumb || null,
-                storagePath: file?.storagePath || file?._storagePath || null
-            });
-        }
-
-        const storagePath = file?.storagePath || file?._storagePath || (url ? storagePathFromFirebaseUrl(url) : null);
-
-        if (!storagePath) {
-            alert("Missing storagePath (and cannot extract from URL). Save snapshot.ref.fullPath during upload.");
-            return;
-        }
-
-        const dlUrl = buildDownloadUrl(storagePath, name);
-        downloadViaIframe(dlUrl);
-    };
-
-    const downloadSelectedAsZip = async () => {
-        if (!selectedFiles.length || zipping) return;
-
-        setZipping(true);
-        try {
-            const zip = new JSZip();
-            const folderName = (game?.name || "assets").replace(/[^\w.\-]+/g, "_").slice(0, 50);
-            const folder = zip.folder(folderName) || zip;
-
-            for (let idx = 0; idx < selectedFiles.length; idx += 1) {
-                const { f } = selectedFiles[idx];
-                const url = f?._url || f?.url || f?.fileURL || null;
-                const baseName = f?._name || f?.name || f?.fileName || `file-${idx + 1}`;
-                const ext = getExt(baseName, f?._ext).toLowerCase();
-                const safeBase = String(baseName).replace(/[^\w.\-]+/g, "_");
-                const finalName = ext && !safeBase.toLowerCase().endsWith(`.${ext}`) ? `${safeBase}.${ext}` : safeBase;
-
-                const storagePath = f?.storagePath || f?._storagePath || (url ? storagePathFromFirebaseUrl(url) : null);
-
-                if (!storagePath) continue;
-
-                const blob = await fetchBlobFromCloudDownload(storagePath, finalName);
-                folder.file(finalName, blob);
-            }
-
-            const content = await zip.generateAsync({ type: "blob" });
-            saveAs(content, `${folderName}.zip`);
-            clearSelected();
-        } catch (e) {
-            alert(e?.message || "ZIP download failed");
-        } finally {
-            setZipping(false);
-        }
-    };
 
     const fileToCollectionPayload = (f) => ({
         fileName: f._name,
@@ -385,11 +655,13 @@ export default function GameDetails() {
 
         if (isInCollection(collectionId, file)) {
             setAddedFlash((p) => ({ ...p, [busyKey]: "already" }));
-            setTimeout(() => setAddedFlash((p) => {
-                const n = { ...p };
-                delete n[busyKey];
-                return n;
-            }), 700);
+            setTimeout(() => {
+                setAddedFlash((p) => {
+                    const n = { ...p };
+                    delete n[busyKey];
+                    return n;
+                });
+            }, 700);
             return;
         }
 
@@ -397,11 +669,13 @@ export default function GameDetails() {
         try {
             await addFileToCollection(collectionId, fileToCollectionPayload(file));
             setAddedFlash((p) => ({ ...p, [busyKey]: "added" }));
-            setTimeout(() => setAddedFlash((p) => {
-                const n = { ...p };
-                delete n[busyKey];
-                return n;
-            }), 900);
+            setTimeout(() => {
+                setAddedFlash((p) => {
+                    const n = { ...p };
+                    delete n[busyKey];
+                    return n;
+                });
+            }, 900);
         } finally {
             setAddingMap((p) => {
                 const n = { ...p };
@@ -445,12 +719,94 @@ export default function GameDetails() {
         }
     };
 
+    const openMobileAddToCollection = (file) => {
+        collections.forEach((c) => {
+            if (c?.id) ensureItemsLoaded(c.id);
+        });
+        setSheetFile(file);
+        setMobileSheetOpen(true);
+    };
+
+    const handleDownload = async (file) => {
+        try {
+            const url = file?._url || file?.url || file?.fileURL;
+            const name = file?._name || file?.name || file?.fileName || "download";
+
+            if (user?.uid) {
+                addDownload({
+                    userId: user.uid,
+                    gameId,
+                    sectionId: file?._sectionId || null,
+                    sectionTitle: file?._sectionTitle || null,
+                    fileName: name,
+                    fileURL: url || null,
+                    ext: file?._ext || getExt(name),
+                    size: file?._size || null,
+                    thumbURL: file?._thumb || null,
+                    storagePath: file?.storagePath || file?._storagePath || null
+                });
+            }
+
+            const storagePath = file?.storagePath || file?._storagePath || (url ? storagePathFromFirebaseUrl(url) : null);
+            if (!storagePath) {
+                alert("Missing storagePath. Save snapshot.ref.fullPath during upload.");
+                return;
+            }
+
+            await downloadViaIframe(storagePath, name);
+        } catch (e) {
+            alert(e?.message || "Download failed");
+        }
+    };
+
+    const downloadSelectedAsZip = async () => {
+        if (!selectedFiles.length || zipping) return;
+
+        setZipping(true);
+        try {
+            const zip = new JSZip();
+            const folderName = (game?.name || "assets").replace(/[^\w.\-]+/g, "_").slice(0, 50);
+            const folder = zip.folder(folderName) || zip;
+
+            const seen = new Map();
+
+            for (let idx = 0; idx < selectedFiles.length; idx += 1) {
+                const { f } = selectedFiles[idx];
+                const url = f?._url || f?.url || f?.fileURL || null;
+                const baseName = f?._name || f?.name || f?.fileName || `file-${idx + 1}`;
+                const ext = getExt(baseName, f?._ext).toLowerCase();
+
+                const safeBase = String(baseName).replace(/[^\w.\-]+/g, "_");
+                let finalName = ext && !safeBase.toLowerCase().endsWith(`.${ext}`) ? `${safeBase}.${ext}` : safeBase;
+
+                const cnt = seen.get(finalName) || 0;
+                if (cnt > 0) {
+                    const dot = finalName.lastIndexOf(".");
+                    const namePart = dot > 0 ? finalName.slice(0, dot) : finalName;
+                    const extPart = dot > 0 ? finalName.slice(dot) : "";
+                    finalName = `${namePart} (${cnt + 1})${extPart}`;
+                }
+                seen.set(finalName, cnt + 1);
+
+                const storagePath = f?.storagePath || f?._storagePath || (url ? storagePathFromFirebaseUrl(url) : null);
+                if (!storagePath) continue;
+
+                const blob = await fetchBlobFromCloudDownload(storagePath, finalName);
+                folder.file(finalName, blob);
+            }
+
+            const content = await zip.generateAsync({ type: "blob" });
+            saveAs(content, `${folderName}.zip`);
+            clearSelected();
+        } catch (e) {
+            alert(e?.message || "ZIP download failed");
+        } finally {
+            setZipping(false);
+        }
+    };
+
     if (error) {
-        return (
-            <div className="max-w-6xl mx-auto pt-24 pb-10 px-4 text-center text-red-400 text-lg">
-                {error}
-            </div>
-        );
+        return <div className="max-w-6xl mx-auto pt-24 pb-10 px-4 text-center text-red-400 text-lg">{error}</div>;
     }
 
     return (
@@ -478,8 +834,10 @@ export default function GameDetails() {
                             <Tab key={t} as={Fragment}>
                                 {({ selected }) => (
                                     <button
-                                        className={`px-4 py-2 rounded-md text-sm font-semibold border transition ${selected ? "bg-primary text-black border-primary" : "bg-transparent text-white/80 border-white/20 hover:bg-white/5"
-                                            }`}
+                                        className={[
+                                            "px-4 py-2 rounded-md text-sm font-semibold border transition",
+                                            selected ? "bg-primary text-black border-primary" : "bg-transparent text-white/80 border-white/20 hover:bg-white/5"
+                                        ].join(" ")}
                                     >
                                         {t}
                                     </button>
@@ -560,7 +918,7 @@ export default function GameDetails() {
                                     <div className="border border-white/10 bg-[#111318] rounded-xl overflow-hidden min-w-0">
                                         <div className="w-full min-w-0 overflow-x-hidden">
                                             <div
-                                                className="grid text-xs font-bold text-white/80 bg-[#161922] px-4 py-2 border-b border-white/10"
+                                                className="hidden md:grid text-xs font-bold text-white/80 bg-[#161922] px-4 py-2 border-b border-white/10"
                                                 style={{ gridTemplateColumns: TABLE_COLS }}
                                             >
                                                 <div />
@@ -578,10 +936,7 @@ export default function GameDetails() {
                                                 </div>
                                             )}
 
-                                            {!(loadingSections || loadingGame) && pageFiles.length === 0 && (
-                                                <div className="p-6 text-white/70 text-sm">No files found.</div>
-                                            )}
-
+                                            {!(loadingSections || loadingGame) && pageFiles.length === 0 && <div className="p-6 text-white/70 text-sm">No files found.</div>}
                                             {!(loadingSections || loadingGame) &&
                                                 pageFiles.map((f, idx) => {
                                                     const globalIndex = (page - 1) * PAGE_SIZE + idx;
@@ -592,11 +947,11 @@ export default function GameDetails() {
 
                                                     return (
                                                         <div
-                                                            key={`${f._name}-${idx}`}
-                                                            className="grid items-center px-4 py-3 border-b border-white/5 min-w-0"
+                                                            key={k}
+                                                            className="md:grid flex flex-col md:items-center px-4 py-3 border-b border-white/5 min-w-0"
                                                             style={{ gridTemplateColumns: TABLE_COLS }}
                                                         >
-                                                            <div className="flex items-center justify-center">
+                                                            <div className="hidden md:flex items-center justify-center">
                                                                 <input
                                                                     type="checkbox"
                                                                     className="accent-primary"
@@ -605,12 +960,32 @@ export default function GameDetails() {
                                                                 />
                                                             </div>
 
+                                                            <div className="flex items-center gap-3 md:hidden mb-2">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    className="accent-primary"
+                                                                    checked={isSelected(k)}
+                                                                    onChange={() => toggleSelected(k)}
+                                                                />
+                                                                <div className="text-xs text-white/60">
+                                                                    Actions are below •{" "}
+                                                                    <span className="text-white/80 font-semibold">Add to Collection</span>
+                                                                </div>
+                                                            </div>
+
                                                             <button
                                                                 onClick={() => openPreviewAt(globalIndex)}
                                                                 className="relative h-[64px] w-[140px] mx-auto flex items-center justify-center group"
                                                             >
                                                                 {showImg ? (
-                                                                    <img src={f._thumb || f._url} alt="" className="h-[64px] w-[140px] object-contain" loading="lazy" />
+                                                                    <div className="w-[140px] h-[64px] flex items-center justify-center">
+                                                                        <img
+                                                                            src={f._thumb || f._url}
+                                                                            alt=""
+                                                                            className="max-w-full max-h-full object-contain"
+                                                                            loading="lazy"
+                                                                        />
+                                                                    </div>
                                                                 ) : showPdf ? (
                                                                     <FileText className="text-red-400" size={22} />
                                                                 ) : (
@@ -627,7 +1002,7 @@ export default function GameDetails() {
                                                                 )}
                                                             </button>
 
-                                                            <div className="min-w-0 px-3">
+                                                            <div className="min-w-0 px-0 md:px-3 mt-2 md:mt-0">
                                                                 <div className="flex items-start gap-2 font-semibold text-sm min-w-0">
                                                                     {showPdf ? (
                                                                         <FileText size={16} className="text-white/70 mt-0.5 flex-shrink-0" />
@@ -637,7 +1012,9 @@ export default function GameDetails() {
                                                                         <File size={16} className="text-white/70 mt-0.5 flex-shrink-0" />
                                                                     )}
 
-                                                                    <span className="min-w-0 break-words whitespace-normal leading-snug line-clamp-3">{f._name}</span>
+                                                                    <span className="min-w-0 break-words whitespace-normal leading-snug line-clamp-3">
+                                                                        {f._name}
+                                                                    </span>
                                                                 </div>
 
                                                                 <div className="text-xs text-white/60 mt-1 break-words whitespace-normal">
@@ -645,158 +1022,71 @@ export default function GameDetails() {
                                                                 </div>
                                                             </div>
 
-                                                            <div className="text-xs text-white/70 pr-3 min-w-0">
+                                                            <div className="text-xs text-white/70 pr-0 md:pr-3 min-w-0 mt-2 md:mt-0">
                                                                 {!!f._size && <div className="truncate">{f._size}</div>}
-                                                                {!!f._date && <div className="truncate">Added {new Date(f._date).toLocaleDateString()}</div>}
+                                                                {!!f._date && (
+                                                                    <div className="truncate">
+                                                                        Added {new Date(f._date).toLocaleDateString()}
+                                                                    </div>
+                                                                )}
                                                             </div>
 
-                                                            <div className="flex flex-col items-end gap-2 min-w-0">
-                                                                <div className="grid grid-cols-2 gap-2 w-full max-w-[280px]">
-                                                                    <button
-                                                                        onClick={() => handleDownload(f)}
-                                                                        className="inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded bg-primary text-black text-xs font-bold hover:opacity-90"
-                                                                    >
-                                                                        <Download size={14} />
-                                                                        Download
-                                                                    </button>
+                                                            <div className="flex flex-col gap-2 min-w-0 mt-3 md:mt-0 items-center md:items-end">
+                                                                <div className="w-full max-w-[340px] mx-auto md:mx-0">
+                                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 w-full">
+                                                                        <button
+                                                                            onClick={() => handleDownload(f)}
+                                                                            className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-primary text-black text-xs font-extrabold hover:opacity-90"
+                                                                        >
+                                                                            <Download size={14} />
+                                                                            Download
+                                                                        </button>
 
-                                                                    <button
-                                                                        onClick={() => openPreviewAt(globalIndex)}
-                                                                        className="inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded border border-white/30 text-white text-xs font-semibold hover:bg-white/5"
-                                                                    >
-                                                                        <Eye size={14} />
-                                                                        Preview
-                                                                    </button>
+                                                                        <button
+                                                                            onClick={() => openPreviewAt(globalIndex)}
+                                                                            className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-white/30 text-white text-xs font-semibold hover:bg-white/5"
+                                                                        >
+                                                                            <Eye size={14} />
+                                                                            Preview
+                                                                        </button>
+                                                                    </div>
                                                                 </div>
 
-                                                                <Popover className="relative w-full max-w-[280px]">
-                                                                    {({ open }) => (
-                                                                        <>
-                                                                            <Popover.Button
-                                                                                onClick={() => {
-                                                                                    if (!open) {
-                                                                                        collections.forEach((c) => {
-                                                                                            if (c?.id) ensureItemsLoaded(c.id);
-                                                                                        });
-                                                                                    }
-                                                                                }}
-                                                                                className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded border border-white/30 text-white text-xs font-semibold hover:bg-white/5 w-full"
-                                                                            >
-                                                                                <PlusSquare size={14} />
-                                                                                Add to Collection
-                                                                            </Popover.Button>
+                                                                <div className="w-full max-w-[340px] mx-auto md:mx-0 hidden md:block">
+                                                                    <AddToCollectionInline
+                                                                        file={f}
+                                                                        collections={collections}
+                                                                        ensureItemsLoaded={ensureItemsLoaded}
+                                                                        isInCollection={isInCollection}
+                                                                        addToExistingCollection={addToExistingCollection}
+                                                                        creatingForFile={creatingForFile}
+                                                                        setCreatingForFile={setCreatingForFile}
+                                                                        newCollectionName={newCollectionName}
+                                                                        setNewCollectionName={setNewCollectionName}
+                                                                        creatingCollection={creatingCollection}
+                                                                        createStage={createStage}
+                                                                        createProg={createProg}
+                                                                        createAndAddCollection={createAndAddCollection}
+                                                                        addingMap={addingMap}
+                                                                        addedFlash={addedFlash}
+                                                                    />
+                                                                </div>
 
-                                                                            <Transition
-                                                                                as={Fragment}
-                                                                                enter="transition duration-150 ease-out"
-                                                                                enterFrom="opacity-0 translate-y-1"
-                                                                                enterTo="opacity-100 translate-y-0"
-                                                                                leave="transition duration-100 ease-in"
-                                                                                leaveFrom="opacity-100 translate-y-0"
-                                                                                leaveTo="opacity-0 translate-y-1"
-                                                                            >
-                                                                                <Popover.Panel className="absolute right-0 mt-2 w-[260px] rounded-xl border border-border bg-card shadow-xl p-2 z-20">
-                                                                                    <div className="px-2 py-1 text-xs font-bold text-white/70">Add to:</div>
-
-                                                                                    <div className="max-h-48 overflow-y-auto scrollbar-hide">
-                                                                                        {collections.length === 0 && (
-                                                                                            <div className="px-3 py-2 text-xs text-white/60">No collections yet.</div>
-                                                                                        )}
-
-                                                                                        {collections.map((c) => {
-                                                                                            const url = f?._url || f?.url || f?.fileURL || "";
-                                                                                            const busyKey = `${c.id}::${url}`;
-                                                                                            const inCol = isInCollection(c.id, f);
-                                                                                            const busy = !!addingMap[busyKey];
-                                                                                            const flash = addedFlash[busyKey];
-
-                                                                                            return (
-                                                                                                <button
-                                                                                                    key={c.id}
-                                                                                                    onClick={() => addToExistingCollection(c.id, f)}
-                                                                                                    disabled={busy}
-                                                                                                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm hover:bg-white/5 ${inCol ? "text-emerald-200" : "text-white"
-                                                                                                        } ${busy ? "opacity-60" : ""}`}
-                                                                                                >
-                                                                                                    <span className="truncate">{c.name}</span>
-
-                                                                                                    <span className="flex items-center gap-2">
-                                                                                                        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                                                                                                        {inCol ? <Check size={16} className="text-emerald-400" /> : <PlusSquare size={16} className="opacity-60" />}
-                                                                                                        {flash === "added" ? <span className="text-[10px] text-emerald-300">Added</span> : null}
-                                                                                                        {flash === "already" ? <span className="text-[10px] text-white/60">Already</span> : null}
-                                                                                                    </span>
-                                                                                                </button>
-                                                                                            );
-                                                                                        })}
-                                                                                    </div>
-
-                                                                                    <div className="border-t border-white/10 my-2" />
-
-                                                                                    {creatingForFile?.id !== f.id ? (
-                                                                                        <button
-                                                                                            onClick={() => {
-                                                                                                setCreatingForFile(f);
-                                                                                                setNewCollectionName("");
-                                                                                            }}
-                                                                                            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-white hover:bg-white/5"
-                                                                                        >
-                                                                                            <FolderPlus size={16} />
-                                                                                            Create Collection
-                                                                                        </button>
-                                                                                    ) : (
-                                                                                        <div className="p-2 space-y-2">
-                                                                                            <input
-                                                                                                autoFocus
-                                                                                                value={newCollectionName}
-                                                                                                onChange={(e) => setNewCollectionName(e.target.value)}
-                                                                                                placeholder="Collection name"
-                                                                                                className="w-full px-3 py-2 text-sm rounded-md bg-white text-black outline-none"
-                                                                                                disabled={creatingCollection}
-                                                                                            />
-
-                                                                                            {creatingCollection && (
-                                                                                                <div className="space-y-1">
-                                                                                                    <ProgressBar value={createProg.pct} />
-                                                                                                    <div className="text-[11px] text-white/60 flex items-center justify-between">
-                                                                                                        <span>{createStage || "Processing"}</span>
-                                                                                                        <span>{Math.min(99, Math.round(createProg.pct))}%</span>
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                            )}
-
-                                                                                            <div className="grid grid-cols-2 gap-2">
-                                                                                                <button
-                                                                                                    onClick={() => createAndAddCollection(f)}
-                                                                                                    disabled={creatingCollection}
-                                                                                                    className="px-3 py-2 rounded-md bg-primary text-black text-xs font-bold disabled:opacity-60 inline-flex items-center justify-center gap-2"
-                                                                                                >
-                                                                                                    {creatingCollection ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                                                                                                    Create
-                                                                                                </button>
-                                                                                                <button
-                                                                                                    onClick={() => {
-                                                                                                        if (creatingCollection) return;
-                                                                                                        setCreatingForFile(null);
-                                                                                                        setNewCollectionName("");
-                                                                                                    }}
-                                                                                                    disabled={creatingCollection}
-                                                                                                    className="px-3 py-2 rounded-md border border-white/30 text-white text-xs font-semibold disabled:opacity-60"
-                                                                                                >
-                                                                                                    Cancel
-                                                                                                </button>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    )}
-                                                                                </Popover.Panel>
-                                                                            </Transition>
-                                                                        </>
-                                                                    )}
-                                                                </Popover>
-                                                            </div>
+                                                                <div className="md:hidden w-full max-w-[340px] mx-auto">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => openMobileAddToCollection(f)}
+                                                                        className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-white/20 bg-white/[0.03] hover:bg-white/[0.06] text-white text-sm font-semibold"
+                                                                    >
+                                                                        <PlusSquare className="h-4 w-4 text-white/80" />
+                                                                        Add to Collection
+                                                                    </button>
+                                                                </div>
+                                                            </div> 
                                                         </div>
                                                     );
                                                 })}
+
                                         </div>
                                     </div>
 
@@ -833,13 +1123,29 @@ export default function GameDetails() {
                             <div className="mt-4">
                                 {loadingRelated && (
                                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                                        {Array.from({ length: 4 }).map((_, i) => (
-                                            <div key={i} className="h-40 bg-white/5 rounded-xl" />
+                                        {Array.from({ length: 8 }).map((_, i) => (
+                                            <div key={i} className="h-44 bg-white/5 rounded-2xl border border-white/10" />
                                         ))}
                                     </div>
                                 )}
 
-                                {!loadingRelated && (
+                                {!loadingRelated && promotionGames.length === 0 && (
+                                    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-center">
+                                        <div className="text-lg font-extrabold text-white">No related games found</div>
+                                        <div className="text-sm text-white/65 mt-2">
+                                            We couldn&apos;t find other <span className="text-white/90 font-semibold">{game?.name || "this"}</span> games right now.
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => navigate("/")}
+                                            className="mt-4 inline-flex items-center justify-center px-4 py-2 rounded-xl bg-primary text-black font-extrabold"
+                                        >
+                                            Browse All Games
+                                        </button>
+                                    </div>
+                                )}
+
+                                {!loadingRelated && promotionGames.length > 0 && (
                                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                                         {promotionGames.map((g) => (
                                             <button
@@ -848,16 +1154,18 @@ export default function GameDetails() {
                                                     window.scrollTo(0, 0);
                                                     navigate(`/game/${g.id}`);
                                                 }}
-                                                className="bg-[#111318] border border-white/10 rounded-xl overflow-hidden hover:scale-[1.03] transition"
+                                                className="group rounded-2xl overflow-hidden border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] transition"
                                             >
-                                                <div className="aspect-[16/9] bg-black/40">
+                                                <div className="aspect-[16/9] bg-black/40 overflow-hidden">
                                                     <img
                                                         src={g.imageURL || "https://via.placeholder.com/300?text=No+Image"}
                                                         alt={g.name}
-                                                        className="w-full h-full object-cover"
+                                                        className="w-full h-full object-cover group-hover:scale-[1.03] transition"
+                                                        loading="lazy"
                                                     />
                                                 </div>
-                                                <div className="p-2 text-sm font-semibold text-left">{g.name}</div>
+                                                <div className="p-3 text-sm font-extrabold text-left text-white truncate">{g.name}</div>
+                                                <div className="px-3 pb-3 text-[11px] text-white/60 text-left">View assets</div>
                                             </button>
                                         ))}
                                     </div>
@@ -868,6 +1176,31 @@ export default function GameDetails() {
                 </Tab.Group>
             </div>
 
+            <MobileCollectionSheet
+                open={mobileSheetOpen}
+                onClose={() => {
+                    setMobileSheetOpen(false);
+                    setSheetFile(null);
+                    setCreatingForFile(null);
+                    setNewCollectionName("");
+                }}
+                collections={collections}
+                file={sheetFile}
+                ensureItemsLoaded={ensureItemsLoaded}
+                isInCollection={isInCollection}
+                addToExistingCollection={addToExistingCollection}
+                creatingForFile={creatingForFile}
+                setCreatingForFile={setCreatingForFile}
+                newCollectionName={newCollectionName}
+                setNewCollectionName={setNewCollectionName}
+                creatingCollection={creatingCollection}
+                createStage={createStage}
+                createProg={createProg}
+                createAndAddCollection={createAndAddCollection}
+                addingMap={addingMap}
+                addedFlash={addedFlash}
+            />
+
             <PreviewModal
                 open={previewOpen}
                 onClose={() => setPreviewOpen(false)}
@@ -875,6 +1208,20 @@ export default function GameDetails() {
                 index={previewIndex}
                 setIndex={setPreviewIndex}
                 onDownload={handleDownload}
+                collections={collections}
+                ensureItemsLoaded={ensureItemsLoaded}
+                isInCollection={isInCollection}
+                addToExistingCollection={addToExistingCollection}
+                creatingForFile={creatingForFile}
+                setCreatingForFile={setCreatingForFile}
+                newCollectionName={newCollectionName}
+                setNewCollectionName={setNewCollectionName}
+                creatingCollection={creatingCollection}
+                createStage={createStage}
+                createProg={createProg}
+                createAndAddCollection={createAndAddCollection}
+                addingMap={addingMap}
+                addedFlash={addedFlash}
             />
         </div>
     );

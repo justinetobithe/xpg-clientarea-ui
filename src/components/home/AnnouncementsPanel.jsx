@@ -3,11 +3,11 @@ import { Link } from "react-router-dom";
 import { Dialog, Transition } from "@headlessui/react";
 import { X, ExternalLink, Sparkles } from "lucide-react";
 
-function AnnouncementSkeletonRow() {
+function AnnouncementSkeletonCard() {
     return (
-        <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 animate-pulse">
+        <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 md:p-6 animate-pulse">
             <div className="flex gap-4">
-                <div className="h-16 w-28 md:h-20 md:w-32 rounded-xl bg-white/10 shrink-0" />
+                <div className="h-20 w-32 rounded-xl bg-white/10 shrink-0" />
                 <div className="flex-1 min-w-0 space-y-2">
                     <div className="h-4 bg-white/10 rounded w-3/4" />
                     <div className="h-3 bg-white/10 rounded w-full" />
@@ -38,8 +38,54 @@ const formatLongDate = (val) => {
 
 export default function AnnouncementsPanel({ items = [], loading = false, error = null, skeletonCount = 3 }) {
     const [detail, setDetail] = useState(null);
-
     const list = useMemo(() => (Array.isArray(items) ? items : []), [items]);
+
+    const Card = ({ a }) => {
+        const dateLabel = formatDate(a.date || a.createdAt);
+        const title = a.title || "Untitled";
+        const desc = toText(a.description || a.content || "");
+
+        return (
+            <button
+                type="button"
+                onClick={() => setDetail(a)}
+                className="w-full text-left group rounded-2xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] transition overflow-hidden"
+            >
+                <div className="flex gap-4 p-5 md:p-6">
+                    <div className="h-20 w-32 md:h-24 md:w-40 rounded-xl overflow-hidden bg-black/40 border border-white/10 shrink-0">
+                        {a.imageURL ? (
+                            <img
+                                src={a.imageURL}
+                                alt={title}
+                                className="w-full h-full object-cover group-hover:scale-[1.03] transition"
+                                loading="lazy"
+                            />
+                        ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-white/10 to-white/0" />
+                        )}
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                            <div className="text-sm md:text-base font-semibold text-white truncate">{title}</div>
+                            {!!dateLabel && (
+                                <span className="shrink-0 text-[11px] px-2 py-1 rounded-full bg-black/40 border border-white/10 text-white/70">
+                                    {dateLabel}
+                                </span>
+                            )}
+                        </div>
+
+                        {!!desc && <div className="text-xs md:text-sm text-white/70 line-clamp-2 mt-2">{desc}</div>}
+
+                        <div className="mt-4 flex items-center gap-2">
+                            <span className="text-xs text-primary font-semibold group-hover:underline">Open details</span>
+                            {a.ctaLabel && a.ctaURL && <span className="text-[11px] text-white/50">• {a.ctaLabel}</span>}
+                        </div>
+                    </div>
+                </div>
+            </button>
+        );
+    };
 
     return (
         <div className="bg-card border border-border rounded-2xl p-5 md:p-6">
@@ -59,79 +105,64 @@ export default function AnnouncementsPanel({ items = [], loading = false, error 
                 </Link>
             </div>
 
-            <div className="space-y-3">
-                {loading && Array.from({ length: skeletonCount }).map((_, i) => <AnnouncementSkeletonRow key={i} />)}
+            {loading && (
+                <div className="space-y-3 md:space-y-4">
+                    {Array.from({ length: skeletonCount }).map((_, i) => (
+                        <AnnouncementSkeletonCard key={i} />
+                    ))}
+                </div>
+            )}
 
-                {!loading && error && <div className="text-sm text-red-400 py-6 text-center">{error}</div>}
+            {!loading && error && <div className="text-sm text-red-400 py-6 text-center">{error}</div>}
 
-                {!loading && !error && list.length === 0 && (
-                    <div className="text-sm text-white/60 py-8 text-center">
-                        No announcements yet.
+            {!loading && !error && list.length === 0 && <div className="text-sm text-white/60 py-8 text-center">No announcements yet.</div>}
+
+            {!loading && !error && list.length > 0 && (
+                <>
+                    <div className="hidden md:grid gap-4">
+                        {list.map((a) => (
+                            <Card key={a.id} a={a} />
+                        ))}
                     </div>
-                )}
 
-                {!loading &&
-                    !error &&
-                    list.map((a) => {
-                        const dateLabel = formatDate(a.date || a.createdAt);
-                        const title = a.title || "Untitled";
-                        const desc = toText(a.description || a.content || "");
-
-                        return (
-                            <button
-                                key={a.id}
-                                type="button"
-                                onClick={() => setDetail(a)}
-                                className="w-full text-left group rounded-2xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] transition overflow-hidden"
-                            >
-                                <div className="flex gap-4 p-4">
-                                    <div className="h-16 w-28 md:h-20 md:w-32 rounded-xl overflow-hidden bg-black/40 border border-white/10 shrink-0">
-                                        {a.imageURL ? (
-                                            <img
-                                                src={a.imageURL}
-                                                alt={title}
-                                                className="w-full h-full object-cover group-hover:scale-[1.03] transition"
-                                                loading="lazy"
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full bg-gradient-to-br from-white/10 to-white/0" />
-                                        )}
-                                    </div>
-
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-start justify-between gap-2">
-                                            <div className="text-sm md:text-base font-semibold text-white truncate">
-                                                {title}
-                                            </div>
-                                            {!!dateLabel && (
-                                                <span className="shrink-0 text-[11px] px-2 py-1 rounded-full bg-black/40 border border-white/10 text-white/70">
-                                                    {dateLabel}
-                                                </span>
-                                            )}
-                                        </div>
-
-                                        {!!desc && (
-                                            <div className="text-xs md:text-sm text-white/70 line-clamp-2 mt-1">
-                                                {desc}
-                                            </div>
-                                        )}
-
-                                        <div className="mt-3 flex items-center gap-2">
-                                            <span className="text-xs text-primary font-semibold group-hover:underline">
-                                                Open details
-                                            </span>
-                                            {a.ctaLabel && a.ctaURL && (
-                                                <span className="text-[11px] text-white/50">
-                                                    • {a.ctaLabel}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
+                    <div className="md:hidden -mx-5">
+                        <div className="px-5">
+                            <div className="flex items-center justify-between mb-3">
+                                <div className="text-xs font-semibold text-white/70">Swipe</div>
+                                <div className="flex gap-1.5">
+                                    {list.slice(0, 6).map((a, i) => (
+                                        <span key={a.id || i} className="h-1.5 w-1.5 rounded-full bg-white/25" />
+                                    ))}
                                 </div>
-                            </button>
-                        );
-                    })}
-            </div>
+                            </div>
+                        </div>
+
+                        <div
+                            className={[
+                                "flex gap-4 px-5 pb-1 overflow-x-auto",
+                                "snap-x snap-mandatory",
+                                "[-webkit-overflow-scrolling:touch]"
+                            ].join(" ")}
+                        >
+                            {list.map((a) => (
+                                <div
+                                    key={a.id}
+                                    className={[
+                                        "snap-start shrink-0",
+                                        "w-[92%] sm:w-[80%]"
+                                    ].join(" ")}
+                                >
+                                    <Card a={a} />
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="px-5 mt-3 text-[11px] text-white/50">
+                            Swipe left/right to see more announcements
+                        </div>
+                    </div>
+                </>
+            )}
 
             <Transition appear show={Boolean(detail)} as={Fragment}>
                 <Dialog as="div" className="relative z-[80]" onClose={() => setDetail(null)}>
@@ -161,7 +192,7 @@ export default function AnnouncementsPanel({ items = [], loading = false, error 
                                 <Dialog.Panel className="w-full max-w-3xl overflow-hidden rounded-2xl border border-white/10 bg-[#0f1118] shadow-2xl">
                                     <div className="relative">
                                         {detail?.imageURL ? (
-                                            <div className="h-52 md:h-64 bg-black/40">
+                                            <div className="h-56 md:h-72 bg-black/40">
                                                 <img
                                                     src={detail.imageURL}
                                                     alt={detail?.title || "Announcement"}
@@ -170,7 +201,7 @@ export default function AnnouncementsPanel({ items = [], loading = false, error 
                                                 />
                                             </div>
                                         ) : (
-                                            <div className="h-40 bg-gradient-to-br from-white/10 via-white/5 to-transparent" />
+                                            <div className="h-44 bg-gradient-to-br from-white/10 via-white/5 to-transparent" />
                                         )}
 
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />
@@ -203,15 +234,11 @@ export default function AnnouncementsPanel({ items = [], loading = false, error 
                                     <div className="p-5 md:p-6">
                                         {detail?.content ? (
                                             <div
-                                                className="prose prose-invert max-w-none text-sm md:text-[15px] leading-relaxed
-                          prose-p:my-3 prose-a:text-primary prose-a:no-underline hover:prose-a:underline
-                          prose-strong:text-white prose-li:my-1 prose-h1:text-white prose-h2:text-white prose-h3:text-white"
+                                                className="prose prose-invert max-w-none text-sm md:text-[15px] leading-relaxed prose-p:my-3 prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-strong:text-white prose-li:my-1 prose-h1:text-white prose-h2:text-white prose-h3:text-white"
                                                 dangerouslySetInnerHTML={{ __html: detail.content }}
                                             />
                                         ) : (
-                                            <div className="text-white/80 text-sm">
-                                                {toText(detail?.description || "") || "No content provided."}
-                                            </div>
+                                            <div className="text-white/80 text-sm">{toText(detail?.description || "") || "No content provided."}</div>
                                         )}
 
                                         {(detail?.ctaLabel && detail?.ctaURL) || detail?.packURL ? (

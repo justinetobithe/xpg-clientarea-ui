@@ -1,15 +1,5 @@
 import { create } from "zustand";
-import {
-    doc,
-    setDoc,
-    collection,
-    query,
-    where,
-    orderBy,
-    limit,
-    onSnapshot,
-    serverTimestamp
-} from "firebase/firestore";
+import { doc, setDoc, collection, query, where, orderBy, limit, onSnapshot, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase";
 
 const hashString = (str = "") => {
@@ -33,12 +23,7 @@ export const useDownloadsStore = create((set, get) => ({
             set({ error: null });
 
             const userId = payload?.userId;
-            const fileKey =
-                payload?.fileKey ||
-                payload?.storagePath ||
-                payload?.fileURL ||
-                payload?.fileName ||
-                "";
+            const fileKey = payload?.fileKey || payload?.storagePath || payload?.fileURL || payload?.fileName || "";
 
             if (!userId || !fileKey) throw new Error("Missing userId or fileKey");
 
@@ -62,7 +47,7 @@ export const useDownloadsStore = create((set, get) => ({
         return await get().upsertDownload(payload);
     },
 
-    startUserDownloadsListener: (userId, pageSize = 5) => {
+    startUserDownloadsListener: (userId, pageSize = 10) => {
         if (!userId) return;
 
         const { unsub, activeUserId, activeLimit } = get();
@@ -79,11 +64,7 @@ export const useDownloadsStore = create((set, get) => ({
             limit(pageSize)
         );
 
-        const fallbackQuery = query(
-            collection(db, "downloads"),
-            where("userId", "==", userId),
-            limit(pageSize)
-        );
+        const fallbackQuery = query(collection(db, "downloads"), where("userId", "==", userId), limit(pageSize));
 
         const attach = (q, clientSort) =>
             onSnapshot(
