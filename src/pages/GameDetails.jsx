@@ -150,9 +150,16 @@ function MobileCollectionSheet({
     const url = file?._url || file?.url || file?.fileURL || "";
     const isCreatingThis = creatingForFile?.id === file?.id;
 
+    useEffect(() => {
+        if (!open) return;
+        collections.forEach((c) => {
+            if (c?.id) ensureItemsLoaded(c.id);
+        });
+    }, [open, collections, ensureItemsLoaded]);
+
     return (
         <Transition appear show={open} as={Fragment}>
-            <Dialog as="div" className="relative z-50" onClose={onClose}>
+            <Dialog as="div" className="relative z-[80]" onClose={onClose}>
                 <Transition.Child
                     as={Fragment}
                     enter="ease-out duration-200"
@@ -165,38 +172,51 @@ function MobileCollectionSheet({
                     <div className="fixed inset-0 bg-black/60" />
                 </Transition.Child>
 
-                <div className="fixed inset-0 overflow-y-auto">
-                    <div className="min-h-full flex items-end justify-center p-0">
-                        <Transition.Child
-                            as={Fragment}
-                            enter="ease-out duration-200"
-                            enterFrom="opacity-0 translate-y-6"
-                            enterTo="opacity-100 translate-y-0"
-                            leave="ease-in duration-150"
-                            leaveFrom="opacity-100 translate-y-0"
-                            leaveTo="opacity-0 translate-y-6"
+                <div className="fixed inset-0 flex items-end justify-center">
+                    <Transition.Child
+                        as={Fragment}
+                        enter="ease-out duration-200"
+                        enterFrom="opacity-0 translate-y-6"
+                        enterTo="opacity-100 translate-y-0"
+                        leave="ease-in duration-150"
+                        leaveFrom="opacity-100 translate-y-0"
+                        leaveTo="opacity-0 translate-y-6"
+                    >
+                        <Dialog.Panel
+                            className={[
+                                "w-full max-w-md rounded-t-2xl border border-white/10 bg-[#0f121a]",
+                                "shadow-2xl overflow-hidden",
+                                "max-h-[85vh] flex flex-col"
+                            ].join(" ")}
+                            style={{
+                                paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)"
+                            }}
                         >
-                            <Dialog.Panel className="w-full rounded-t-2xl border border-white/10 bg-[#0f121a] px-4 pt-4 pb-6">
-                                <div className="flex items-center justify-between">
-                                    <Dialog.Title className="text-base font-extrabold text-white">Add to Collection</Dialog.Title>
+                            <div className="px-4 pt-4 pb-3 border-b border-white/10">
+                                <div className="flex items-center justify-between gap-3">
+                                    <Dialog.Title className="text-base font-extrabold text-white">
+                                        Add to Collection
+                                    </Dialog.Title>
                                     <button
                                         type="button"
                                         onClick={onClose}
-                                        className="h-9 w-9 rounded-full bg-white/[0.06] hover:bg-white/[0.1] grid place-items-center"
+                                        className="h-9 w-9 rounded-full bg-white/[0.06] hover:bg-white/[0.1] grid place-items-center shrink-0"
                                     >
                                         <X className="h-5 w-5 text-white/80" />
                                     </button>
                                 </div>
 
-                                <div className="mt-2 text-xs text-white/60">Pick a collection below, or create a new one.</div>
+                                <div className="mt-1 text-xs text-white/60">
+                                    Pick a collection below, or create a new one.
+                                </div>
+                            </div>
 
-                                <div className="mt-4 max-h-[45vh] overflow-y-auto">
-                                    {collections.length === 0 && (
-                                        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm text-white/70">
-                                            No collections yet.
-                                        </div>
-                                    )}
-
+                            <div className="flex-1 min-h-0 px-4 py-3 overflow-y-auto overscroll-contain">
+                                {collections.length === 0 ? (
+                                    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm text-white/70">
+                                        No collections yet.
+                                    </div>
+                                ) : (
                                     <div className="space-y-2">
                                         {collections.map((c) => {
                                             const busyKey = `${c.id}::${url}`;
@@ -213,93 +233,98 @@ function MobileCollectionSheet({
                                                     className={[
                                                         "w-full rounded-xl border px-4 py-3 text-left transition",
                                                         "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]",
+                                                        "flex items-center justify-between gap-3",
                                                         busy ? "opacity-60" : ""
                                                     ].join(" ")}
                                                 >
-                                                    <div className="flex items-center justify-between gap-3">
-                                                        <div className="min-w-0">
-                                                            <div className="text-sm font-semibold text-white truncate">{c.name}</div>
-                                                            <div className="text-[11px] text-white/55 mt-0.5">
-                                                                {inCol ? "Already in this collection" : "Tap to add"}
-                                                            </div>
+                                                    <div className="min-w-0">
+                                                        <div className="text-sm font-semibold text-white truncate">
+                                                            {c.name || "Untitled"}
                                                         </div>
+                                                        <div className="text-[11px] text-white/55 mt-0.5 truncate">
+                                                            {inCol ? "Already in this collection" : "Tap to add"}
+                                                        </div>
+                                                    </div>
 
-                                                        <div className="flex items-center gap-2 shrink-0">
-                                                            {busy ? <Loader2 className="h-4 w-4 animate-spin text-white/80" /> : null}
-                                                            {inCol ? <Check className="h-5 w-5 text-emerald-400" /> : <PlusSquare className="h-5 w-5 text-white/60" />}
-                                                            {flash === "added" ? <span className="text-[10px] text-emerald-300">Added</span> : null}
-                                                            {flash === "already" ? <span className="text-[10px] text-white/60">Already</span> : null}
-                                                        </div>
+                                                    <div className="flex items-center gap-2 shrink-0">
+                                                        {busy ? <Loader2 className="h-4 w-4 animate-spin text-white/80" /> : null}
+                                                        {inCol ? (
+                                                            <Check className="h-5 w-5 text-emerald-400" />
+                                                        ) : (
+                                                            <PlusSquare className="h-5 w-5 text-white/60" />
+                                                        )}
+                                                        {flash === "added" ? <span className="text-[10px] text-emerald-300">Added</span> : null}
+                                                        {flash === "already" ? <span className="text-[10px] text-white/60">Already</span> : null}
                                                     </div>
                                                 </button>
                                             );
                                         })}
                                     </div>
-                                </div>
+                                )}
+                            </div>
 
-                                <div className="mt-4 border-t border-white/10 pt-4">
-                                    {!isCreatingThis ? (
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setCreatingForFile(file);
-                                                setNewCollectionName("");
-                                            }}
-                                            className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-black font-extrabold py-3"
-                                        >
-                                            <FolderPlus className="h-5 w-5" />
-                                            Create New Collection
-                                        </button>
-                                    ) : (
-                                        <div className="space-y-2">
-                                            <input
-                                                autoFocus
-                                                value={newCollectionName}
-                                                onChange={(e) => setNewCollectionName(e.target.value)}
-                                                placeholder="Collection name"
-                                                className="w-full px-4 py-3 text-sm rounded-xl bg-white text-black outline-none"
-                                                disabled={creatingCollection}
-                                            />
+                            <div className="px-4 pt-3 border-t border-white/10 bg-[#0f121a]">
+                                {!isCreatingThis ? (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setCreatingForFile(file);
+                                            setNewCollectionName("");
+                                        }}
+                                        className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-black font-extrabold py-3"
+                                    >
+                                        <FolderPlus className="h-5 w-5" />
+                                        Create New Collection
+                                    </button>
+                                ) : (
+                                    <div className="space-y-2 pb-1">
+                                        <input
+                                            autoFocus
+                                            value={newCollectionName}
+                                            onChange={(e) => setNewCollectionName(e.target.value)}
+                                            placeholder="Collection name"
+                                            className="w-full px-4 py-3 text-sm rounded-xl bg-white text-black outline-none"
+                                            disabled={creatingCollection}
+                                        />
 
-                                            {creatingCollection && (
-                                                <div className="space-y-1">
-                                                    <ProgressBar value={createProg.pct} />
-                                                    <div className="text-[11px] text-white/60 flex items-center justify-between">
-                                                        <span>{createStage || "Processing"}</span>
-                                                        <span>{Math.min(99, Math.round(createProg.pct))}%</span>
-                                                    </div>
+                                        {creatingCollection ? (
+                                            <div className="space-y-1">
+                                                <ProgressBar value={createProg.pct} />
+                                                <div className="text-[11px] text-white/60 flex items-center justify-between">
+                                                    <span className="truncate">{createStage || "Processing"}</span>
+                                                    <span className="shrink-0">{Math.min(99, Math.round(createProg.pct))}%</span>
                                                 </div>
-                                            )}
-
-                                            <div className="grid grid-cols-2 gap-2">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => createAndAddCollection(file)}
-                                                    disabled={creatingCollection}
-                                                    className="rounded-xl bg-primary text-black font-extrabold py-3 inline-flex items-center justify-center gap-2 disabled:opacity-60"
-                                                >
-                                                    {creatingCollection ? <Loader2 className="h-5 w-5 animate-spin" /> : null}
-                                                    Create
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        if (creatingCollection) return;
-                                                        setCreatingForFile(null);
-                                                        setNewCollectionName("");
-                                                    }}
-                                                    disabled={creatingCollection}
-                                                    className="rounded-xl border border-white/20 text-white font-semibold py-3 disabled:opacity-60 hover:bg-white/5"
-                                                >
-                                                    Cancel
-                                                </button>
                                             </div>
+                                        ) : null}
+
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => createAndAddCollection(file)}
+                                                disabled={creatingCollection}
+                                                className="rounded-xl bg-primary text-black font-extrabold py-3 inline-flex items-center justify-center gap-2 disabled:opacity-60"
+                                            >
+                                                {creatingCollection ? <Loader2 className="h-5 w-5 animate-spin" /> : null}
+                                                Create
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    if (creatingCollection) return;
+                                                    setCreatingForFile(null);
+                                                    setNewCollectionName("");
+                                                }}
+                                                disabled={creatingCollection}
+                                                className="rounded-xl border border-white/20 text-white font-semibold py-3 disabled:opacity-60 hover:bg-white/5"
+                                            >
+                                                Cancel
+                                            </button>
                                         </div>
-                                    )}
-                                </div>
-                            </Dialog.Panel>
-                        </Transition.Child>
-                    </div>
+                                    </div>
+                                )}
+                            </div>
+                        </Dialog.Panel>
+                    </Transition.Child>
                 </div>
             </Dialog>
         </Transition>
@@ -720,9 +745,6 @@ export default function GameDetails() {
     };
 
     const openMobileAddToCollection = (file) => {
-        collections.forEach((c) => {
-            if (c?.id) ensureItemsLoaded(c.id);
-        });
         setSheetFile(file);
         setMobileSheetOpen(true);
     };
@@ -937,6 +959,7 @@ export default function GameDetails() {
                                             )}
 
                                             {!(loadingSections || loadingGame) && pageFiles.length === 0 && <div className="p-6 text-white/70 text-sm">No files found.</div>}
+
                                             {!(loadingSections || loadingGame) &&
                                                 pageFiles.map((f, idx) => {
                                                     const globalIndex = (page - 1) * PAGE_SIZE + idx;
@@ -968,8 +991,7 @@ export default function GameDetails() {
                                                                     onChange={() => toggleSelected(k)}
                                                                 />
                                                                 <div className="text-xs text-white/60">
-                                                                    Actions are below •{" "}
-                                                                    <span className="text-white/80 font-semibold">Add to Collection</span>
+                                                                    Actions are below • <span className="text-white/80 font-semibold">Add to Collection</span>
                                                                 </div>
                                                             </div>
 
@@ -1082,11 +1104,10 @@ export default function GameDetails() {
                                                                         Add to Collection
                                                                     </button>
                                                                 </div>
-                                                            </div> 
+                                                            </div>
                                                         </div>
                                                     );
                                                 })}
-
                                         </div>
                                     </div>
 

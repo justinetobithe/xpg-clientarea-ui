@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Listbox } from "@headlessui/react";
 import { ChevronDown, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { useGamesQuery } from "../../hooks/useGamesQuery";
-import { useLiveGamesStore } from "../../store/liveGamesStore";
 
 const sortOptions = [
     { value: "order-asc", label: "Default Order" },
@@ -35,14 +34,6 @@ function getGameName(g) {
     return g?.name || g?.title || g?.game_name || "Untitled";
 }
 
-function getLiveName(lg) {
-    return lg?.name || lg?.title || "Untitled";
-}
-
-function getLiveImage(lg) {
-    return lg?.imageURL || lg?.image || lg?.thumbnail || null;
-}
-
 function GameCardSkeleton() {
     return (
         <div className="rounded-xl overflow-hidden shadow-lg bg-background/40 border border-border/50 animate-pulse">
@@ -65,17 +56,17 @@ function GamesGridSkeleton({ count = 8 }) {
 }
 
 function MobilePagination({ page, totalPages, onPrev, onNext, onJump }) {
-    if (totalPages <= 1) return null;
-
-    const canPrev = page > 1;
-    const canNext = page < totalPages;
-
     const pages = useMemo(() => {
         const out = new Set([1, totalPages, page, page - 1, page + 1]);
         return Array.from(out)
             .filter((n) => n >= 1 && n <= totalPages)
             .sort((a, b) => a - b);
     }, [page, totalPages]);
+
+    if (totalPages <= 1) return null;
+
+    const canPrev = page > 1;
+    const canNext = page < totalPages;
 
     return (
         <div className="md:hidden mt-5 flex flex-col items-center gap-2">
@@ -145,36 +136,20 @@ function MobilePagination({ page, totalPages, onPrev, onNext, onJump }) {
 }
 
 export default function GamesSection() {
+    const navigate = useNavigate();
     const { data: allGames = [], isLoading, error } = useGamesQuery();
-
-    const liveGames = useLiveGamesStore((s) => s.items);
-    const liveGamesLoading = useLiveGamesStore((s) => s.loading);
-    const liveGamesError = useLiveGamesStore((s) => s.error);
-    const startLiveGamesListener = useLiveGamesStore((s) => s.startLiveGamesListener);
-    const stopLiveGamesListener = useLiveGamesStore((s) => s.stopLiveGamesListener);
 
     const [inputValue, setInputValue] = useState("");
     const [searchTerm, setSearchTerm] = useState("");
     const [sortBy, setSortBy] = useState(sortOptions[0]);
     const [isSearching, setIsSearching] = useState(false);
-
     const [mobilePage, setMobilePage] = useState(1);
 
     const timerRef = useRef(null);
     const typesTrackRef = useRef(null);
 
-    const xpgLiveBase = (import.meta.env.VITE_XPG_LIVE_URL).replace(/\/+$/, "");
-
-    useEffect(() => {
-        startLiveGamesListener(200);
-        return () => stopLiveGamesListener();
-    }, [startLiveGamesListener, stopLiveGamesListener]);
-
-    useEffect(() => {
-        return () => {
-            if (timerRef.current) clearTimeout(timerRef.current);
-        };
-    }, []);
+    const [canPrevTypes, setCanPrevTypes] = useState(false);
+    const [canNextTypes, setCanNextTypes] = useState(false);
 
     const handleSearchChange = (e) => {
         const val = e.target.value;
@@ -196,24 +171,43 @@ export default function GamesSection() {
         }, 450);
     };
 
-    const normalizedLiveGames = useMemo(() => {
-        const list = Array.isArray(liveGames) ? liveGames : [];
-        return list
-            .map((lg) => ({
-                ...lg,
-                _title: getLiveName(lg),
-                _imageURL: getLiveImage(lg)
-            }))
-            .filter((x) => x.id);
-    }, [liveGames]);
+    useEffect(() => {
+        return () => {
+            if (timerRef.current) clearTimeout(timerRef.current);
+        };
+    }, []);
 
-    const openLiveGame = useCallback(
-        (id) => {
-            if (!id) return;
-            window.open(`${xpgLiveBase}/live-games/${id}`, "_blank", "noopener,noreferrer");
-        },
-        [xpgLiveBase]
-    );
+    const gamesSortedForTypes = useMemo(() => {
+        const list = Array.isArray(allGames) ? [...allGames] : [];
+        list.sort((a, b) => (a.order ?? 999999) - (b.order ?? 999999));
+        return list.slice(0, 12);
+    }, [allGames]);
+
+    const updateTypesArrows = useCallback(() => {
+        const el = typesTrackRef.current;
+        if (!el) return;
+        const max = el.scrollWidth - el.clientWidth;
+        const left = el.scrollLeft;
+        setCanPrevTypes(left > 2);
+        setCanNextTypes(max - left > 2);
+    }, []);
+
+    useEffect(() => {
+        updateTypesArrows();
+        const el = typesTrackRef.current;
+        if (!el) return;
+
+        const onScroll = () => updateTypesArrows();
+        el.addEventListener("scroll", onScroll, { passive: true });
+
+        const ro = new ResizeObserver(() => updateTypesArrows());
+        ro.observe(el);
+
+        return () => {
+            el.removeEventListener("scroll", onScroll);
+            ro.disconnect();
+        };
+    }, [updateTypesArrows, gamesSortedForTypes.length]);
 
     const scrollTypesBy = useCallback((dir) => {
         const el = typesTrackRef.current;
@@ -222,10 +216,16 @@ export default function GamesSection() {
         el.scrollBy({ left: dir * step, behavior: "smooth" });
     }, []);
 
-    const canScrollTypes = normalizedLiveGames.length > 1;
+    const openGame = useCallback(
+        (id) => {
+            if (!id) return;
+            navigate(`/game/${id}`);
+        },
+        [navigate]
+    );
 
     const games = useMemo(() => {
-        let filtered = [...allGames];
+        let filtered = Array.isArray(allGames) ? [...allGames] : [];
 
         if (searchTerm.length >= 2) {
             const lower = searchTerm.toLowerCase();
@@ -236,6 +236,8 @@ export default function GamesSection() {
             filtered.sort((a, b) => getGameName(a).localeCompare(getGameName(b)));
         } else if (sortBy.value === "name-desc") {
             filtered.sort((a, b) => getGameName(b).localeCompare(getGameName(a)));
+        } else {
+            filtered.sort((a, b) => (a.order ?? 999999) - (b.order ?? 999999));
         }
 
         return filtered;
@@ -258,45 +260,44 @@ export default function GamesSection() {
                 <div className="flex items-center justify-between mb-4">
                     <div className="text-lg font-semibold text-white">Game Types</div>
                     <div className="flex items-center gap-2">
-                        <IconButton label="Previous" onClick={() => scrollTypesBy(-1)} disabled={!canScrollTypes}>
+                        <IconButton label="Previous" onClick={() => scrollTypesBy(-1)} disabled={!canPrevTypes}>
                             <ChevronLeft className="h-5 w-5" />
                         </IconButton>
-                        <IconButton label="Next" onClick={() => scrollTypesBy(1)} disabled={!canScrollTypes}>
+                        <IconButton label="Next" onClick={() => scrollTypesBy(1)} disabled={!canNextTypes}>
                             <ChevronRight className="h-5 w-5" />
                         </IconButton>
                     </div>
                 </div>
 
-                {(liveGamesLoading || liveGamesError) && (
-                    <div className="text-sm text-white/60">{liveGamesLoading ? "Loading..." : liveGamesError}</div>
+                {showSkeleton && <div className="text-sm text-white/60">Loading...</div>}
+
+                {!showSkeleton && gamesSortedForTypes.length === 0 && (
+                    <div className="text-sm text-white/60">No games found.</div>
                 )}
 
-                {!liveGamesLoading && !liveGamesError && normalizedLiveGames.length === 0 && (
-                    <div className="text-sm text-white/60">No live games found.</div>
-                )}
-
-                {!liveGamesLoading && !liveGamesError && normalizedLiveGames.length > 0 && (
+                {!showSkeleton && gamesSortedForTypes.length > 0 && (
                     <div className="-mx-0">
                         <div
                             ref={typesTrackRef}
                             className={[
-                                "flex gap-4 overflow-x-auto pb-1",
+                                "flex gap-4 pb-1 overflow-x-auto",
                                 "snap-x snap-mandatory",
-                                "[-webkit-overflow-scrolling:touch]"
+                                "[-webkit-overflow-scrolling:touch]",
+                                "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                             ].join(" ")}
                         >
-                            {normalizedLiveGames.map((lg) => (
-                                <div key={lg.id} className="snap-start shrink-0 w-[48%] sm:w-[32%] lg:w-[24%]">
+                            {gamesSortedForTypes.map((g) => (
+                                <div key={g.id} className="snap-start shrink-0 w-[48%] sm:w-[32%] lg:w-[24%]">
                                     <button
                                         type="button"
-                                        onClick={() => openLiveGame(lg.id)}
+                                        onClick={() => openGame(g.id)}
                                         className="group rounded-xl overflow-hidden shadow-lg hover:shadow-primary/50 transition-all duration-300 transform hover:scale-[1.03] bg-background/50 border border-border/50 block w-full text-left"
                                     >
                                         <div className="aspect-video relative overflow-hidden">
-                                            {lg._imageURL ? (
+                                            {g.imageURL ? (
                                                 <img
-                                                    src={lg._imageURL}
-                                                    alt={lg._title}
+                                                    src={g.imageURL}
+                                                    alt={getGameName(g)}
                                                     className="w-full h-full object-cover transition-opacity duration-300 group-hover:opacity-90"
                                                     loading="lazy"
                                                 />
@@ -307,7 +308,9 @@ export default function GamesSection() {
                                             )}
                                         </div>
 
-                                        <div className="p-3 text-center text-white text-sm font-medium truncate">{lg._title}</div>
+                                        <div className="p-3 text-center text-white text-sm font-medium truncate">
+                                            {getGameName(g)}
+                                        </div>
                                     </button>
                                 </div>
                             ))}
@@ -372,7 +375,9 @@ export default function GamesSection() {
 
                 {showSkeleton && <GamesGridSkeleton count={8} />}
 
-                {!showSkeleton && error && <div className="text-red-400 text-sm">{error?.message || "Failed to load games"}</div>}
+                {!showSkeleton && error && (
+                    <div className="text-red-400 text-sm">{error?.message || "Failed to load games"}</div>
+                )}
 
                 {!showSkeleton && !error && allGames.length > 0 && games.length === 0 && (
                     <div className="text-white/70 text-sm">No games found matching "{searchTerm}".</div>

@@ -10,7 +10,6 @@ import {
     Settings,
     LayoutGrid,
     Loader2,
-    ExternalLink,
     ChevronRight
 } from "lucide-react";
 import { useAuthStore } from "../store/authStore";
@@ -47,7 +46,7 @@ export default function Navbar() {
     const startLiveGamesListener = useLiveGamesStore((s) => s.startLiveGamesListener);
     const stopLiveGamesListener = useLiveGamesStore((s) => s.stopLiveGamesListener);
 
-    const xpgLiveBase = (import.meta.env.VITE_XPG_LIVE_URL).replace(/\/+$/, "");
+    const xpgLiveBase = (import.meta.env.VITE_XPG_LIVE_URL || "https://xpg.live").replace(/\/+$/, "");
 
     useEffect(() => {
         const onScroll = () => setScrollY(window.scrollY || 0);
@@ -116,8 +115,7 @@ export default function Navbar() {
     const openLiveGame = useCallback(
         (id) => {
             if (!id) return;
-            const url = `${xpgLiveBase}/live-games/${id}`;
-            window.open(url, "_blank", "noopener,noreferrer");
+            window.open(`${xpgLiveBase}/live-games/${id}`, "_blank", "noopener,noreferrer");
         },
         [xpgLiveBase]
     );
@@ -125,7 +123,8 @@ export default function Navbar() {
     const mobilePrimaryLinks = useMemo(
         () => [
             { label: "Home", to: "/" },
-            { label: "Announcements", to: "/announcements" }
+            { label: "Announcements", to: "/announcements" },
+            { label: "API Documents", to: "/game/Pw1UU7RW513n9SNsPXPQ" }
         ],
         []
     );
@@ -133,6 +132,7 @@ export default function Navbar() {
     const mobileOtherLinks = useMemo(
         () => [
             { label: "Announcements", to: "/announcements" },
+            { label: "API Documents", to: "/game/Pw1UU7RW513n9SNsPXPQ" },
             { label: "Settings", to: "/settings" }
         ],
         []
@@ -178,18 +178,32 @@ export default function Navbar() {
                         <nav className="hidden md:flex items-center gap-8">
                             <Link
                                 to="/"
-                                className={`text-base font-semibold tracking-wide transition hover:opacity-80 ${pathname === "/" ? "text-primary" : "text-white"
-                                    }`}
+                                className={[
+                                    "text-base font-semibold tracking-wide transition hover:opacity-80",
+                                    pathname === "/" ? "text-primary" : "text-white"
+                                ].join(" ")}
                             >
                                 Home
                             </Link>
 
                             <Link
                                 to="/announcements"
-                                className={`text-base font-semibold tracking-wide transition hover:opacity-80 ${pathname === "/announcements" ? "text-primary" : "text-white"
-                                    }`}
+                                className={[
+                                    "text-base font-semibold tracking-wide transition hover:opacity-80",
+                                    pathname === "/announcements" ? "text-primary" : "text-white"
+                                ].join(" ")}
                             >
                                 Announcements
+                            </Link>
+
+                            <Link
+                                to="/game/Pw1UU7RW513n9SNsPXPQ"
+                                className={[
+                                    "text-base font-semibold tracking-wide transition hover:opacity-80",
+                                    pathname === "/game/Pw1UU7RW513n9SNsPXPQ" ? "text-primary" : "text-white"
+                                ].join(" ")}
+                            >
+                                API Documents
                             </Link>
                         </nav>
                     </div>
@@ -256,7 +270,10 @@ export default function Navbar() {
                                         {({ active }) => (
                                             <Link
                                                 to="/settings"
-                                                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-white ${active ? "bg-white/5" : ""}`}
+                                                className={[
+                                                    "flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-white",
+                                                    active ? "bg-white/5" : ""
+                                                ].join(" ")}
                                             >
                                                 <Settings size={16} /> Settings
                                             </Link>
@@ -268,8 +285,11 @@ export default function Navbar() {
                                             <button
                                                 onClick={onLogout}
                                                 disabled={logoutLoading}
-                                                className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-white ${active ? "bg-white/5" : ""
-                                                    } disabled:opacity-60`}
+                                                className={[
+                                                    "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-white",
+                                                    active ? "bg-white/5" : "",
+                                                    "disabled:opacity-60"
+                                                ].join(" ")}
                                             >
                                                 {logoutLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut size={16} />}
                                                 Logout
@@ -330,7 +350,6 @@ export default function Navbar() {
                                             }}
                                         />
                                     ))}
-
                                 </div>
 
                                 <div className="h-px bg-white/10" />
