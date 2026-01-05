@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Fieldset, Field, Input, Label } from "@headlessui/react";
 import { useMutation } from "@tanstack/react-query";
@@ -12,7 +12,8 @@ import { useDialog } from "../contexts/DialogContext";
 import { useToast } from "../contexts/ToastContext";
 import CookiePolicy from "../components/CookiePolicy";
 import PrivacyPolicy from "../components/PrivacyPolicy";
-import ReCAPTCHA from "react-google-recaptcha";
+
+const PENDING_KEY = "xpg_registration_pending_email";
 
 const schema = z
     .object({
@@ -24,39 +25,23 @@ const schema = z
         confirmPassword: z.string().min(6, "Confirm your password"),
         newsletter: z.boolean().optional(),
         notice: z.boolean(),
-        privacy: z.boolean()
+        privacy: z.boolean(),
     })
     .refine((v) => v.password === v.confirmPassword, {
         message: "Passwords do not match",
-        path: ["confirmPassword"]
+        path: ["confirmPassword"],
     })
     .refine((v) => v.notice && v.privacy, {
         message: "Please accept required policies",
-        path: ["privacy"]
+        path: ["privacy"],
     });
 
-function isValidRecaptchaToken(token) {
-    if (!token || typeof token !== "string") return false;
-    if (token.length < 20) return false;
-    if (/[^\x00-\x7F]/.test(token)) return false;
-    return true;
-}
-
-async function verifyRecaptchaServer(token) {
-    const url = import.meta.env.VITE_VERIFY_RECAPTCHA_URL;
-    if (!url) throw new Error("Missing VITE_VERIFY_RECAPTCHA_URL");
-
-    const resp = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token })
-    });
-
-    const data = await resp.json().catch(() => ({}));
-    if (!resp.ok || !data?.success) {
-        throw new Error(data?.message || "reCAPTCHA verification failed");
-    }
-    return true;
+function toUserMessage(err) {
+    const code = err?.code ? String(err.code) : "";
+    if (code === "auth/email-already-in-use") return "This email is already in use. Please use another email or log in.";
+    if (code === "auth/invalid-email") return "Invalid email address.";
+    if (code === "auth/weak-password") return "Password is too weak.";
+    return "Unable to register. Please try again.";
 }
 
 export default function Register() {
@@ -64,37 +49,50 @@ export default function Register() {
     const { openDialog } = useDialog();
     const { showToast } = useToast();
 
-    const recaptchaRef = useRef(null);
-
     const [err, setErr] = useState("");
-    const [captchaToken, setCaptchaToken] = useState("");
     const [userIPInfo, setUserIPInfo] = useState(null);
 
-    const recaptchaSiteKey = useMemo(() => import.meta.env.VITE_RECAPTCHA_SITE_KEY, []);
+    const [submittedEmail, setSubmittedEmail] = useState(() => {
+        try {
+            return localStorage.getItem(PENDING_KEY) || "";
+        } catch {
+            return "";
+        }
+    });
+
+    const isPendingScreen = useMemo(() => !!submittedEmail, [submittedEmail]);
 
     useEffect(() => {
-        const fetchIPInfo = async () => {
+        let alive = true;
+
+        (async () => {
             try {
                 const res = await fetch("https://ipapi.co/json/");
                 const data = await res.json();
+                if (!alive) return;
+
                 setUserIPInfo({
                     ip: data.ip || null,
                     city: data.city || null,
                     region: data.region || null,
                     country: data.country_name || null,
-                    loc: data.loc || null
+                    loc: data.loc || null,
                 });
             } catch {
+                if (!alive) return;
                 setUserIPInfo(null);
             }
+        })();
+
+        return () => {
+            alive = false;
         };
-        fetchIPInfo();
     }, []);
 
     const {
         register,
         handleSubmit,
-        formState: { errors }
+        formState: { errors },
     } = useForm({
         resolver: zodResolver(schema),
         defaultValues: {
@@ -106,18 +104,12 @@ export default function Register() {
             confirmPassword: "",
             newsletter: false,
             notice: false,
-            privacy: false
-        }
+            privacy: false,
+        },
     });
 
     const registerMutation = useMutation({
         mutationFn: async (form) => {
-            if (!isValidRecaptchaToken(captchaToken)) {
-                throw new Error("Please complete the CAPTCHA.");
-            }
-
-            await verifyRecaptchaServer(captchaToken);
-
             const usersRef = collection(db, "users");
             const q = query(usersRef, orderBy("opid", "desc"), limit(1));
             const snap = await getDocs(q);
@@ -147,43 +139,35 @@ export default function Register() {
                     city: userIPInfo?.city || null,
                     region: userIPInfo?.region || null,
                     country: userIPInfo?.country || null,
-                    coordinates: userIPInfo?.loc || null
-                }
+                    coordinates: userIPInfo?.loc || null,
+                },
             });
 
             await signOut(auth);
-            return cred.user;
+            return { email: form.email };
         },
-        onSuccess: () => {
+        onSuccess: ({ email }) => {
+            try {
+                localStorage.setItem(PENDING_KEY, email);
+            } catch { }
+
+            setSubmittedEmail(email);
+
             showToast({
                 title: "Registration submitted",
                 description: "Your account is pending admin approval.",
-                variant: "success"
+                variant: "success",
             });
-            nav("/login");
         },
         onError: (error) => {
-            try {
-                recaptchaRef.current?.reset();
-            } catch { }
-
-            setCaptchaToken("");
-
-            const msg =
-                error?.message === "Please complete the CAPTCHA."
-                    ? "Please complete the CAPTCHA."
-                    : error?.code === "auth/email-already-in-use"
-                        ? "This email is already in use. Please use another email or log in."
-                        : "Unable to register. Try another email.";
-
+            const msg = toUserMessage(error);
             setErr(msg);
-
             showToast({
                 title: "Registration failed",
                 description: msg,
-                variant: "error"
+                variant: "error",
             });
-        }
+        },
     });
 
     const onSubmit = (data) => {
@@ -201,15 +185,67 @@ export default function Register() {
         openDialog("Privacy Policy", <PrivacyPolicy />);
     };
 
-    const handleCaptchaChange = (token) => setCaptchaToken(token || "");
-    const handleCaptchaExpired = () => {
-        setCaptchaToken("");
-        showToast({ title: "CAPTCHA expired", description: "Please check the CAPTCHA again.", variant: "warning" });
+    const handleGoLogin = () => {
+        nav("/login");
     };
-    const handleCaptchaErrored = () => {
-        setCaptchaToken("");
-        showToast({ title: "CAPTCHA error", description: "CAPTCHA failed to load.", variant: "error" });
+
+    const handleClearPending = () => {
+        try {
+            localStorage.removeItem(PENDING_KEY);
+        } catch { }
+        setSubmittedEmail("");
     };
+
+    if (isPendingScreen) {
+        return (
+            <div className="min-h-screen flex items-center justify-center relative overflow-hidden text-foreground">
+                <div className="absolute inset-0 bg-[url('/image/bg.jpg')] bg-cover bg-center scale-110 blur-xl opacity-60" />
+                <div className="absolute inset-0 bg-black/70" />
+
+                <div className="relative w-[94%] max-w-xl rounded-2xl border border-border bg-card shadow-2xl p-8 md:p-10">
+                    <div className="flex flex-col items-center gap-3 mb-6">
+                        <img src="/image/logo-white.png" alt="Logo" className="h-[90px]" />
+                    </div>
+
+                    <h1 className="text-center text-xl font-semibold text-white mb-2">Request submitted</h1>
+                    <p className="text-center text-white/80 text-sm">
+                        Your account is pending admin approval.
+                    </p>
+
+                    <div className="mt-6 rounded-lg border border-white/10 bg-black/30 p-4">
+                        <div className="text-white/80 text-sm">Submitted email</div>
+                        <div className="text-white font-semibold break-all">{submittedEmail}</div>
+                        <div className="text-white/60 text-xs mt-2">
+                            Once approved, you can sign in and the system will grant access automatically.
+                        </div>
+                    </div>
+
+                    <div className="mt-6 flex flex-col gap-3">
+                        <button
+                            onClick={handleGoLogin}
+                            className="w-full rounded-md bg-primary px-6 py-3 text-base font-semibold text-primary-foreground hover:opacity-90"
+                        >
+                            Go to login
+                        </button>
+
+                        <button
+                            onClick={handleClearPending}
+                            className="w-full rounded-md border border-white/15 bg-transparent px-6 py-3 text-base font-semibold text-white/90 hover:bg-white/5"
+                        >
+                            Submit another request
+                        </button>
+                    </div>
+
+                    <div className="text-center text-sm mt-6 text-white/70">
+                        Already have an account?{" "}
+                        <Link to="/login" className="text-primary hover:underline">
+                            Sign in
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen flex items-center justify-center relative overflow-hidden text-foreground">
@@ -305,8 +341,7 @@ export default function Register() {
                                 I have read and understood the full{" "}
                                 <button type="button" onClick={handleOpenCookiePolicy} className="text-primary hover:underline">
                                     Cookie Policy
-                                </button>{" "}
-                                (referred to as notice)
+                                </button>
                             </label>
 
                             <label className="flex items-center gap-3 text-sm text-white/90">
@@ -321,18 +356,8 @@ export default function Register() {
                         </div>
 
                         <div className="md:col-span-2 pt-2 flex flex-col items-center gap-4">
-                            <div className="flex justify-center">
-                                <ReCAPTCHA
-                                    ref={recaptchaRef}
-                                    sitekey={recaptchaSiteKey}
-                                    onChange={handleCaptchaChange}
-                                    onExpired={handleCaptchaExpired}
-                                    onErrored={handleCaptchaErrored}
-                                />
-                            </div>
-
                             <button
-                                disabled={registerMutation.isPending || !isValidRecaptchaToken(captchaToken)}
+                                disabled={registerMutation.isPending}
                                 className="w-fit mx-auto block rounded-md bg-primary px-9 py-3 text-base font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
                             >
                                 {registerMutation.isPending ? "Registering..." : "Request access"}

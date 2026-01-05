@@ -1,5 +1,6 @@
 const { onRequest, onCall, HttpsError } = require("firebase-functions/v2/https");
 const admin = require("firebase-admin");
+const fetch = require("node-fetch");
 
 const REGION = "us-central1";
 
@@ -16,8 +17,7 @@ const jsonBody = (req) => {
     if (req.body && typeof req.body === "object") return req.body;
     try {
         return JSON.parse(req.rawBody?.toString("utf8") || "{}");
-    } catch (e) {
-        void e;
+    } catch {
         return {};
     }
 };
@@ -40,16 +40,20 @@ const getBearer = (req) => {
     return h.slice("Bearer ".length).trim();
 };
 
+const getToken = (req) => {
+    const q = String(req.query.token || "").trim();
+    return getBearer(req) || (q ? q : null);
+};
+
 const requireAuth = async (req) => {
-    const token = getBearer(req);
+    const token = getToken(req);
     if (!token) throw new Error("missing_token");
     const decoded = await getAdmin().auth().verifyIdToken(token);
     if (!decoded?.uid) throw new Error("invalid_token");
     return decoded;
 };
 
-const safeFilename = (name) =>
-    String(name || "download").replace(/["\r\n]/g, "").slice(0, 180);
+const safeFilename = (name) => String(name || "download").replace(/["\r\n]/g, "").slice(0, 180);
 
 const isSafePath = (p) => {
     if (!p) return false;
@@ -138,7 +142,7 @@ const deleteUserStorage = async (uid) => {
         try {
             await bucket.deleteFiles({ prefix });
         } catch (e) {
-            void e;
+            console.warn("deleteFiles failed:", prefix, e?.message || e);
         }
     }
 };
@@ -146,14 +150,14 @@ const deleteUserStorage = async (uid) => {
 exports.verifyRecaptcha = onRequest({ region: REGION }, async (req, res) => {
     if (allowCors(req, res)) return;
 
-    if (req.method !== "POST") return res.status(405).json({ success: false });
+    if (req.method !== "POST") return res.status(405).json({ success: false, message: "Method Not Allowed" });
 
     const body = jsonBody(req);
     const token = String(body.token || "");
     const secret = process.env.RECAPTCHA_SECRET;
 
-    if (!token) return res.status(400).json({ success: false });
-    if (!secret) return res.status(500).json({ success: false });
+    if (!token) return res.status(400).json({ success: false, message: "Missing token" });
+    if (!secret) return res.status(500).json({ success: false, message: "Missing RECAPTCHA_SECRET" });
 
     try {
         const resp = await fetch("https://www.google.com/recaptcha/api/siteverify", {
@@ -162,12 +166,16 @@ exports.verifyRecaptcha = onRequest({ region: REGION }, async (req, res) => {
             body: new URLSearchParams({ secret, response: token }).toString()
         });
 
-        const data = await resp.json();
-        if (data.success) return res.json({ success: true });
-        return res.status(400).json({ success: false });
+        const data = await resp.json().catch(() => ({}));
+        if (!data?.success) {
+            const codes = Array.isArray(data?.["error-codes"]) ? data["error-codes"].join(", ") : "";
+            return res.status(400).json({ success: false, message: codes || "reCAPTCHA failed" });
+        }
+
+        return res.json({ success: true });
     } catch (e) {
-        void e;
-        return res.status(500).json({ success: false });
+        const msg = String(e?.message || "verify error");
+        return res.status(500).json({ success: false, message: msg });
     }
 });
 
@@ -187,8 +195,7 @@ exports.downloadFile = onRequest({ region: REGION }, async (req, res) => {
 
         const enforcePrefix = process.env.DOWNLOAD_REQUIRE_UID_PREFIX === "true";
         if (enforcePrefix) {
-            const ok =
-                filePath.startsWith(`${decoded.uid}/`) || filePath.startsWith(`users/${decoded.uid}/`);
+            const ok = filePath.startsWith(`${decoded.uid}/`) || filePath.startsWith(`users/${decoded.uid}/`);
             if (!ok) return res.status(403).send("Forbidden");
         }
 
@@ -204,18 +211,18 @@ exports.downloadFile = onRequest({ region: REGION }, async (req, res) => {
 
         file
             .createReadStream()
-            .on("error", () => {
+            .on("error", (err) => {
                 try {
                     res.status(500).end("Server error");
                 } catch (e) {
-                    void e;
+                    console.warn("stream error:", err?.message || err, e?.message || e);
                 }
             })
             .pipe(res);
 
         return null;
     } catch (e) {
-        void e;
+        console.warn("downloadFile unauthorized:", e?.message || e);
         return res.status(401).send("Unauthorized");
     }
 });

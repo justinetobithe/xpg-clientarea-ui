@@ -26,35 +26,68 @@ function ProtectedLayout({ children }) {
   );
 }
 
+function Splash() {
+  return (
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden text-foreground">
+      <div className="absolute inset-0 bg-[url('/image/bg.jpg')] bg-cover bg-center scale-110 blur-xl opacity-60" />
+      <div className="absolute inset-0 bg-black/70" />
+      <div className="relative w-[94%] max-w-md rounded-2xl border border-border bg-card shadow-2xl p-8 md:p-10">
+        <div className="flex flex-col items-center gap-4">
+          <img src="/image/logo-white.png" alt="Logo" className="h-[90px]" />
+          <div className="text-white/80 text-sm">Loading…</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   useAuthListener();
 
-  const user = useAuthStore((s) => s.user);
   const loading = useAuthStore((s) => s.loading);
+  const user = useAuthStore((s) => s.user);
+  const profile = useAuthStore((s) => s.profile);
 
-  if (loading) return null;
+  const isAuthed = !!user;
+  const hasAccess = profile?.access === true;
 
   return (
     <ToastProvider>
       <DialogProvider>
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={user ? <ProtectedLayout><Home /></ProtectedLayout> : <Navigate to="/login" />} />
+          {loading ? (
+            <Splash />
+          ) : (
+            <Routes>
+              <Route
+                path="/"
+                element={isAuthed && hasAccess ? <ProtectedLayout><Home /></ProtectedLayout> : <Navigate to="/login" />}
+              />
+              <Route
+                path="/search"
+                element={isAuthed && hasAccess ? <ProtectedLayout><Search /></ProtectedLayout> : <Navigate to="/login" />}
+              />
+              <Route
+                path="/announcements"
+                element={isAuthed && hasAccess ? <ProtectedLayout><Announcements /></ProtectedLayout> : <Navigate to="/login" />}
+              />
+              <Route
+                path="/announcement/:id"
+                element={isAuthed && hasAccess ? <ProtectedLayout><AnnouncementDetails /></ProtectedLayout> : <Navigate to="/login" />}
+              />
+              <Route
+                path="/game/:gameId"
+                element={isAuthed && hasAccess ? <ProtectedLayout><GameDetails /></ProtectedLayout> : <Navigate to="/login" />}
+              />
+              <Route
+                path="/settings"
+                element={isAuthed && hasAccess ? <ProtectedLayout><Settings /></ProtectedLayout> : <Navigate to="/login" />}
+              />
 
-            <Route path="/search" element={user ? <ProtectedLayout><Search /></ProtectedLayout> : <Navigate to="/login" />} />
-
-            <Route path="/announcements" element={user ? <ProtectedLayout><Announcements /></ProtectedLayout> : <Navigate to="/login" />} />
-
-            <Route path="/announcement/:id" element={user ? <ProtectedLayout><AnnouncementDetails /></ProtectedLayout> : <Navigate to="/login" />} />
-
-            <Route path="/game/:gameId" element={user ? <ProtectedLayout><GameDetails /></ProtectedLayout> : <Navigate to="/login" />} />
-
-            <Route path="/settings" element={user ? <ProtectedLayout><Settings /></ProtectedLayout> : <Navigate to="/login" />} />
-
-            <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
-            <Route path="/register" element={!user ? <Register /> : <Navigate to="/" />} />
-          </Routes>
-
+              <Route path="/login" element={!isAuthed || !hasAccess ? <Login /> : <Navigate to="/" />} />
+              <Route path="/register" element={!isAuthed ? <Register /> : <Navigate to="/" />} />
+            </Routes>
+          )}
         </BrowserRouter>
       </DialogProvider>
     </ToastProvider>

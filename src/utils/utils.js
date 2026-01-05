@@ -15,3 +15,7 @@ export function formatLongDate(ts) {
 export function toDate(ts) {
     return ts?.toDate ? ts.toDate() : new Date(ts || Date.now());
 }
+
+export function sleep(ms) {
+    return new Promise((r) => setTimeout(r, ms));
+}

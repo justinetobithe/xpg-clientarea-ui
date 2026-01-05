@@ -1,6 +1,9 @@
 import { useMemo, useState } from "react";
 import { FileText, FileImage, File, Loader2, DownloadCloud, Download } from "lucide-react";
+import { getAuth } from "firebase/auth";
 import { useDownloadsStore } from "../../store/downloadsStore";
+import { getExt, isImage, buildDownloadUrl, storagePathFromFirebaseUrl, downloadViaIframe } from "../../utils/fileUtils";
+import { sleep } from "../../utils/utils";
 
 function RecentDownloadSkeletonRow() {
     return (
@@ -33,47 +36,6 @@ function RecentDownloadSkeletonCard() {
         </div>
     );
 }
-
-const IMAGE_EXTS = new Set(["PNG", "JPG", "JPEG", "GIF", "WEBP", "SVG"]);
-
-const getExt = (name = "") => {
-    const n = name.toString();
-    if (!n.includes(".")) return "";
-    return n.split(".").pop().toUpperCase();
-};
-
-const isImage = (ext) => IMAGE_EXTS.has((ext || "").toUpperCase());
-
-const buildDownloadUrl = (storagePath, filename) => {
-    const base = import.meta.env.VITE_DOWNLOAD_FILE_URL;
-    if (!base) return null;
-    return `${base}?path=${encodeURIComponent(storagePath)}&name=${encodeURIComponent(filename || "download")}`;
-};
-
-const storagePathFromFirebaseUrl = (fileURL) => {
-    try {
-        const u = new URL(fileURL);
-        const m = u.pathname.match(/\/o\/(.+)$/);
-        if (!m) return null;
-        return decodeURIComponent(m[1]);
-    } catch {
-        return null;
-    }
-};
-
-const downloadViaIframe = (url) => {
-    const iframe = document.createElement("iframe");
-    iframe.style.display = "none";
-    iframe.src = url;
-    document.body.appendChild(iframe);
-    setTimeout(() => {
-        try {
-            iframe.remove();
-        } catch { }
-    }, 60000);
-};
-
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function TooltipIconButton({ label, disabled, onClick, children }) {
     return (
@@ -147,6 +109,23 @@ export default function RecentDownloadsPanel({ items = [], loading = false, erro
                 return;
             }
 
+            const auth = getAuth();
+            const token = await auth.currentUser?.getIdToken();
+            if (!token) {
+                alert("Not authenticated. Please login again.");
+                return;
+            }
+
+            const url = buildDownloadUrl(storagePath, name, token);
+            if (!url) {
+                alert("Missing VITE_DOWNLOAD_FILE_URL");
+                return;
+            }
+
+            downloadViaIframe(url);
+
+            await sleep(1200);
+
             await upsertDownload({
                 userId: f.userId,
                 fileName: f.fileName,
@@ -157,14 +136,7 @@ export default function RecentDownloadsPanel({ items = [], loading = false, erro
                 fileKey: storagePath
             });
 
-            const url = buildDownloadUrl(storagePath, name);
-            if (!url) {
-                alert("Missing VITE_DOWNLOAD_FILE_URL");
-                return;
-            }
-
-            downloadViaIframe(url);
-            await sleep(800);
+            await sleep(300);
         } catch (e) {
             alert(e?.message || "Download failed");
         } finally {
@@ -172,7 +144,6 @@ export default function RecentDownloadsPanel({ items = [], loading = false, erro
         }
     };
 
-    // ✅ limits requested
     const desktopMaxItems = 5;
     const mobileMaxItems = 10;
 
@@ -186,8 +157,8 @@ export default function RecentDownloadsPanel({ items = [], loading = false, erro
     const showMobileScroller = !loading && !error && mobileItems.length > 0;
 
     return (
-        <div className="bg-card border border-border rounded-2xl p-5 md:p-6">
-            <div className="flex items-center justify-between mb-4">
+        <div className="bg-card border border-border rounded-2xl p-5 md:p-6 h-full min-h-[560px] flex flex-col">
+            <div className="flex items-center justify-between mb-4 shrink-0">
                 <div>
                     <div className="text-lg font-semibold text-white flex items-center gap-2">
                         <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-primary/15 border border-primary/30">
@@ -199,7 +170,7 @@ export default function RecentDownloadsPanel({ items = [], loading = false, erro
                 </div>
             </div>
 
-            <div className="rounded-xl overflow-hidden border border-white/10 bg-background/10">
+            <div className="rounded-xl overflow-hidden border border-white/10 bg-background/10 flex-1 min-h-0">
                 <div className="hidden md:grid grid-cols-[56px_minmax(0,1fr)_150px_90px] items-center gap-3 px-4 py-3 text-xs font-bold text-white/80 bg-white/5">
                     <div />
                     <div>Filename</div>
@@ -224,7 +195,7 @@ export default function RecentDownloadsPanel({ items = [], loading = false, erro
                 {showMobileScroller && (
                     <div className="md:hidden border-t border-white/10">
                         <div className="px-4 pt-3 pb-2 flex items-center justify-between">
-                            <div className="text-xs font-semibold text-white/70">Recent (Mobile)</div>
+                            <div className="text-xs font-semibold text-white/70">Recent</div>
                             <div className="text-[11px] text-white/50">
                                 Showing {Math.min(mobileItems.length, mobileMaxItems)} {mobileItems.length >= mobileMaxItems ? "+" : ""} items
                             </div>
@@ -331,10 +302,7 @@ export default function RecentDownloadsPanel({ items = [], loading = false, erro
                                 <div className="flex items-center justify-center">{icon}</div>
 
                                 <div className="min-w-0 pr-2">
-                                    <div
-                                        className="text-sm font-semibold text-white leading-snug break-words whitespace-normal line-clamp-3"
-                                        title={name}
-                                    >
+                                    <div className="text-sm font-semibold text-white leading-snug break-words whitespace-normal line-clamp-3" title={name}>
                                         {name}
                                     </div>
                                     <div className="text-xs text-white/60 truncate mt-0.5">

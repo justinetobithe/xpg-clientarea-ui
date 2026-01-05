@@ -1,40 +1,44 @@
 import { useEffect } from "react";
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "../firebase";
 import { useAuthStore } from "../store/authStore";
 
 export function useAuthListener() {
-    const setUser = useAuthStore((s) => s.setUser);
+    const setLoading = useAuthStore((s) => s.setLoading);
+    const setAuthUser = useAuthStore((s) => s.setAuthUser);
     const clearUser = useAuthStore((s) => s.clearUser);
     const hydrateUserProfile = useAuthStore((s) => s.hydrateUserProfile);
 
     useEffect(() => {
+        setLoading(true);
+
         const unsub = onAuthStateChanged(auth, async (u) => {
             if (!u) {
                 clearUser();
                 return;
             }
 
-            setUser({
-                uid: u.uid,
-                email: u.email || "",
-                displayName: u.displayName || "",
-                photoURL: u.photoURL || ""
-            });
+            setLoading(true);
+            setAuthUser(u);
 
             try {
                 await hydrateUserProfile(u);
             } catch {
-                await auth.signOut().catch(() => { });
+                await signOut(auth).catch(() => { });
                 clearUser();
                 return;
             }
 
-            import("../store/gamesStore").then(({ useGamesStore }) => {
-                useGamesStore.getState().startGamesListener();
-            });
+            const st = useAuthStore.getState();
+            const hasAccess = st.profile?.access === true;
+
+            if (hasAccess) {
+                import("../store/gamesStore").then(({ useGamesStore }) => {
+                    useGamesStore.getState().startGamesListener();
+                });
+            }
         });
 
         return () => unsub();
-    }, [setUser, clearUser, hydrateUserProfile]);
+    }, [clearUser, hydrateUserProfile, setAuthUser, setLoading]);
 }

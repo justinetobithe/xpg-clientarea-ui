@@ -90,3 +90,38 @@ export const formatBytes = (bytes) => {
     }
     return `${v.toFixed(2)} ${units[i]}`;
 };
+
+export const storagePathFromFirebaseUrl = (fileURL) => {
+    try {
+        const u = new URL(fileURL);
+        const m = u.pathname.match(/\/o\/(.+)$/);
+        if (!m) return null;
+        return decodeURIComponent(m[1]);
+    } catch {
+        return null;
+    }
+};
+
+export const buildDownloadUrl = (storagePath, filename, token) => {
+    const base = import.meta.env.VITE_DOWNLOAD_FILE_URL;
+    if (!base) return null;
+
+    const u = new URL(base);
+    u.searchParams.set("path", storagePath);
+    u.searchParams.set("name", filename || "download");
+    if (token) u.searchParams.set("token", token);
+
+    return u.toString();
+};
+
+export const downloadViaIframe = (url) => {
+    const iframe = document.createElement("iframe");
+    iframe.style.display = "none";
+    iframe.src = url;
+    document.body.appendChild(iframe);
+    setTimeout(() => {
+        try {
+            iframe.remove();
+        } catch { }
+    }, 60000);
+};

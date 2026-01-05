@@ -88,8 +88,8 @@ export default function AnnouncementsPanel({ items = [], loading = false, error 
     };
 
     return (
-        <div className="bg-card border border-border rounded-2xl p-5 md:p-6">
-            <div className="flex items-center justify-between mb-4">
+        <div className="bg-card border border-border rounded-2xl p-5 md:p-6 h-full min-h-[560px] flex flex-col">
+            <div className="flex items-center justify-between mb-4 shrink-0">
                 <div>
                     <div className="text-lg font-semibold text-white flex items-center gap-2">
                         <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-primary/15 border border-primary/30">
@@ -105,64 +105,59 @@ export default function AnnouncementsPanel({ items = [], loading = false, error 
                 </Link>
             </div>
 
-            {loading && (
-                <div className="space-y-3 md:space-y-4">
-                    {Array.from({ length: skeletonCount }).map((_, i) => (
-                        <AnnouncementSkeletonCard key={i} />
-                    ))}
-                </div>
-            )}
-
-            {!loading && error && <div className="text-sm text-red-400 py-6 text-center">{error}</div>}
-
-            {!loading && !error && list.length === 0 && <div className="text-sm text-white/60 py-8 text-center">No announcements yet.</div>}
-
-            {!loading && !error && list.length > 0 && (
-                <>
-                    <div className="hidden md:grid gap-4">
-                        {list.map((a) => (
-                            <Card key={a.id} a={a} />
+            <div className="flex-1 min-h-0">
+                {loading && (
+                    <div className="space-y-3 md:space-y-4">
+                        {Array.from({ length: skeletonCount }).map((_, i) => (
+                            <AnnouncementSkeletonCard key={i} />
                         ))}
                     </div>
+                )}
 
-                    <div className="md:hidden -mx-5">
-                        <div className="px-5">
-                            <div className="flex items-center justify-between mb-3">
-                                <div className="text-xs font-semibold text-white/70">Swipe</div>
-                                <div className="flex gap-1.5">
-                                    {list.slice(0, 6).map((a, i) => (
-                                        <span key={a.id || i} className="h-1.5 w-1.5 rounded-full bg-white/25" />
+                {!loading && error && <div className="text-sm text-red-400 py-6 text-center">{error}</div>}
+
+                {!loading && !error && list.length === 0 && (
+                    <div className="text-sm text-white/60 py-8 text-center">No announcements yet.</div>
+                )}
+
+                {!loading && !error && list.length > 0 && (
+                    <>
+                        <div className="hidden md:flex flex-col gap-4 h-full">
+                            <div className="flex-1 min-h-0 overflow-y-auto pr-1">
+                                <div className="grid gap-4">
+                                    {list.map((a) => (
+                                        <Card key={a.id} a={a} />
                                     ))}
                                 </div>
                             </div>
+                            <div className="h-6" />
                         </div>
 
-                        <div
-                            className={[
-                                "flex gap-4 px-5 pb-1 overflow-x-auto",
-                                "snap-x snap-mandatory",
-                                "[-webkit-overflow-scrolling:touch]"
-                            ].join(" ")}
-                        >
-                            {list.map((a) => (
-                                <div
-                                    key={a.id}
-                                    className={[
-                                        "snap-start shrink-0",
-                                        "w-[92%] sm:w-[80%]"
-                                    ].join(" ")}
-                                >
-                                    <Card a={a} />
+                        <div className="md:hidden -mx-5">
+                            <div className="px-5">
+                                <div className="flex items-center justify-between mb-3">
+                                    <div className="text-xs font-semibold text-white/70">Swipe</div>
+                                    <div className="flex gap-1.5">
+                                        {list.slice(0, 6).map((a, i) => (
+                                            <span key={a.id || i} className="h-1.5 w-1.5 rounded-full bg-white/25" />
+                                        ))}
+                                    </div>
                                 </div>
-                            ))}
-                        </div>
+                            </div>
 
-                        <div className="px-5 mt-3 text-[11px] text-white/50">
-                            Swipe left/right to see more announcements
+                            <div className="flex gap-4 px-5 pb-1 overflow-x-auto snap-x snap-mandatory [-webkit-overflow-scrolling:touch]">
+                                {list.map((a) => (
+                                    <div key={a.id} className="snap-start shrink-0 w-[92%] sm:w-[80%]">
+                                        <Card a={a} />
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="px-5 mt-3 text-[11px] text-white/50">Swipe left/right to see more announcements</div>
                         </div>
-                    </div>
-                </>
-            )}
+                    </>
+                )}
+            </div>
 
             <Transition appear show={Boolean(detail)} as={Fragment}>
                 <Dialog as="div" className="relative z-[80]" onClose={() => setDetail(null)}>

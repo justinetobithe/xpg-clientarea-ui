@@ -1,92 +1,136 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { Switch, Fieldset, Field, Input, Label } from "@headlessui/react";
 import { useMutation } from "@tanstack/react-query";
 import { signInWithEmailAndPassword, signOut } from "firebase/auth";
-import { auth, db } from "../firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { auth } from "../firebase";
 import { enableRememberMe } from "../lib/auth";
-import { useAuthStore } from "../store/authStore";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "../contexts/ToastContext";
+import { useAuthStore } from "../store/authStore";
 
-const partners = [
-    "/image/gibraltar.png",
-    "/image/MGA-New-Grayscale.png",
-    "/image/responsible-gaming.png",
-    "/image/be-gamble-aware-gray-footer.png",
-    "/image/ecogra.png",
-    "/image/gambling-commission.png"
-];
+const PENDING_KEY = "xpg_registration_pending_email";
 
 const schema = z.object({
     email: z.string().email("Please enter a valid email"),
     password: z.string().min(6, "Password must be at least 6 characters"),
-    remember: z.boolean().optional()
+    remember: z.boolean().optional(),
 });
 
+function toUserMessage(err) {
+    const code = err?.code ? String(err.code) : "";
+    if (code === "auth/invalid-credential") return "Invalid email or password.";
+    if (code === "auth/user-not-found") return "Invalid email or password.";
+    if (code === "auth/wrong-password") return "Invalid email or password.";
+    if (code === "auth/too-many-requests") return "Too many attempts. Please try again later.";
+    return "Login failed. Please try again.";
+}
+
 export default function Login() {
-    const nav = useNavigate();
-    const setUser = useAuthStore((s) => s.setUser);
-    const [err, setErr] = useState("");
     const { showToast } = useToast();
+    const [err, setErr] = useState("");
+
+    const hydrateUserProfile = useAuthStore((s) => s.hydrateUserProfile);
+
+    const [pendingEmail, setPendingEmail] = useState(() => {
+        try {
+            return localStorage.getItem(PENDING_KEY) || "";
+        } catch {
+            return "";
+        }
+    });
+
+    const hasPending = useMemo(() => !!pendingEmail, [pendingEmail]);
 
     const {
         register,
         handleSubmit,
         setValue,
         watch,
-        formState: { errors }
+        formState: { errors },
+        setValue: setFormValue,
     } = useForm({
         resolver: zodResolver(schema),
-        defaultValues: { email: "", password: "", remember: false }
+        defaultValues: { email: "", password: "", remember: false },
     });
 
     const remember = watch("remember");
+    const typedEmail = watch("email");
+
+    useEffect(() => {
+        try {
+            const v = localStorage.getItem(PENDING_KEY) || "";
+            setPendingEmail(v);
+            if (v) setFormValue("email", v);
+        } catch { }
+    }, [setFormValue]);
 
     const loginMutation = useMutation({
         mutationFn: async ({ email, password, remember }) => {
+            const cleanEmail = String(email || "").trim().toLowerCase();
             await enableRememberMe(remember);
-            const cred = await signInWithEmailAndPassword(auth, email, password);
 
-            const snap = await getDoc(doc(db, "users", cred.user.uid));
+            const cred = await signInWithEmailAndPassword(auth, cleanEmail, String(password || ""));
 
-            let hasAccess = false;
-            if (snap.exists()) {
-                const v = snap.data()?.access;
-                hasAccess = v === true || v === "true";
+            await hydrateUserProfile(cred.user);
+
+            const st = useAuthStore.getState();
+            const hasAccess = st.profile?.access === true;
+
+            if (!hasAccess) {
+                await signOut(auth).catch(() => { });
+                throw new Error("NOT_APPROVED");
             }
 
-            return { user: cred.user, hasAccess };
+            return { email: cleanEmail };
         },
-        onSuccess: async ({ user, hasAccess }) => {
-            if (hasAccess) {
-                setUser(user);
-                showToast({ variant: "success", title: "Login successful", description: "Welcome back!" });
-                nav("/");
-                return;
-            }
+        onSuccess: ({ email }) => {
+            setErr("");
+            try {
+                localStorage.removeItem(PENDING_KEY);
+            } catch { }
+            setPendingEmail("");
 
-            await signOut(auth);
-            setErr("Your account is pending approval.");
             showToast({
-                variant: "warning",
-                title: "Approval required",
-                description: "Your account needs to be approved by an administrator before you can log in."
+                variant: "success",
+                title: "Welcome!",
+                description: "Access granted. Redirecting…",
             });
         },
-        onError: () => {
-            setErr("Invalid email or password.");
-            showToast({ variant: "error", title: "Login failed", description: "Invalid email or password. Please try again." });
-        }
+        onError: (error) => {
+            const msg =
+                error?.message === "NOT_APPROVED"
+                    ? "Your account is pending approval. Please wait for admin approval."
+                    : toUserMessage(error);
+
+            setErr(msg);
+
+            showToast({
+                variant: error?.message === "NOT_APPROVED" ? "warning" : "error",
+                title: error?.message === "NOT_APPROVED" ? "Pending approval" : "Login failed",
+                description: msg,
+            });
+        },
     });
 
     const onSubmit = (data) => {
         setErr("");
         loginMutation.mutate(data);
     };
+
+    const clearPending = () => {
+        try {
+            localStorage.removeItem(PENDING_KEY);
+        } catch { }
+        setPendingEmail("");
+        setErr("");
+    };
+
+    const showPendingCard =
+        hasPending &&
+        (!typedEmail || String(typedEmail).trim().toLowerCase() === String(pendingEmail).toLowerCase());
 
     return (
         <div className="min-h-screen flex items-center justify-center relative overflow-hidden text-foreground">
@@ -95,10 +139,23 @@ export default function Login() {
 
             <div className="relative w-[94%] max-w-2xl rounded-2xl border border-border bg-card shadow-2xl p-8 md:p-10 lg:p-12">
                 <div className="flex flex-col items-center gap-3 mb-8">
-                    <img src="/image/logo-black.png" alt="Logo" className="h-[90px]" />
+                    <img src="/image/logo-white.png" alt="Logo" className="h-[90px]" />
                 </div>
 
                 <h1 className="text-center text-xl font-semibold text-white mb-7">Client login</h1>
+
+                {showPendingCard && (
+                    <div className="mb-6 rounded-lg border border-white/10 bg-black/30 p-4">
+                        <div className="text-white/80 text-sm">Pending approval</div>
+                        <div className="text-white font-semibold break-all">{pendingEmail}</div>
+                        <div className="text-white/60 text-xs mt-2">
+                            Once approved, you can log in and access will be granted automatically.
+                        </div>
+                        <button type="button" onClick={clearPending} className="mt-3 text-sm text-primary hover:underline">
+                            Use another account
+                        </button>
+                    </div>
+                )}
 
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <Fieldset className="space-y-5">
@@ -130,7 +187,9 @@ export default function Login() {
                                 onChange={(v) => setValue("remember", v)}
                                 className={`${remember ? "bg-primary" : "bg-muted"} relative inline-flex h-6 w-11 items-center rounded-full transition`}
                             >
-                                <span className={`${remember ? "translate-x-6" : "translate-x-1"} inline-block h-4 w-4 transform rounded-full bg-white transition`} />
+                                <span
+                                    className={`${remember ? "translate-x-6" : "translate-x-1"} inline-block h-4 w-4 transform rounded-full bg-white transition`}
+                                />
                             </Switch>
                             <span className="text-sm text-white/90">Remember me on this device</span>
                         </div>

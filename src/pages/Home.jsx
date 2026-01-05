@@ -7,25 +7,6 @@ import { useAuthStore } from "../store/authStore";
 import { useDownloadsStore } from "../store/downloadsStore";
 import { useAnnouncementStore } from "../store/announcementStore";
 
-function GlassDivider({ orientation = "vertical" }) {
-    if (orientation === "horizontal") {
-        return (
-            <div className="md:hidden my-4">
-                <div className="h-px w-full bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-                <div className="h-[10px] w-full -mt-[6px] bg-gradient-to-r from-transparent via-primary/10 to-transparent blur-md" />
-            </div>
-        );
-    }
-
-    return (
-        <div className="hidden md:block relative">
-            <div className="h-full w-[14px] rounded-full border border-white/10 bg-white/[0.04] backdrop-blur-md shadow-[0_0_30px_rgba(255,255,255,0.06)]" />
-            <div className="pointer-events-none absolute inset-y-2 left-1/2 w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-white/25 to-transparent" />
-            <div className="pointer-events-none absolute inset-y-3 left-1/2 w-[6px] -translate-x-1/2 rounded-full bg-primary/10 blur-md" />
-        </div>
-    );
-}
-
 export default function Home() {
     const user = useAuthStore((s) => s.user);
 
@@ -76,13 +57,10 @@ export default function Home() {
             </HeroBanner>
 
             <div className="px-4 md:px-8 py-8 max-w-7xl mx-auto w-full">
-                <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] gap-6 md:gap-8 items-stretch">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 items-stretch">
                     <div className="min-w-0">
                         <RecentDownloadsPanel items={downloads} loading={loadingDownloads} error={downloadsError} />
                     </div>
-
-                    <GlassDivider orientation="horizontal" />
-                    <GlassDivider orientation="vertical" />
 
                     <div className="min-w-0">
                         <AnnouncementsPanel items={announcements} loading={loadingAnnouncements} error={announcementsError} />

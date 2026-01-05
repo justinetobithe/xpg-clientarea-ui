@@ -4,7 +4,7 @@ import {
     signOut,
     EmailAuthProvider,
     reauthenticateWithCredential,
-    updatePassword as fbUpdatePassword
+    updatePassword as fbUpdatePassword,
 } from "firebase/auth";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { httpsCallable, getFunctions } from "firebase/functions";
@@ -12,25 +12,50 @@ import { auth, db } from "../firebase";
 
 const functions = getFunctions(undefined, "us-central1");
 
+const normalizeAccess = (v) => v === true || v === "true";
+const normalizeRole = (v) => (v ? String(v) : "user");
+const normalizeStatus = (v) => (v ? String(v) : "pending");
+
 export const useAuthStore = create((set, get) => ({
     user: null,
+    profile: null,
     loading: true,
     error: null,
 
-    setUser: (user) => set({ user, loading: false, error: null }),
-    clearUser: () => set({ user: null, loading: false, error: null }),
+    setLoading: (loading) => set({ loading: !!loading }),
+
+    setAuthUser: (firebaseUser) => {
+        if (!firebaseUser?.uid) {
+            set({ user: null });
+            return;
+        }
+
+        set({
+            user: {
+                uid: firebaseUser.uid,
+                email: firebaseUser.email || "",
+                displayName: firebaseUser.displayName || "",
+                photoURL: firebaseUser.photoURL || "",
+            },
+        });
+    },
+
+    clearUser: () => set({ user: null, profile: null, loading: false, error: null }),
 
     hydrateUserProfile: async (firebaseUser) => {
-        if (!firebaseUser?.uid) return;
+        if (!firebaseUser?.uid) {
+            set({ user: null, profile: null, loading: false, error: null });
+            return;
+        }
 
         const ref = doc(db, "users", firebaseUser.uid);
         const snap = await getDoc(ref);
 
-        const base = {
+        const baseUser = {
             uid: firebaseUser.uid,
             email: firebaseUser.email || "",
             displayName: firebaseUser.displayName || "",
-            photoURL: firebaseUser.photoURL || ""
+            photoURL: firebaseUser.photoURL || "",
         };
 
         if (!snap.exists()) {
@@ -39,37 +64,59 @@ export const useAuthStore = create((set, get) => ({
                 email: firebaseUser.email || "",
                 name: firebaseUser.displayName || "",
                 role: "user",
+                access: false,
+                status: "pending",
                 company: "",
                 department: "",
                 timezone: "",
                 subscribedToNewsletter: false,
                 createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp()
+                updatedAt: serverTimestamp(),
             };
 
             await setDoc(ref, newProfile, { merge: true });
-            set({ user: { ...base, ...newProfile }, loading: false, error: null });
+
+            set({
+                user: { ...baseUser, ...newProfile, access: false, role: "user", status: "pending" },
+                profile: { ...newProfile, access: false, role: "user", status: "pending" },
+                loading: false,
+                error: null,
+            });
+
             return;
         }
 
         const profile = snap.data() || {};
-        const merged = { ...base, ...profile };
-        if (!merged.role) merged.role = "user";
+        const access = normalizeAccess(profile.access);
+        const role = normalizeRole(profile.role);
+        const status = normalizeStatus(profile.status);
 
-        set({ user: merged, loading: false, error: null });
+        const mergedProfile = { ...profile, access, role, status };
+
+        set({
+            user: { ...baseUser, ...mergedProfile },
+            profile: mergedProfile,
+            loading: false,
+            error: null,
+        });
     },
 
     login: async (email, password) => {
         set({ loading: true, error: null });
-        const res = await signInWithEmailAndPassword(auth, String(email || ""), String(password || ""));
+
+        const cleanEmail = String(email || "").trim().toLowerCase();
+        const res = await signInWithEmailAndPassword(auth, cleanEmail, String(password || ""));
+
+        set({ loading: true });
         await get().hydrateUserProfile(res.user);
+
         return res.user;
     },
 
     logout: async () => {
-        set({ error: null });
+        set({ error: null, loading: true });
         await signOut(auth);
-        get().clearUser();
+        set({ user: null, profile: null, loading: false, error: null });
     },
 
     updateUserDetails: async (payload) => {
@@ -82,13 +129,18 @@ export const useAuthStore = create((set, get) => ({
             department: String(payload?.department || ""),
             timezone: String(payload?.timezone || ""),
             subscribedToNewsletter: !!payload?.subscribedToNewsletter,
-            updatedAt: serverTimestamp()
+            updatedAt: serverTimestamp(),
         };
 
         await setDoc(doc(db, "users", u.uid), next, { merge: true });
 
-        const cur = get().user || {};
-        set({ user: { ...cur, ...next }, error: null });
+        const curUser = get().user || {};
+        const curProfile = get().profile || {};
+        set({
+            user: { ...curUser, ...next },
+            profile: { ...curProfile, ...next },
+            error: null,
+        });
     },
 
     changePassword: async (currentPassword, newPassword) => {
@@ -111,6 +163,6 @@ export const useAuthStore = create((set, get) => ({
         await fn({ deleteStorage: !!opts.deleteStorage });
 
         await signOut(auth);
-        get().clearUser();
-    }
+        set({ user: null, profile: null, loading: false, error: null });
+    },
 }));
