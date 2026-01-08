@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Listbox } from "@headlessui/react";
-import { ChevronDown, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronDown, Search, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useGamesQuery } from "../../hooks/useGamesQuery";
 
 const sortOptions = [
@@ -9,6 +9,8 @@ const sortOptions = [
     { value: "name-asc", label: "Name (A-Z)" },
     { value: "name-desc", label: "Name (Z-A)" }
 ];
+
+const TYPE_ORDER = ["Baccarat", "Teen Patti", "Roulette", "Blackjack", "Dragon Tiger", "Sic Bo", "Poker", "Other"];
 
 function IconButton({ label, onClick, disabled, children }) {
     return (
@@ -32,6 +34,24 @@ function IconButton({ label, onClick, disabled, children }) {
 
 function getGameName(g) {
     return g?.name || g?.title || g?.game_name || "Untitled";
+}
+
+function normalize(s) {
+    return String(s || "").toLowerCase().trim();
+}
+
+function detectTypeFromGame(game) {
+    const n = normalize(getGameName(game)).replace(/\s+/g, " ");
+
+    if (n.includes("baccarat")) return "Baccarat";
+    if (n.includes("teen patti") || n.includes("teenpatti")) return "Teen Patti";
+    if (n.includes("roulette")) return "Roulette";
+    if (n.includes("blackjack")) return "Blackjack";
+    if (n.includes("dragon tiger") || n.includes("dragontiger")) return "Dragon Tiger";
+    if (n.includes("sic bo") || n.includes("sicbo")) return "Sic Bo";
+    if (n.includes("poker")) return "Poker";
+
+    return "Other";
 }
 
 function GameCardSkeleton() {
@@ -135,10 +155,25 @@ function MobilePagination({ page, totalPages, onPrev, onNext, onJump }) {
     );
 }
 
+function GameImage({ src, alt }) {
+    const [failed, setFailed] = useState(false);
+
+    if (!src || failed) {
+        return (
+            <div className="w-full h-full flex items-center justify-center bg-white/[0.06] text-white/50 text-xs">
+                No Image
+            </div>
+        );
+    }
+
+    return <img src={src} alt={alt} loading="lazy" onError={() => setFailed(true)} className="w-full h-full object-cover" />;
+}
+
 export default function GamesSection() {
     const navigate = useNavigate();
     const { data: allGames = [], isLoading, error } = useGamesQuery();
 
+    const [activeType, setActiveType] = useState("All");
     const [inputValue, setInputValue] = useState("");
     const [searchTerm, setSearchTerm] = useState("");
     const [sortBy, setSortBy] = useState(sortOptions[0]);
@@ -177,10 +212,32 @@ export default function GamesSection() {
         };
     }, []);
 
-    const gamesSortedForTypes = useMemo(() => {
-        const list = Array.isArray(allGames) ? [...allGames] : [];
-        list.sort((a, b) => (a.order ?? 999999) - (b.order ?? 999999));
-        return list.slice(0, 12);
+    const typeCards = useMemo(() => {
+        const list = Array.isArray(allGames) ? allGames : [];
+        const map = new Map();
+
+        for (const g of list) {
+            const type = detectTypeFromGame(g);
+            if (!map.has(type)) {
+                map.set(type, { type, id: type, name: type, imageURL: g?.imageURL || null, count: 1 });
+            } else {
+                const cur = map.get(type);
+                cur.count += 1;
+                if (!cur.imageURL && g?.imageURL) cur.imageURL = g.imageURL;
+            }
+        }
+
+        const arr = Array.from(map.values());
+        arr.sort((a, b) => {
+            const ai = TYPE_ORDER.indexOf(a.type);
+            const bi = TYPE_ORDER.indexOf(b.type);
+            const ax = ai === -1 ? 999 : ai;
+            const bx = bi === -1 ? 999 : bi;
+            if (ax !== bx) return ax - bx;
+            return a.type.localeCompare(b.type);
+        });
+
+        return arr;
     }, [allGames]);
 
     const updateTypesArrows = useCallback(() => {
@@ -207,7 +264,7 @@ export default function GamesSection() {
             el.removeEventListener("scroll", onScroll);
             ro.disconnect();
         };
-    }, [updateTypesArrows, gamesSortedForTypes.length]);
+    }, [updateTypesArrows, typeCards.length]);
 
     const scrollTypesBy = useCallback((dir) => {
         const el = typesTrackRef.current;
@@ -216,16 +273,12 @@ export default function GamesSection() {
         el.scrollBy({ left: dir * step, behavior: "smooth" });
     }, []);
 
-    const openGame = useCallback(
-        (id) => {
-            if (!id) return;
-            navigate(`/game/${id}`);
-        },
-        [navigate]
-    );
-
     const games = useMemo(() => {
         let filtered = Array.isArray(allGames) ? [...allGames] : [];
+
+        if (activeType !== "All") {
+            filtered = filtered.filter((g) => detectTypeFromGame(g) === activeType);
+        }
 
         if (searchTerm.length >= 2) {
             const lower = searchTerm.toLowerCase();
@@ -241,7 +294,7 @@ export default function GamesSection() {
         }
 
         return filtered;
-    }, [allGames, searchTerm, sortBy.value]);
+    }, [allGames, activeType, searchTerm, sortBy.value]);
 
     const showSkeleton = isLoading || isSearching;
 
@@ -252,7 +305,7 @@ export default function GamesSection() {
 
     useEffect(() => {
         setMobilePage(1);
-    }, [searchTerm, sortBy.value, allGames.length]);
+    }, [searchTerm, sortBy.value, allGames.length, activeType]);
 
     return (
         <section className="mt-8 space-y-8">
@@ -271,11 +324,9 @@ export default function GamesSection() {
 
                 {showSkeleton && <div className="text-sm text-white/60">Loading...</div>}
 
-                {!showSkeleton && gamesSortedForTypes.length === 0 && (
-                    <div className="text-sm text-white/60">No games found.</div>
-                )}
+                {!showSkeleton && typeCards.length === 0 && <div className="text-sm text-white/60">No game types found.</div>}
 
-                {!showSkeleton && gamesSortedForTypes.length > 0 && (
+                {!showSkeleton && typeCards.length > 0 && (
                     <div className="-mx-0">
                         <div
                             ref={typesTrackRef}
@@ -286,31 +337,22 @@ export default function GamesSection() {
                                 "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                             ].join(" ")}
                         >
-                            {gamesSortedForTypes.map((g) => (
-                                <div key={g.id} className="snap-start shrink-0 w-[48%] sm:w-[32%] lg:w-[24%]">
+                            {typeCards.map((t) => (
+                                <div key={t.id} className="snap-start shrink-0 w-[48%] sm:w-[32%] lg:w-[24%]">
                                     <button
                                         type="button"
-                                        onClick={() => openGame(g.id)}
-                                        className="group rounded-xl overflow-hidden shadow-lg hover:shadow-primary/50 transition-all duration-300 transform hover:scale-[1.03] bg-background/50 border border-border/50 block w-full text-left"
+                                        onClick={() => setActiveType(t.type)}
+                                        className={[
+                                            "group rounded-xl overflow-hidden shadow-lg hover:shadow-primary/50 transition-all duration-300 transform hover:scale-[1.03]",
+                                            "bg-background/50 border border-border/50 block w-full text-left",
+                                            activeType === t.type ? "ring-2 ring-primary" : ""
+                                        ].join(" ")}
                                     >
-                                        <div className="aspect-video relative overflow-hidden">
-                                            {g.imageURL ? (
-                                                <img
-                                                    src={g.imageURL}
-                                                    alt={getGameName(g)}
-                                                    className="w-full h-full object-cover transition-opacity duration-300 group-hover:opacity-90"
-                                                    loading="lazy"
-                                                />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center bg-gray-700 text-white/50 text-xs">
-                                                    No Image
-                                                </div>
-                                            )}
+                                        <div className="aspect-video relative overflow-hidden bg-white/[0.03]">
+                                            <GameImage src={t.imageURL} alt={t.type} />
                                         </div>
 
-                                        <div className="p-3 text-center text-white text-sm font-medium truncate">
-                                            {getGameName(g)}
-                                        </div>
+                                        <div className="p-3 text-center text-white text-sm font-medium truncate">{t.type}</div>
                                     </button>
                                 </div>
                             ))}
@@ -323,8 +365,21 @@ export default function GamesSection() {
 
             <div>
                 <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3 mb-4">
-                    <div className="text-lg font-semibold text-white">
-                        All Games ({showSkeleton ? allGames.length : games.length})
+                    <div className="flex items-center gap-3 min-w-0">
+                        <div className="text-lg font-semibold text-white min-w-0 truncate">
+                            {activeType === "All" ? "All Games" : `${activeType} Games`} ({showSkeleton ? allGames.length : games.length})
+                        </div>
+
+                        {activeType !== "All" && (
+                            <button
+                                type="button"
+                                onClick={() => setActiveType("All")}
+                                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/15 bg-white/[0.03] hover:bg-white/[0.06] text-white text-xs font-semibold"
+                            >
+                                <X className="h-4 w-4" />
+                                Clear Type
+                            </button>
+                        )}
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
@@ -354,8 +409,7 @@ export default function GamesSection() {
                                             <Listbox.Option
                                                 key={option.value}
                                                 className={({ active }) =>
-                                                    `relative cursor-default select-none py-2 px-4 text-xs ${active ? "bg-primary/50 text-white" : "text-white"
-                                                    }`
+                                                    `relative cursor-default select-none py-2 px-4 text-xs ${active ? "bg-primary/50 text-white" : "text-white"}`
                                                 }
                                                 value={option}
                                             >
@@ -375,13 +429,9 @@ export default function GamesSection() {
 
                 {showSkeleton && <GamesGridSkeleton count={8} />}
 
-                {!showSkeleton && error && (
-                    <div className="text-red-400 text-sm">{error?.message || "Failed to load games"}</div>
-                )}
+                {!showSkeleton && error && <div className="text-red-400 text-sm">{error?.message || "Failed to load games"}</div>}
 
-                {!showSkeleton && !error && allGames.length > 0 && games.length === 0 && (
-                    <div className="text-white/70 text-sm">No games found matching "{searchTerm}".</div>
-                )}
+                {!showSkeleton && !error && allGames.length > 0 && games.length === 0 && <div className="text-white/70 text-sm">No games found.</div>}
 
                 {!showSkeleton && !error && games.length > 0 && (
                     <div className="hidden md:grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
@@ -391,19 +441,8 @@ export default function GamesSection() {
                                 to={`/game/${g.id}`}
                                 className="group rounded-xl overflow-hidden cursor-pointer shadow-lg hover:shadow-primary/50 transition-all duration-300 transform hover:scale-[1.03] bg-background/50 border border-border/50 block"
                             >
-                                <div className="aspect-video relative overflow-hidden">
-                                    {g.imageURL ? (
-                                        <img
-                                            src={g.imageURL}
-                                            alt={getGameName(g)}
-                                            className="w-full h-full object-cover transition-opacity duration-300 group-hover:opacity-90"
-                                            loading="lazy"
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center bg-gray-700 text-white/50 text-xs">
-                                            No Image
-                                        </div>
-                                    )}
+                                <div className="aspect-video relative overflow-hidden bg-white/[0.03]">
+                                    <GameImage src={g.imageURL} alt={getGameName(g)} />
                                 </div>
                                 <div className="p-3 text-center text-white text-sm font-medium truncate">{getGameName(g)}</div>
                             </Link>
@@ -420,19 +459,8 @@ export default function GamesSection() {
                                     to={`/game/${g.id}`}
                                     className="group rounded-xl overflow-hidden cursor-pointer shadow-lg hover:shadow-primary/50 transition-all duration-300 transform hover:scale-[1.03] bg-background/50 border border-border/50 block"
                                 >
-                                    <div className="aspect-video relative overflow-hidden">
-                                        {g.imageURL ? (
-                                            <img
-                                                src={g.imageURL}
-                                                alt={getGameName(g)}
-                                                className="w-full h-full object-cover transition-opacity duration-300 group-hover:opacity-90"
-                                                loading="lazy"
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center bg-gray-700 text-white/50 text-xs">
-                                                No Image
-                                            </div>
-                                        )}
+                                    <div className="aspect-video relative overflow-hidden bg-white/[0.03]">
+                                        <GameImage src={g.imageURL} alt={getGameName(g)} />
                                     </div>
                                     <div className="p-3 text-center text-white text-sm font-medium truncate">{getGameName(g)}</div>
                                 </Link>

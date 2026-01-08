@@ -1,27 +1,12 @@
-import { Download, FileText, ShieldCheck } from "lucide-react";
-
 export default function Footer() {
+    const certUrl =
+        "https://firebasestorage.googleapis.com/v0/b/xpg-system.firebasestorage.app/o/files%2FiTech%20Certificate.pdf?alt=media&token=27702b7e-a90b-491f-8732-7f85ce4288c9";
+
     return (
         <footer className="bg-black/90 border-t border-white/10">
             <div className="max-w-6xl mx-auto px-4 md:px-8 py-10 md:py-12 text-center">
                 <div className="flex flex-col items-center">
-                    <img
-                        src="/image/logo-white.png"
-                        alt="XPG"
-                        className="h-10 md:h-12 object-contain"
-                    />
-
-                    <div className="mt-4 flex items-center justify-center gap-6">
-                        <div className="h-9 w-9 rounded-full bg-white/10 border border-white/15 flex items-center justify-center">
-                            <FileText size={16} className="text-white/80" />
-                        </div>
-                        <div className="h-9 w-9 rounded-full bg-white/10 border border-white/15 flex items-center justify-center">
-                            <Download size={16} className="text-white/80" />
-                        </div>
-                        <div className="h-9 w-9 rounded-full bg-white/10 border border-white/15 flex items-center justify-center">
-                            <ShieldCheck size={16} className="text-white/80" />
-                        </div>
-                    </div>
+                    <img src="/image/logo-white.png" alt="XPG" className="h-10 md:h-12 object-contain" />
                 </div>
 
                 <div className="mt-6 text-[11px] md:text-xs leading-relaxed text-white/70 max-w-4xl mx-auto">
@@ -35,43 +20,21 @@ export default function Footer() {
                     Copyright © 2008 - 2025 XPG. All Rights Reserved.
                 </div>
 
-                <div className="mt-7 flex flex-wrap items-center justify-center gap-x-8 gap-y-4">
-                    <img
-                        src="/image/gibraltar.png"
-                        alt="Gibraltar"
-                        className="h-6 md:h-7 object-contain opacity-90"
-                        style={{ filter: "grayscale(1) brightness(3) contrast(1.05)" }}
-                    />
-                    <img
-                        src="/image/MGA-New-Grayscale.png"
-                        alt="MGA"
-                        className="h-6 md:h-7 object-contain opacity-90"
-                        style={{ filter: "grayscale(1) brightness(3) contrast(1.05)" }}
-                    />
-                    <img
-                        src="/image/responsible-gaming.png"
-                        alt="Responsible Gaming"
-                        className="h-6 md:h-7 object-contain opacity-90"
-                        style={{ filter: "grayscale(1) brightness(3) contrast(1.05)" }}
-                    />
-                    <img
-                        src="/image/be-gamble-aware-gray-footer.png"
-                        alt="BeGambleAware"
-                        className="h-6 md:h-7 object-contain opacity-90"
-                        style={{ filter: "grayscale(1) brightness(3) contrast(1.05)" }}
-                    />
-                    <img
-                        src="/image/ecogra.png"
-                        alt="eCOGRA"
-                        className="h-6 md:h-7 object-contain opacity-90"
-                        style={{ filter: "grayscale(1) brightness(3) contrast(1.05)" }}
-                    />
-                    <img
-                        src="/image/gambling-commission.png"
-                        alt="Gambling Commission"
-                        className="h-6 md:h-7 object-contain opacity-90"
-                        style={{ filter: "grayscale(1) brightness(3) contrast(1.05)" }}
-                    />
+                <div className="mt-8 flex items-center justify-center">
+                    <a
+                        href={certUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        title="View iTech Certificate"
+                        className="inline-flex items-center justify-center hover:opacity-90 transition"
+                    >
+                        <img
+                            src="/image/itech-lab-icon.png"
+                            alt="iTech Lab"
+                            className="h-14 md:h-16 object-contain opacity-95"
+                            style={{ filter: "grayscale(1) brightness(3) contrast(1.05)" }}
+                        />
+                    </a>
                 </div>
             </div>
         </footer>

@@ -34,9 +34,7 @@ import {
     isPDF,
     flattenSectionsToFiles,
     collectExtensions,
-    collectSectionNames,
-    parseSizeToBytes,
-    formatBytes
+    collectSectionNames
 } from "../utils/fileUtils";
 
 const TABLE_COLS = "44px 160px minmax(260px, 1fr) 160px minmax(240px, 280px)";

@@ -40,6 +40,22 @@ const matchFamily = (candidateName, familyKey) => {
     return c.includes(familyKey);
 };
 
+const getUserRole = async (user) => {
+    const direct = String(user?.role || "").trim();
+    if (direct) return direct;
+
+    const uid = user?.uid;
+    if (!uid) return "";
+
+    try {
+        const snap = await getDoc(doc(db, "users", uid));
+        const role = String(snap.data()?.role || "").trim();
+        return role;
+    } catch {
+        return "";
+    }
+};
+
 export const useGameDetailsStore = create((set, get) => ({
     game: null,
     sections: [],
@@ -66,8 +82,9 @@ export const useGameDetailsStore = create((set, get) => ({
     },
 
     fetchSections: async (gameId, user) => {
-        if (!gameId || !user) return;
+        if (!gameId || !user?.uid) return;
         set({ loadingSections: true, error: null });
+
         try {
             const sectSnap = await getDocs(query(collection(db, "sections"), where("gameId", "==", gameId)));
 
@@ -82,7 +99,9 @@ export const useGameDetailsStore = create((set, get) => ({
                 };
             });
 
-            if (user.role !== "super admin") {
+            const role = String(await getUserRole(user)).toLowerCase();
+
+            if (role !== "super admin") {
                 const permSnap = await getDocs(
                     query(
                         collection(db, "permissions"),
@@ -92,19 +111,36 @@ export const useGameDetailsStore = create((set, get) => ({
                     )
                 );
 
-                const allowed = new Set(permSnap.docs.map((d) => d.data()?.sectionId).filter(Boolean));
+                const allowed = new Set(
+                    permSnap.docs
+                        .map((d) => {
+                            const data = d.data() || {};
+                            return data.sectionId || data.section_id || null;
+                        })
+                        .filter(Boolean)
+                );
+
                 raw = raw.filter((s) => allowed.has(s.sectionId));
+
+                if (!raw.length) {
+                    set({
+                        sections: [],
+                        loadingSections: false,
+                        error: "No sections available for your account. Ask admin to grant section permissions."
+                    });
+                    return;
+                }
             }
 
             raw.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
-            set({ sections: raw, loadingSections: false });
+            set({ sections: raw, loadingSections: false, error: null });
         } catch {
-            set({ sections: [], loadingSections: false });
+            set({ sections: [], loadingSections: false, error: "Error fetching sections" });
         }
     },
 
     startRelatedListener: async (gameId, user, currentGameName = "") => {
-        if (!user) return;
+        if (!user?.uid) return;
 
         const { relatedUnsub } = get();
         if (relatedUnsub) return;
@@ -116,7 +152,9 @@ export const useGameDetailsStore = create((set, get) => ({
         try {
             let allowedGameIds = null;
 
-            if (user.role !== "super admin") {
+            const role = String(await getUserRole(user)).toLowerCase();
+
+            if (role !== "super admin") {
                 const accessSnap = await getDocs(
                     query(collection(db, "permissions"), where("userId", "==", user.uid), where("view", "==", true))
                 );
