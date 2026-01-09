@@ -73,7 +73,6 @@ export default function Login() {
             await enableRememberMe(remember);
 
             const cred = await signInWithEmailAndPassword(auth, cleanEmail, String(password || ""));
-
             await hydrateUserProfile(cred.user);
 
             const st = useAuthStore.getState();
@@ -86,7 +85,7 @@ export default function Login() {
 
             return { email: cleanEmail };
         },
-        onSuccess: ({ email }) => {
+        onSuccess: () => {
             setErr("");
             try {
                 localStorage.removeItem(PENDING_KEY);
@@ -206,7 +205,9 @@ export default function Login() {
                 </form>
 
                 <div className="text-center text-sm mt-6">
-                    <button className="text-primary hover:underline">Forgot password?</button>
+                    <Link to="/forgot-password" className="text-primary hover:underline">
+                        Forgot password?
+                    </Link>
                 </div>
 
                 <div className="text-center text-sm mt-8 text-white/80">Create an account?</div>

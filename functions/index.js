@@ -1,8 +1,9 @@
 const { onRequest, onCall, HttpsError } = require("firebase-functions/v2/https");
+const { defineSecret } = require("firebase-functions/params");
 const admin = require("firebase-admin");
-const fetch = require("node-fetch");
 
 const REGION = "us-central1";
+const RECAPTCHA_SECRET = defineSecret("RECAPTCHA_SECRET");
 
 let _adminReady = false;
 const getAdmin = () => {
@@ -142,22 +143,22 @@ const deleteUserStorage = async (uid) => {
         try {
             await bucket.deleteFiles({ prefix });
         } catch (e) {
-            console.warn("deleteFiles failed:", prefix, e?.message || e);
+            console.warn("deleteFiles failed:", prefix, e?.message || String(e));
         }
     }
 };
 
-exports.verifyRecaptcha = onRequest({ region: REGION }, async (req, res) => {
+exports.verifyRecaptcha = onRequest({ region: REGION, secrets: [RECAPTCHA_SECRET] }, async (req, res) => {
     if (allowCors(req, res)) return;
 
-    if (req.method !== "POST") return res.status(405).json({ success: false, message: "Method Not Allowed" });
+    if (req.method !== "POST") return res.status(405).json({ success: false });
 
     const body = jsonBody(req);
     const token = String(body.token || "");
-    const secret = process.env.RECAPTCHA_SECRET;
+    const secret = RECAPTCHA_SECRET.value();
 
-    if (!token) return res.status(400).json({ success: false, message: "Missing token" });
-    if (!secret) return res.status(500).json({ success: false, message: "Missing RECAPTCHA_SECRET" });
+    if (!token) return res.status(400).json({ success: false });
+    if (!secret) return res.status(500).json({ success: false });
 
     try {
         const resp = await fetch("https://www.google.com/recaptcha/api/siteverify", {
@@ -167,15 +168,11 @@ exports.verifyRecaptcha = onRequest({ region: REGION }, async (req, res) => {
         });
 
         const data = await resp.json().catch(() => ({}));
-        if (!data?.success) {
-            const codes = Array.isArray(data?.["error-codes"]) ? data["error-codes"].join(", ") : "";
-            return res.status(400).json({ success: false, message: codes || "reCAPTCHA failed" });
-        }
+        if (!data?.success) return res.status(400).json({ success: false });
 
         return res.json({ success: true });
-    } catch (e) {
-        const msg = String(e?.message || "verify error");
-        return res.status(500).json({ success: false, message: msg });
+    } catch {
+        return res.status(500).json({ success: false });
     }
 });
 
@@ -209,20 +206,10 @@ exports.downloadFile = onRequest({ region: REGION }, async (req, res) => {
         res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
         res.setHeader("Cache-Control", "no-store");
 
-        file
-            .createReadStream()
-            .on("error", (err) => {
-                try {
-                    res.status(500).end("Server error");
-                } catch (e) {
-                    console.warn("stream error:", err?.message || err, e?.message || e);
-                }
-            })
-            .pipe(res);
+        file.createReadStream().pipe(res);
 
         return null;
-    } catch (e) {
-        console.warn("downloadFile unauthorized:", e?.message || e);
+    } catch {
         return res.status(401).send("Unauthorized");
     }
 });

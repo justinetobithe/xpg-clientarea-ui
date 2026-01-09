@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Fieldset, Field, Input, Label } from "@headlessui/react";
 import { useMutation } from "@tanstack/react-query";
@@ -12,6 +12,7 @@ import { useDialog } from "../contexts/DialogContext";
 import { useToast } from "../contexts/ToastContext";
 import CookiePolicy from "../components/CookiePolicy";
 import PrivacyPolicy from "../components/PrivacyPolicy";
+import ReCAPTCHA from "react-google-recaptcha";
 
 const PENDING_KEY = "xpg_registration_pending_email";
 
@@ -26,6 +27,7 @@ const schema = z
         newsletter: z.boolean().optional(),
         notice: z.boolean(),
         privacy: z.boolean(),
+        recaptchaToken: z.string().min(1, "Please complete the reCAPTCHA"),
     })
     .refine((v) => v.password === v.confirmPassword, {
         message: "Passwords do not match",
@@ -44,10 +46,27 @@ function toUserMessage(err) {
     return "Unable to register. Please try again.";
 }
 
+async function verifyRecaptchaToken(token) {
+    const url = import.meta.env.VITE_VERIFY_RECAPTCHA_URL;
+    if (!url) throw new Error("RECAPTCHA_VERIFY_URL_MISSING");
+
+    const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data?.success) throw new Error("RECAPTCHA_INVALID");
+    return true;
+}
+
 export default function Register() {
     const nav = useNavigate();
     const { openDialog } = useDialog();
     const { showToast } = useToast();
+
+    const recaptchaRef = useRef(null);
 
     const [err, setErr] = useState("");
     const [userIPInfo, setUserIPInfo] = useState(null);
@@ -92,6 +111,8 @@ export default function Register() {
     const {
         register,
         handleSubmit,
+        setValue,
+        watch,
         formState: { errors },
     } = useForm({
         resolver: zodResolver(schema),
@@ -105,11 +126,16 @@ export default function Register() {
             newsletter: false,
             notice: false,
             privacy: false,
+            recaptchaToken: "",
         },
     });
 
+    const recaptchaToken = watch("recaptchaToken");
+
     const registerMutation = useMutation({
         mutationFn: async (form) => {
+            await verifyRecaptchaToken(form.recaptchaToken);
+
             const usersRef = collection(db, "users");
             const q = query(usersRef, orderBy("opid", "desc"), limit(1));
             const snap = await getDocs(q);
@@ -152,6 +178,7 @@ export default function Register() {
             } catch { }
 
             setSubmittedEmail(email);
+            setErr("");
 
             showToast({
                 title: "Registration submitted",
@@ -160,8 +187,18 @@ export default function Register() {
             });
         },
         onError: (error) => {
-            const msg = toUserMessage(error);
+            recaptchaRef.current?.reset?.();
+            setValue("recaptchaToken", "");
+
+            const msg =
+                error?.message === "RECAPTCHA_VERIFY_URL_MISSING"
+                    ? "reCAPTCHA is not configured. Please contact the administrator."
+                    : error?.message === "RECAPTCHA_INVALID"
+                        ? "reCAPTCHA failed. Please try again."
+                        : toUserMessage(error);
+
             setErr(msg);
+
             showToast({
                 title: "Registration failed",
                 description: msg,
@@ -208,23 +245,16 @@ export default function Register() {
                     </div>
 
                     <h1 className="text-center text-xl font-semibold text-white mb-2">Request submitted</h1>
-                    <p className="text-center text-white/80 text-sm">
-                        Your account is pending admin approval.
-                    </p>
+                    <p className="text-center text-white/80 text-sm">Your account is pending admin approval.</p>
 
                     <div className="mt-6 rounded-lg border border-white/10 bg-black/30 p-4">
                         <div className="text-white/80 text-sm">Submitted email</div>
                         <div className="text-white font-semibold break-all">{submittedEmail}</div>
-                        <div className="text-white/60 text-xs mt-2">
-                            Once approved, you can sign in and the system will grant access automatically.
-                        </div>
+                        <div className="text-white/60 text-xs mt-2">Once approved, you can sign in and the system will grant access automatically.</div>
                     </div>
 
                     <div className="mt-6 flex flex-col gap-3">
-                        <button
-                            onClick={handleGoLogin}
-                            className="w-full rounded-md bg-primary px-6 py-3 text-base font-semibold text-primary-foreground hover:opacity-90"
-                        >
+                        <button onClick={handleGoLogin} className="w-full rounded-md bg-primary px-6 py-3 text-base font-semibold text-primary-foreground hover:opacity-90">
                             Go to login
                         </button>
 
@@ -355,9 +385,20 @@ export default function Register() {
                             {(errors.privacy || err) && <div className="text-sm text-red-400 pt-1">{errors.privacy?.message || err}</div>}
                         </div>
 
+                        <div className="md:col-span-2 pt-2 flex flex-col items-center gap-3">
+                            <ReCAPTCHA
+                                ref={recaptchaRef}
+                                sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY || ""}
+                                onChange={(token) => setValue("recaptchaToken", token || "", { shouldValidate: true })}
+                                onExpired={() => setValue("recaptchaToken", "", { shouldValidate: true })}
+                                theme="dark"
+                            />
+                            {errors.recaptchaToken && <div className="text-sm text-red-400">{errors.recaptchaToken.message}</div>}
+                        </div>
+
                         <div className="md:col-span-2 pt-2 flex flex-col items-center gap-4">
                             <button
-                                disabled={registerMutation.isPending}
+                                disabled={registerMutation.isPending || !recaptchaToken}
                                 className="w-fit mx-auto block rounded-md bg-primary px-9 py-3 text-base font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
                             >
                                 {registerMutation.isPending ? "Registering..." : "Request access"}

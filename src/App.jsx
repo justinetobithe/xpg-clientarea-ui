@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
 import Home from "./pages/Home";
 import Settings from "./pages/Settings";
 import Announcements from "./pages/Announcements";
@@ -86,6 +87,7 @@ export default function App() {
 
               <Route path="/login" element={!isAuthed || !hasAccess ? <Login /> : <Navigate to="/" />} />
               <Route path="/register" element={!isAuthed ? <Register /> : <Navigate to="/" />} />
+              <Route path="/forgot-password" element={!isAuthed ? <ForgotPassword /> : <Navigate to="/" />} />
             </Routes>
           )}
         </BrowserRouter>
