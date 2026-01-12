@@ -4,20 +4,19 @@ import { Fieldset, Field, Input, Label } from "@headlessui/react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { sendPasswordResetEmail } from "firebase/auth";
-import { auth } from "../firebase";
 import { useToast } from "../contexts/ToastContext";
+import { db } from "../firebase";
+import { doc, setDoc, serverTimestamp, Timestamp } from "firebase/firestore";
+import axios from "axios";
 
 const schema = z.object({
     email: z.string().email("Please enter a valid email"),
 });
 
-function toUserMessage(err) {
-    const code = err?.code ? String(err.code) : "";
-    if (code === "auth/user-not-found") return "If this email exists, we sent a reset link.";
-    if (code === "auth/invalid-email") return "Please enter a valid email.";
-    if (code === "auth/too-many-requests") return "Too many attempts. Please try again later.";
-    return "Unable to send reset email. Please try again.";
+function makeToken() {
+    const bytes = new Uint8Array(32);
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 export default function ForgotPassword() {
@@ -40,8 +39,43 @@ export default function ForgotPassword() {
         const cleanEmail = String(email || "").trim().toLowerCase();
 
         try {
-            const continueUrl = `${window.location.origin}/login`;
-            await sendPasswordResetEmail(auth, cleanEmail, { url: continueUrl });
+            const token = makeToken();
+            const now = Date.now();
+            const expiresAt = Timestamp.fromMillis(now + 30 * 60 * 1000);
+
+            await setDoc(doc(db, "password_reset_tokens", token), {
+                email: cleanEmail,
+                status: "pending",
+                createdAt: serverTimestamp(),
+                expiresAt,
+                usedAt: null,
+            });
+
+            const clientUrl = import.meta.env.VITE_XPG_CLIENTAREA_URL || window.location.origin;
+            const resetUrl = `${clientUrl}/reset-password?token=${encodeURIComponent(token)}`;
+            const expiryMinutes = 30;
+
+            await axios.post(`${import.meta.env.VITE_XPG_API_URL}/api/send-mail`, {
+                full_name: "XPG Member",
+                email: cleanEmail,
+                subject: "Reset your XPG password",
+                body: `
+          <p>Hello,</p>
+          <p>We received a request to reset your XPG password.</p>
+          <p>This link is valid for <strong>${expiryMinutes} minutes</strong>.</p>
+          <p style="margin:16px 0;">
+            <a href="${resetUrl}"
+               style="display:inline-block;padding:12px 18px;border-radius:10px;text-decoration:none;font-weight:700;background:#FF8D47;color:#fff;">
+              Reset Password
+            </a>
+          </p>
+          <p style="font-size:12px;margin:6px 0;">
+            If the button doesn't work, copy this link: <a href="${resetUrl}">${resetUrl}</a>
+          </p>
+          <p>If you did not request this, you can ignore this email.</p>
+          <p style="margin-top: 16px;"><strong>XPG Team</strong></p>
+        `,
+            });
 
             setSent(true);
             showToast({
@@ -50,13 +84,9 @@ export default function ForgotPassword() {
                 description: "If the email exists, you will receive a reset link shortly.",
             });
         } catch (e) {
-            const msg = toUserMessage(e);
+            const msg = "Unable to send reset email. Please try again.";
             setErr(msg);
-            showToast({
-                variant: "error",
-                title: "Reset failed",
-                description: msg,
-            });
+            showToast({ variant: "error", title: "Reset failed", description: msg });
         }
     };
 

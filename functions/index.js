@@ -1,19 +1,14 @@
 const { onRequest, onCall, HttpsError } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
+const fetch = require("node-fetch");
 const admin = require("firebase-admin");
 
 const REGION = "us-central1";
 const RECAPTCHA_SECRET = defineSecret("RECAPTCHA_SECRET");
 
-let _adminReady = false;
-const getAdmin = () => {
-    if (!_adminReady) {
-        admin.initializeApp();
-        _adminReady = true;
-    }
-    return admin;
-};
-
+admin.initializeApp();
+const getAdmin = () => admin;
+ 
 const jsonBody = (req) => {
     if (req.body && typeof req.body === "object") return req.body;
     try {
@@ -164,7 +159,7 @@ exports.verifyRecaptcha = onRequest({ region: REGION, secrets: [RECAPTCHA_SECRET
         const resp = await fetch("https://www.google.com/recaptcha/api/siteverify", {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: new URLSearchParams({ secret, response: token }).toString()
+            body: new URLSearchParams({ secret, response: token }).toString(),
         });
 
         const data = await resp.json().catch(() => ({}));
@@ -232,4 +227,50 @@ exports.deleteMyAccount = onCall({ region: REGION }, async (request) => {
     await getAdmin().auth().deleteUser(uid);
 
     return { ok: true };
+});
+
+exports.resetPasswordWithToken = onRequest({ region: REGION }, async (req, res) => {
+    if (allowCors(req, res)) return;
+
+    if (req.method !== "POST") return res.status(405).json({ error: "Method Not Allowed" });
+
+    const body = jsonBody(req);
+    const token = String(body.token || "").trim();
+    const newPassword = String(body.newPassword || "");
+
+    if (!token || token.length < 20) return res.status(400).json({ error: "Invalid token" });
+    if (!newPassword || newPassword.length < 8) return res.status(400).json({ error: "Password must be at least 8 characters" });
+
+    try {
+        const db = getAdmin().firestore();
+        const ref = db.collection("password_reset_tokens").doc(token);
+        const snap = await ref.get();
+
+        if (!snap.exists) return res.status(404).json({ error: "Token not found" });
+
+        const data = snap.data() || {};
+        const expiresAtMs = data.expiresAt?.toDate ? data.expiresAt.toDate().getTime() : 0;
+
+        if (data.status === "used" || data.usedAt) return res.status(400).json({ error: "Token already used" });
+
+        if (!expiresAtMs || Date.now() > expiresAtMs) {
+            await ref.update({ status: "expired" });
+            return res.status(400).json({ error: "Token expired" });
+        }
+
+        const email = String(data.email || "").trim().toLowerCase();
+        if (!email) return res.status(400).json({ error: "Invalid token data" });
+
+        const user = await getAdmin().auth().getUserByEmail(email);
+        await getAdmin().auth().updateUser(user.uid, { password: newPassword });
+
+        await ref.update({
+            status: "used",
+            usedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        return res.json({ ok: true });
+    } catch {
+        return res.status(500).json({ error: "Server error" });
+    }
 });
