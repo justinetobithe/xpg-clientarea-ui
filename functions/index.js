@@ -1,14 +1,19 @@
 const { onRequest, onCall, HttpsError } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
-const fetch = require("node-fetch");
 const admin = require("firebase-admin");
 
 const REGION = "us-central1";
 const RECAPTCHA_SECRET = defineSecret("RECAPTCHA_SECRET");
 
-admin.initializeApp();
-const getAdmin = () => admin;
- 
+let _adminReady = false;
+const getAdmin = () => {
+    if (!_adminReady) {
+        admin.initializeApp();
+        _adminReady = true;
+    }
+    return admin;
+};
+
 const jsonBody = (req) => {
     if (req.body && typeof req.body === "object") return req.body;
     try {
@@ -131,7 +136,6 @@ const deleteUserStorage = async (uid) => {
     const a = getAdmin();
     const bucketName = process.env.DELETE_STORAGE_BUCKET || "";
     const bucket = bucketName ? a.storage().bucket(bucketName) : a.storage().bucket();
-
     const prefixes = [`${uid}/`, `users/${uid}/`, `downloads/${uid}/`, `collections/${uid}/`];
 
     for (const prefix of prefixes) {
@@ -145,7 +149,6 @@ const deleteUserStorage = async (uid) => {
 
 exports.verifyRecaptcha = onRequest({ region: REGION, secrets: [RECAPTCHA_SECRET] }, async (req, res) => {
     if (allowCors(req, res)) return;
-
     if (req.method !== "POST") return res.status(405).json({ success: false });
 
     const body = jsonBody(req);
@@ -163,9 +166,9 @@ exports.verifyRecaptcha = onRequest({ region: REGION, secrets: [RECAPTCHA_SECRET
         });
 
         const data = await resp.json().catch(() => ({}));
-        if (!data?.success) return res.status(400).json({ success: false });
+        if (!data?.success) return res.status(400).json({ success: false, data });
 
-        return res.json({ success: true });
+        return res.json({ success: true, data });
     } catch {
         return res.status(500).json({ success: false });
     }
@@ -178,7 +181,6 @@ exports.downloadFile = onRequest({ region: REGION }, async (req, res) => {
         if (req.method !== "GET") return res.status(405).send("Method Not Allowed");
 
         const decoded = await requireAuth(req);
-
         const filePath = String(req.query.path || "");
         const filename = safeFilename(req.query.name || "download");
 
@@ -202,7 +204,6 @@ exports.downloadFile = onRequest({ region: REGION }, async (req, res) => {
         res.setHeader("Cache-Control", "no-store");
 
         file.createReadStream().pipe(res);
-
         return null;
     } catch {
         return res.status(401).send("Unauthorized");
@@ -231,7 +232,6 @@ exports.deleteMyAccount = onCall({ region: REGION }, async (request) => {
 
 exports.resetPasswordWithToken = onRequest({ region: REGION }, async (req, res) => {
     if (allowCors(req, res)) return;
-
     if (req.method !== "POST") return res.status(405).json({ error: "Method Not Allowed" });
 
     const body = jsonBody(req);
