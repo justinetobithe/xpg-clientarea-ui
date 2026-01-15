@@ -147,6 +147,22 @@ const deleteUserStorage = async (uid) => {
     }
 };
 
+const getFetch = () => {
+    if (typeof fetch === "function") return fetch; 
+    return require("node-fetch");
+};
+
+const fetchWithTimeout = async (url, options, timeoutMs) => {
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+        const f = getFetch();
+        return await f(url, { ...options, signal: controller.signal });
+    } finally {
+        clearTimeout(t);
+    }
+};
+
 exports.verifyRecaptcha = onRequest({ region: REGION, secrets: [RECAPTCHA_SECRET] }, async (req, res) => {
     if (allowCors(req, res)) return;
     if (req.method !== "POST") return res.status(405).json({ success: false });
@@ -155,20 +171,24 @@ exports.verifyRecaptcha = onRequest({ region: REGION, secrets: [RECAPTCHA_SECRET
     const token = String(body.token || "");
     const secret = RECAPTCHA_SECRET.value();
 
-    if (!token) return res.status(400).json({ success: false });
+    if (!token || token.length < 20) return res.status(400).json({ success: false });
     if (!secret) return res.status(500).json({ success: false });
 
     try {
-        const resp = await fetch("https://www.google.com/recaptcha/api/siteverify", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: new URLSearchParams({ secret, response: token }).toString(),
-        });
+        const resp = await fetchWithTimeout(
+            "https://www.google.com/recaptcha/api/siteverify",
+            {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams({ secret, response: token }).toString(),
+            },
+            5000
+        );
 
         const data = await resp.json().catch(() => ({}));
-        if (!data?.success) return res.status(400).json({ success: false, data });
+        if (!resp.ok || !data?.success) return res.status(400).json({ success: false });
 
-        return res.json({ success: true, data });
+        return res.json({ success: true });
     } catch {
         return res.status(500).json({ success: false });
     }
@@ -226,7 +246,6 @@ exports.deleteMyAccount = onCall({ region: REGION }, async (request) => {
     }
 
     await getAdmin().auth().deleteUser(uid);
-
     return { ok: true };
 });
 

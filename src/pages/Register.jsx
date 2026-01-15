@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Fieldset, Field, Input, Label } from "@headlessui/react";
 import { useMutation } from "@tanstack/react-query";
@@ -61,15 +61,33 @@ async function verifyRecaptchaToken(token) {
     return true;
 }
 
+async function fetchIpInfo() {
+    try {
+        const res = await fetch("https://ipapi.co/json/");
+        const data = await res.json();
+        return {
+            ip: data.ip || null,
+            city: data.city || null,
+            region: data.region || null,
+            country: data.country_name || null,
+            loc: data.loc || null,
+        };
+    } catch {
+        return null;
+    }
+}
+
 export default function Register() {
     const nav = useNavigate();
     const { openDialog } = useDialog();
     const { showToast } = useToast();
 
     const recaptchaRef = useRef(null);
+    const recaptchaHostRef = useRef(null);
 
     const [err, setErr] = useState("");
     const [userIPInfo, setUserIPInfo] = useState(null);
+    const [recaptchaReady, setRecaptchaReady] = useState(false);
 
     const [submittedEmail, setSubmittedEmail] = useState(() => {
         try {
@@ -82,29 +100,51 @@ export default function Register() {
     const isPendingScreen = useMemo(() => !!submittedEmail, [submittedEmail]);
 
     useEffect(() => {
-        let alive = true;
+        let cancelled = false;
 
-        (async () => {
-            try {
-                const res = await fetch("https://ipapi.co/json/");
-                const data = await res.json();
-                if (!alive) return;
+        const enable = () => {
+            if (!cancelled) setRecaptchaReady(true);
+        };
 
-                setUserIPInfo({
-                    ip: data.ip || null,
-                    city: data.city || null,
-                    region: data.region || null,
-                    country: data.country_name || null,
-                    loc: data.loc || null,
-                });
-            } catch {
-                if (!alive) return;
-                setUserIPInfo(null);
+        const idle = (cb) => {
+            if (typeof window.requestIdleCallback === "function") {
+                window.requestIdleCallback(cb, { timeout: 1200 });
+            } else {
+                setTimeout(cb, 700);
             }
-        })();
+        };
+
+        const onFirstInteraction = () => {
+            window.removeEventListener("pointerdown", onFirstInteraction);
+            window.removeEventListener("keydown", onFirstInteraction);
+            idle(enable);
+        };
+
+        window.addEventListener("pointerdown", onFirstInteraction, { passive: true });
+        window.addEventListener("keydown", onFirstInteraction);
+
+        const observer =
+            "IntersectionObserver" in window
+                ? new IntersectionObserver(
+                    (entries) => {
+                        if (entries.some((e) => e.isIntersecting)) {
+                            enable();
+                            observer.disconnect();
+                        }
+                    },
+                    { rootMargin: "250px" }
+                )
+                : null;
+
+        if (observer && recaptchaHostRef.current) observer.observe(recaptchaHostRef.current);
+
+        idle(enable);
 
         return () => {
-            alive = false;
+            cancelled = true;
+            window.removeEventListener("pointerdown", onFirstInteraction);
+            window.removeEventListener("keydown", onFirstInteraction);
+            if (observer) observer.disconnect();
         };
     }, []);
 
@@ -136,6 +176,9 @@ export default function Register() {
         mutationFn: async (form) => {
             await verifyRecaptchaToken(form.recaptchaToken);
 
+            const ipInfo = userIPInfo || (await fetchIpInfo());
+            if (!userIPInfo) setUserIPInfo(ipInfo);
+
             const usersRef = collection(db, "users");
             const q = query(usersRef, orderBy("opid", "desc"), limit(1));
             const snap = await getDocs(q);
@@ -160,12 +203,12 @@ export default function Register() {
                 uid: cred.user.uid,
                 id: cred.user.uid,
                 opid: newOpid,
-                ip: userIPInfo?.ip || null,
+                ip: ipInfo?.ip || null,
                 location: {
-                    city: userIPInfo?.city || null,
-                    region: userIPInfo?.region || null,
-                    country: userIPInfo?.country || null,
-                    coordinates: userIPInfo?.loc || null,
+                    city: ipInfo?.city || null,
+                    region: ipInfo?.region || null,
+                    country: ipInfo?.country || null,
+                    coordinates: ipInfo?.loc || null,
                 },
             });
 
@@ -207,10 +250,13 @@ export default function Register() {
         },
     });
 
-    const onSubmit = (data) => {
-        setErr("");
-        registerMutation.mutate(data);
-    };
+    const onSubmit = useCallback(
+        (data) => {
+            setErr("");
+            registerMutation.mutate(data);
+        },
+        [registerMutation]
+    );
 
     const handleOpenCookiePolicy = (e) => {
         e.preventDefault();
@@ -385,14 +431,18 @@ export default function Register() {
                             {(errors.privacy || err) && <div className="text-sm text-red-400 pt-1">{errors.privacy?.message || err}</div>}
                         </div>
 
-                        <div className="md:col-span-2 pt-2 flex flex-col items-center gap-3">
-                            <ReCAPTCHA
-                                ref={recaptchaRef}
-                                sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY || ""}
-                                onChange={(token) => setValue("recaptchaToken", token || "", { shouldValidate: true })}
-                                onExpired={() => setValue("recaptchaToken", "", { shouldValidate: true })}
-                                theme="dark"
-                            />
+                        <div ref={recaptchaHostRef} className="md:col-span-2 pt-2 flex flex-col items-center gap-3 min-h-[92px]">
+                            {recaptchaReady ? (
+                                <ReCAPTCHA
+                                    ref={recaptchaRef}
+                                    sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY || ""}
+                                    onChange={(token) => setValue("recaptchaToken", token || "", { shouldValidate: true })}
+                                    onExpired={() => setValue("recaptchaToken", "", { shouldValidate: true })}
+                                    theme="dark"
+                                />
+                            ) : (
+                                <div className="text-sm text-white/70">Loading verification…</div>
+                            )}
                             {errors.recaptchaToken && <div className="text-sm text-red-400">{errors.recaptchaToken.message}</div>}
                         </div>
 
