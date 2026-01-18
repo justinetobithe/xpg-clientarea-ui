@@ -2,15 +2,10 @@ import { Fragment, useEffect, useMemo } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { X, ChevronLeft, ChevronRight, Download, FileText, FileImage, File } from "lucide-react";
 import { getExt, isImage, isPDF, parseSizeToBytes, formatBytes } from "../../utils/fileUtils";
+import { useTranslation } from "react-i18next";
 
-export default function PreviewModal({
-    open,
-    onClose,
-    files = [],
-    index = 0,
-    setIndex,
-    onDownload
-}) {
+export default function PreviewModal({ open, onClose, files = [], index = 0, setIndex, onDownload }) {
+    const { t } = useTranslation();
     const current = files[index] || null;
 
     useEffect(() => {
@@ -33,6 +28,16 @@ export default function PreviewModal({
         if (!bytes) return raw ? String(raw) : "";
         return `${raw} (${formatBytes(bytes)})`;
     }, [current]);
+
+    const headerMeta = useMemo(() => {
+        const parts = [];
+        if (current?._name) parts.push(current._name);
+        if (ext) parts.push(ext);
+        if (prettySize) parts.push(prettySize);
+        if (current?._date) parts.push(t("previewModal.addedAt", { date: new Date(current._date).toLocaleString() }));
+        if (files.length) parts.push(t("previewModal.position", { index: index + 1, total: files.length }));
+        return parts.join(" | ");
+    }, [current, ext, prettySize, files.length, index, t]);
 
     return (
         <Transition show={open} as={Fragment}>
@@ -66,16 +71,10 @@ export default function PreviewModal({
                                     return <Icon className="text-primary flex-shrink-0" size={18} />;
                                 })()}
 
-                                <div className="truncate min-w-0">
-                                    {current?._name || ""}
-                                    {ext ? ` | ${ext}` : ""}
-                                    {prettySize ? ` | ${prettySize}` : ""}
-                                    {current?._date ? ` | Added ${new Date(current._date).toLocaleString()}` : ""}
-                                    {files.length ? ` | ${index + 1} of ${files.length}` : ""}
-                                </div>
+                                <div className="truncate min-w-0">{headerMeta}</div>
                             </div>
 
-                            <button onClick={onClose} className="text-white/80 hover:text-white">
+                            <button onClick={onClose} className="text-white/80 hover:text-white" type="button" aria-label={t("previewModal.close")}>
                                 <X size={18} />
                             </button>
                         </div>
@@ -85,6 +84,8 @@ export default function PreviewModal({
                                 onClick={() => setIndex?.((i) => Math.max(0, i - 1))}
                                 disabled={index <= 0}
                                 className="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/60 text-white disabled:opacity-30"
+                                type="button"
+                                aria-label={t("previewModal.prev")}
                             >
                                 <ChevronLeft size={20} />
                             </button>
@@ -93,6 +94,8 @@ export default function PreviewModal({
                                 onClick={() => setIndex?.((i) => Math.min(files.length - 1, i + 1))}
                                 disabled={index >= files.length - 1}
                                 className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/60 text-white disabled:opacity-30"
+                                type="button"
+                                aria-label={t("previewModal.next")}
                             >
                                 <ChevronRight size={20} />
                             </button>
@@ -102,14 +105,14 @@ export default function PreviewModal({
                                     <img src={current._url} alt={current?._name || ""} className="max-h-[70vh] w-auto object-contain" />
                                 ) : isPDF(ext) && current?._url ? (
                                     <iframe
-                                        title={current?._name || "PDF"}
+                                        title={current?._name || t("previewModal.pdfTitle")}
                                         src={`${current._url}#toolbar=1&navpanes=0`}
                                         className="w-full h-full"
                                     />
                                 ) : (
                                     <div className="text-white/80 flex flex-col items-center gap-2">
                                         <File size={48} />
-                                        <div>No inline preview for this file type.</div>
+                                        <div>{t("previewModal.noInlinePreview")}</div>
                                     </div>
                                 )}
                             </div>
@@ -120,9 +123,10 @@ export default function PreviewModal({
                                 onClick={() => current && onDownload?.(current)}
                                 disabled={!current}
                                 className="inline-flex items-center gap-2 px-4 py-2 rounded bg-primary text-black font-bold text-sm hover:opacity-90 disabled:opacity-50"
+                                type="button"
                             >
                                 <Download size={16} />
-                                Download
+                                {t("previewModal.download")}
                             </button>
                         </div>
                     </Dialog.Panel>

@@ -2,9 +2,11 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Field, Fieldset, Input, Label } from "@headlessui/react";
 import { Loader2, AlertTriangle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useAuthStore } from "../../store/authStore";
 
 export default function DeleteAccount() {
+    const { t } = useTranslation();
     const deleteAccount = useAuthStore((s) => s.deleteAccount);
     const navigate = useNavigate();
 
@@ -19,12 +21,12 @@ export default function DeleteAccount() {
         setIsError(false);
 
         if (!password) {
-            setMsg("Password is required.");
+            setMsg(t("settings.deleteAccount.messages.passwordRequired"));
             setIsError(true);
             return;
         }
 
-        const ok = window.confirm("Delete your account permanently? This cannot be undone.");
+        const ok = window.confirm(t("settings.deleteAccount.confirm"));
         if (!ok) return;
 
         setIsDeleting(true);
@@ -32,7 +34,7 @@ export default function DeleteAccount() {
             await deleteAccount(password, { deleteStorage });
             navigate("/login");
         } catch (e) {
-            setMsg(e?.message || String(e) || "Failed to delete account");
+            setMsg(e?.message || String(e) || t("settings.deleteAccount.messages.failed"));
             setIsError(true);
         } finally {
             setIsDeleting(false);
@@ -47,17 +49,18 @@ export default function DeleteAccount() {
                     <AlertTriangle className="h-5 w-5 text-red-300" />
                 </span>
                 <div>
-                    <div className="text-white font-semibold text-lg">Delete Account</div>
-                    <div className="text-white/60 text-sm">This will permanently remove your access.</div>
+                    <div className="text-white font-semibold text-lg">{t("settings.deleteAccount.title")}</div>
+                    <div className="text-white/60 text-sm">{t("settings.deleteAccount.subtitle")}</div>
                 </div>
             </div>
 
             <div className="text-white/70 text-sm mb-6">
-                This action is <span className="text-red-300 font-semibold">irreversible</span>.
+                {t("settings.deleteAccount.warningPrefix")}{" "}
+                <span className="text-red-300 font-semibold">{t("settings.deleteAccount.irreversible")}</span>.
             </div>
 
             <Field className="flex flex-col mb-4 max-w-md">
-                <Label className="text-sm font-medium text-white mb-1">Confirm with Password</Label>
+                <Label className="text-sm font-medium text-white mb-1">{t("settings.deleteAccount.fields.password")}</Label>
                 <Input
                     type="password"
                     value={password}
@@ -75,7 +78,7 @@ export default function DeleteAccount() {
                     className="h-4 w-4 rounded border-border bg-input"
                 />
                 <label htmlFor="deleteStorage" className="text-sm text-white/70">
-                    Also delete my storage files (optional)
+                    {t("settings.deleteAccount.fields.deleteStorage")}
                 </label>
             </div>
 
@@ -84,9 +87,10 @@ export default function DeleteAccount() {
                     onClick={handleDelete}
                     disabled={isDeleting}
                     className="inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 px-6 transition disabled:opacity-50"
+                    type="button"
                 >
                     {isDeleting && <Loader2 className="h-4 w-4 animate-spin" />}
-                    {isDeleting ? "Deleting..." : "Delete Account"}
+                    {isDeleting ? t("settings.deleteAccount.button.deleting") : t("settings.deleteAccount.button.delete")}
                 </button>
 
                 {msg && <div className={`text-sm ${isError ? "text-red-400" : "text-emerald-400"}`}>{msg}</div>}

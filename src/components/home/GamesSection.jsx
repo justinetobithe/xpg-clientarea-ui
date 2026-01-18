@@ -3,12 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Listbox } from "@headlessui/react";
 import { ChevronDown, Search, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useGamesQuery } from "../../hooks/useGamesQuery";
-
-const sortOptions = [
-    { value: "order-asc", label: "Default Order" },
-    { value: "name-asc", label: "Name (A-Z)" },
-    { value: "name-desc", label: "Name (Z-A)" }
-];
+import { useTranslation } from "react-i18next";
 
 const TYPE_ORDER = ["Baccarat", "Teen Patti", "Roulette", "Blackjack", "Dragon Tiger", "Sic Bo", "Poker", "Other"];
 
@@ -32,16 +27,16 @@ function IconButton({ label, onClick, disabled, children }) {
     );
 }
 
-function getGameName(g) {
-    return g?.name || g?.title || g?.game_name || "Untitled";
+function getGameName(g, t) {
+    return g?.name || g?.title || g?.game_name || t("games.untitled");
 }
 
 function normalize(s) {
     return String(s || "").toLowerCase().trim();
 }
 
-function detectTypeFromGame(game) {
-    const n = normalize(getGameName(game)).replace(/\s+/g, " ");
+function detectTypeFromGame(game, t) {
+    const n = normalize(getGameName(game, t)).replace(/\s+/g, " ");
 
     if (n.includes("baccarat")) return "Baccarat";
     if (n.includes("teen patti") || n.includes("teenpatti")) return "Teen Patti";
@@ -76,6 +71,8 @@ function GamesGridSkeleton({ count = 8 }) {
 }
 
 function MobilePagination({ page, totalPages, onPrev, onNext, onJump }) {
+    const { t } = useTranslation();
+
     const pages = useMemo(() => {
         const out = new Set([1, totalPages, page, page - 1, page + 1]);
         return Array.from(out)
@@ -103,11 +100,11 @@ function MobilePagination({ page, totalPages, onPrev, onNext, onJump }) {
                     ].join(" ")}
                 >
                     <ChevronLeft className="h-4 w-4" />
-                    Prev
+                    {t("games.pagination.prev")}
                 </button>
 
                 <div className="text-xs text-white/70 px-2">
-                    Page <span className="text-white font-semibold">{page}</span> / {totalPages}
+                    {t("games.pagination.page")} <span className="text-white font-semibold">{page}</span> / {totalPages}
                 </div>
 
                 <button
@@ -121,7 +118,7 @@ function MobilePagination({ page, totalPages, onPrev, onNext, onJump }) {
                         !canNext ? "opacity-40 cursor-not-allowed" : ""
                     ].join(" ")}
                 >
-                    Next
+                    {t("games.pagination.next")}
                     <ChevronRight className="h-4 w-4" />
                 </button>
             </div>
@@ -150,18 +147,19 @@ function MobilePagination({ page, totalPages, onPrev, onNext, onJump }) {
                 })}
             </div>
 
-            <div className="text-[11px] text-white/50">Showing more pages on mobile</div>
+            <div className="text-[11px] text-white/50">{t("games.pagination.mobileHint")}</div>
         </div>
     );
 }
 
 function GameImage({ src, alt }) {
+    const { t } = useTranslation();
     const [failed, setFailed] = useState(false);
 
     if (!src || failed) {
         return (
             <div className="w-full h-full flex items-center justify-center bg-white/[0.06] text-white/50 text-xs">
-                No Image
+                {t("games.image.noImage")}
             </div>
         );
     }
@@ -170,8 +168,18 @@ function GameImage({ src, alt }) {
 }
 
 export default function GamesSection() {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const { data: allGames = [], isLoading, error } = useGamesQuery();
+
+    const sortOptions = useMemo(
+        () => [
+            { value: "order-asc", label: t("games.sort.defaultOrder") },
+            { value: "name-asc", label: t("games.sort.nameAsc") },
+            { value: "name-desc", label: t("games.sort.nameDesc") }
+        ],
+        [t]
+    );
 
     const [activeType, setActiveType] = useState("All");
     const [inputValue, setInputValue] = useState("");
@@ -185,6 +193,13 @@ export default function GamesSection() {
 
     const [canPrevTypes, setCanPrevTypes] = useState(false);
     const [canNextTypes, setCanNextTypes] = useState(false);
+
+    useEffect(() => {
+        setSortBy((cur) => {
+            const next = sortOptions.find((o) => o.value === cur?.value) || sortOptions[0];
+            return next;
+        });
+    }, [sortOptions]);
 
     const handleSearchChange = (e) => {
         const val = e.target.value;
@@ -217,7 +232,7 @@ export default function GamesSection() {
         const map = new Map();
 
         for (const g of list) {
-            const type = detectTypeFromGame(g);
+            const type = detectTypeFromGame(g, t);
             if (!map.has(type)) {
                 map.set(type, { type, id: type, name: type, imageURL: g?.imageURL || null, count: 1 });
             } else {
@@ -238,7 +253,7 @@ export default function GamesSection() {
         });
 
         return arr;
-    }, [allGames]);
+    }, [allGames, t]);
 
     const updateTypesArrows = useCallback(() => {
         const el = typesTrackRef.current;
@@ -277,24 +292,24 @@ export default function GamesSection() {
         let filtered = Array.isArray(allGames) ? [...allGames] : [];
 
         if (activeType !== "All") {
-            filtered = filtered.filter((g) => detectTypeFromGame(g) === activeType);
+            filtered = filtered.filter((g) => detectTypeFromGame(g, t) === activeType);
         }
 
         if (searchTerm.length >= 2) {
             const lower = searchTerm.toLowerCase();
-            filtered = filtered.filter((g) => getGameName(g).toLowerCase().includes(lower));
+            filtered = filtered.filter((g) => getGameName(g, t).toLowerCase().includes(lower));
         }
 
         if (sortBy.value === "name-asc") {
-            filtered.sort((a, b) => getGameName(a).localeCompare(getGameName(b)));
+            filtered.sort((a, b) => getGameName(a, t).localeCompare(getGameName(b, t)));
         } else if (sortBy.value === "name-desc") {
-            filtered.sort((a, b) => getGameName(b).localeCompare(getGameName(a)));
+            filtered.sort((a, b) => getGameName(b, t).localeCompare(getGameName(a, t)));
         } else {
             filtered.sort((a, b) => (a.order ?? 999999) - (b.order ?? 999999));
         }
 
         return filtered;
-    }, [allGames, activeType, searchTerm, sortBy.value]);
+    }, [allGames, activeType, searchTerm, sortBy.value, t]);
 
     const showSkeleton = isLoading || isSearching;
 
@@ -311,20 +326,20 @@ export default function GamesSection() {
         <section className="mt-8 space-y-8">
             <div>
                 <div className="flex items-center justify-between mb-4">
-                    <div className="text-lg font-semibold text-white">Game Types</div>
+                    <div className="text-lg font-semibold text-white">{t("games.types.title")}</div>
                     <div className="flex items-center gap-2">
-                        <IconButton label="Previous" onClick={() => scrollTypesBy(-1)} disabled={!canPrevTypes}>
+                        <IconButton label={t("games.types.prev")} onClick={() => scrollTypesBy(-1)} disabled={!canPrevTypes}>
                             <ChevronLeft className="h-5 w-5" />
                         </IconButton>
-                        <IconButton label="Next" onClick={() => scrollTypesBy(1)} disabled={!canNextTypes}>
+                        <IconButton label={t("games.types.next")} onClick={() => scrollTypesBy(1)} disabled={!canNextTypes}>
                             <ChevronRight className="h-5 w-5" />
                         </IconButton>
                     </div>
                 </div>
 
-                {showSkeleton && <div className="text-sm text-white/60">Loading...</div>}
+                {showSkeleton && <div className="text-sm text-white/60">{t("games.types.loading")}</div>}
 
-                {!showSkeleton && typeCards.length === 0 && <div className="text-sm text-white/60">No game types found.</div>}
+                {!showSkeleton && typeCards.length === 0 && <div className="text-sm text-white/60">{t("games.types.empty")}</div>}
 
                 {!showSkeleton && typeCards.length > 0 && (
                     <div className="-mx-0">
@@ -337,28 +352,27 @@ export default function GamesSection() {
                                 "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                             ].join(" ")}
                         >
-                            {typeCards.map((t) => (
-                                <div key={t.id} className="snap-start shrink-0 w-[48%] sm:w-[32%] lg:w-[24%]">
+                            {typeCards.map((tc) => (
+                                <div key={tc.id} className="snap-start shrink-0 w-[48%] sm:w-[32%] lg:w-[24%]">
                                     <button
                                         type="button"
-                                        onClick={() => setActiveType(t.type)}
+                                        onClick={() => setActiveType(tc.type)}
                                         className={[
                                             "group rounded-xl overflow-hidden shadow-lg hover:shadow-primary/50 transition-all duration-300 transform hover:scale-[1.03]",
                                             "bg-background/50 border border-border/50 block w-full text-left",
-                                            activeType === t.type ? "ring-2 ring-primary" : ""
+                                            activeType === tc.type ? "ring-2 ring-primary" : ""
                                         ].join(" ")}
                                     >
                                         <div className="aspect-video relative overflow-hidden bg-white/[0.03]">
-                                            <GameImage src={t.imageURL} alt={t.type} />
+                                            <GameImage src={tc.imageURL} alt={tc.type} />
                                         </div>
-
-                                        <div className="p-3 text-center text-white text-sm font-medium truncate">{t.type}</div>
+                                        <div className="p-3 text-center text-white text-sm font-medium truncate">{tc.type}</div>
                                     </button>
                                 </div>
                             ))}
                         </div>
 
-                        <div className="mt-3 text-[11px] text-white/50">Swipe left/right to view</div>
+                        <div className="mt-3 text-[11px] text-white/50">{t("games.types.swipeHint")}</div>
                     </div>
                 )}
             </div>
@@ -367,7 +381,8 @@ export default function GamesSection() {
                 <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3 mb-4">
                     <div className="flex items-center gap-3 min-w-0">
                         <div className="text-lg font-semibold text-white min-w-0 truncate">
-                            {activeType === "All" ? "All Games" : `${activeType} Games`} ({showSkeleton ? allGames.length : games.length})
+                            {activeType === "All" ? t("games.list.allGames") : t("games.list.typeGames", { type: activeType })} (
+                            {showSkeleton ? allGames.length : games.length})
                         </div>
 
                         {activeType !== "All" && (
@@ -377,7 +392,7 @@ export default function GamesSection() {
                                 className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/15 bg-white/[0.03] hover:bg-white/[0.06] text-white text-xs font-semibold"
                             >
                                 <X className="h-4 w-4" />
-                                Clear Type
+                                {t("games.list.clearType")}
                             </button>
                         )}
                     </div>
@@ -388,7 +403,7 @@ export default function GamesSection() {
                                 type="text"
                                 value={inputValue}
                                 onChange={handleSearchChange}
-                                placeholder="Search games..."
+                                placeholder={t("games.list.searchPlaceholder")}
                                 className="w-full bg-background/30 rounded-lg py-2 pl-10 pr-3 text-sm text-white border border-border focus:outline-none focus:ring-1 focus:ring-primary transition"
                             />
                             <Search className="absolute left-3 h-4 w-4 text-white/70" />
@@ -414,9 +429,7 @@ export default function GamesSection() {
                                                 value={option}
                                             >
                                                 {({ selected }) => (
-                                                    <span className={`block truncate ${selected ? "font-medium" : "font-normal"}`}>
-                                                        {option.label}
-                                                    </span>
+                                                    <span className={`block truncate ${selected ? "font-medium" : "font-normal"}`}>{option.label}</span>
                                                 )}
                                             </Listbox.Option>
                                         ))}
@@ -429,9 +442,13 @@ export default function GamesSection() {
 
                 {showSkeleton && <GamesGridSkeleton count={8} />}
 
-                {!showSkeleton && error && <div className="text-red-400 text-sm">{error?.message || "Failed to load games"}</div>}
+                {!showSkeleton && error && (
+                    <div className="text-red-400 text-sm">{error?.message || t("games.list.failedToLoad")}</div>
+                )}
 
-                {!showSkeleton && !error && allGames.length > 0 && games.length === 0 && <div className="text-white/70 text-sm">No games found.</div>}
+                {!showSkeleton && !error && allGames.length > 0 && games.length === 0 && (
+                    <div className="text-white/70 text-sm">{t("games.list.noGamesFound")}</div>
+                )}
 
                 {!showSkeleton && !error && games.length > 0 && (
                     <div className="hidden md:grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
@@ -442,9 +459,9 @@ export default function GamesSection() {
                                 className="group rounded-xl overflow-hidden cursor-pointer shadow-lg hover:shadow-primary/50 transition-all duration-300 transform hover:scale-[1.03] bg-background/50 border border-border/50 block"
                             >
                                 <div className="aspect-video relative overflow-hidden bg-white/[0.03]">
-                                    <GameImage src={g.imageURL} alt={getGameName(g)} />
+                                    <GameImage src={g.imageURL} alt={getGameName(g, t)} />
                                 </div>
-                                <div className="p-3 text-center text-white text-sm font-medium truncate">{getGameName(g)}</div>
+                                <div className="p-3 text-center text-white text-sm font-medium truncate">{getGameName(g, t)}</div>
                             </Link>
                         ))}
                     </div>
@@ -460,9 +477,9 @@ export default function GamesSection() {
                                     className="group rounded-xl overflow-hidden cursor-pointer shadow-lg hover:shadow-primary/50 transition-all duration-300 transform hover:scale-[1.03] bg-background/50 border border-border/50 block"
                                 >
                                     <div className="aspect-video relative overflow-hidden bg-white/[0.03]">
-                                        <GameImage src={g.imageURL} alt={getGameName(g)} />
+                                        <GameImage src={g.imageURL} alt={getGameName(g, t)} />
                                     </div>
-                                    <div className="p-3 text-center text-white text-sm font-medium truncate">{getGameName(g)}</div>
+                                    <div className="p-3 text-center text-white text-sm font-medium truncate">{getGameName(g, t)}</div>
                                 </Link>
                             ))}
                         </div>
@@ -477,7 +494,9 @@ export default function GamesSection() {
                     </>
                 )}
 
-                {!showSkeleton && !error && allGames.length === 0 && <div className="text-white/70 text-sm">No games found.</div>}
+                {!showSkeleton && !error && allGames.length === 0 && (
+                    <div className="text-white/70 text-sm">{t("games.list.noGamesFound")}</div>
+                )}
             </div>
         </section>
     );

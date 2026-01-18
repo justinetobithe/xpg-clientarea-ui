@@ -10,6 +10,7 @@ import {
     ChevronDown,
     ChevronUp,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import PageShell from "../components/common/PageShell";
 import { useSearchQuery } from "../hooks/useSearchQuery";
 
@@ -77,9 +78,10 @@ function EmptyCard({ icon: Icon, title, desc }) {
 }
 
 function GameCard({ g, q }) {
+    const { t } = useTranslation();
     const [open, setOpen] = useState(false);
 
-    const title = g.name || g.title || g.game_name || "Untitled";
+    const title = g.name || g.title || g.game_name || t("search.common.untitled");
     const img = g.imageURL || g.cover || g.thumbnail || "";
     const sections = Array.isArray(g.sections) ? g.sections : [];
 
@@ -108,12 +110,12 @@ function GameCard({ g, q }) {
                                 {hasNested ? (
                                     <span className="inline-flex items-center gap-2">
                                         <Folder className="h-4 w-4 text-white/60" />
-                                        Matching sections/files found
+                                        {t("search.gameCard.matchingFound")}
                                     </span>
                                 ) : (
                                     <span className="inline-flex items-center gap-2">
                                         <FileText className="h-4 w-4 text-white/50" />
-                                        No matching sections/files in this game
+                                        {t("search.gameCard.noMatching")}
                                     </span>
                                 )}
                             </div>
@@ -124,13 +126,14 @@ function GameCard({ g, q }) {
                                 to={`/game/${g.id}`}
                                 className="inline-flex items-center justify-center rounded-xl bg-primary text-black font-bold px-4 py-2 text-sm hover:opacity-90 transition"
                             >
-                                Open
+                                {t("search.actions.open")}
                             </Link>
 
                             {sections.length > 0 ? (
                                 <button
                                     onClick={() => setOpen((v) => !v)}
                                     className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white/80 hover:bg-white/10 transition"
+                                    aria-label={open ? t("search.actions.collapse") : t("search.actions.expand")}
                                 >
                                     {open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                                 </button>
@@ -144,10 +147,10 @@ function GameCard({ g, q }) {
                 <div className="border-t border-white/10 px-5 py-5 bg-black/15">
                     <div className="space-y-4">
                         {sections.length === 0 ? (
-                            <div className="text-white/60 text-sm">No sections found.</div>
+                            <div className="text-white/60 text-sm">{t("search.gameCard.noSectionsFound")}</div>
                         ) : (
                             sections.map((s) => {
-                                const secTitle = s.name || s.title || "Section";
+                                const secTitle = s.name || s.title || t("search.common.section");
                                 const files = Array.isArray(s.files) ? s.files : [];
                                 return (
                                     <div key={s.id} className="rounded-2xl border border-white/10 bg-black/20 p-4">
@@ -156,16 +159,16 @@ function GameCard({ g, q }) {
                                                 <Highlight text={secTitle} q={q} />
                                             </div>
                                             <div className="text-xs text-white/50">
-                                                {files.length} file{files.length === 1 ? "" : "s"}
+                                                {t("search.common.filesCount", { count: files.length })}
                                             </div>
                                         </div>
 
                                         {files.length === 0 ? (
-                                            <div className="text-white/60 text-sm mt-2">No matching files.</div>
+                                            <div className="text-white/60 text-sm mt-2">{t("search.gameCard.noMatchingFiles")}</div>
                                         ) : (
                                             <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
                                                 {files.map((f) => {
-                                                    const fname = f.name || f.filename || f.title || "File";
+                                                    const fname = f.name || f.filename || f.title || t("search.common.file");
                                                     const fdesc = f.description || "";
                                                     return (
                                                         <div
@@ -185,7 +188,7 @@ function GameCard({ g, q }) {
                                                                             <Highlight text={fdesc} q={q} />
                                                                         </div>
                                                                     ) : (
-                                                                        <div className="text-white/50 text-xs mt-1">No description.</div>
+                                                                        <div className="text-white/50 text-xs mt-1">{t("search.common.noDescription")}</div>
                                                                     )}
                                                                 </div>
                                                             </div>
@@ -206,6 +209,7 @@ function GameCard({ g, q }) {
 }
 
 export default function Search() {
+    const { t } = useTranslation();
     const q = useQueryParam("q");
     const { isLoading, error, matchedAnnouncements, matchedGames, totalCount } = useSearchQuery(q);
 
@@ -213,7 +217,8 @@ export default function Search() {
         <div className="hidden md:flex items-center gap-2 rounded-xl border border-white/10 bg-black/25 px-4 py-2">
             <SearchIcon className="h-4 w-4 text-white/70" />
             <span className="text-sm text-white/70">
-                Query: <span className="text-white font-semibold">{q || "-"}</span>
+                {t("search.header.queryLabel")}{" "}
+                <span className="text-white font-semibold">{q || t("search.common.dash")}</span>
             </span>
         </div>
     );
@@ -223,9 +228,9 @@ export default function Search() {
 
     return (
         <PageShell
-            crumb="Home / Search"
-            title="Search"
-            subtitle="Search announcements, games, sections and files."
+            crumb={t("search.crumb")}
+            title={t("search.title")}
+            subtitle={t("search.subtitle")}
             right={headerRight}
         >
             <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.05] via-black/20 to-black/30 p-6 shadow-[0_30px_90px_rgba(0,0,0,0.45)]">
@@ -238,22 +243,22 @@ export default function Search() {
                             <div className="text-white font-semibold text-xl">
                                 {q ? (
                                     <>
-                                        Results for <span className="text-primary">{q}</span>
+                                        {t("search.hero.resultsFor")} <span className="text-primary">{q}</span>
                                     </>
                                 ) : (
-                                    "Start searching"
+                                    t("search.hero.startSearching")
                                 )}
                             </div>
                             <div className="text-white/60 text-sm mt-1">
-                                {q ? "Showing matched content across your client area." : "Use the navbar search bar and press Enter."}
+                                {q ? t("search.hero.showingMatched") : t("search.hero.useNavbarHint")}
                             </div>
                         </div>
                     </div>
 
                     <div className="flex flex-wrap gap-2">
-                        <StatPill icon={Megaphone} label="Announcements" value={announcementsCount} />
-                        <StatPill icon={Gamepad2} label="Games" value={gamesCount} />
-                        <StatPill icon={SearchIcon} label="Total" value={q ? totalCount : 0} />
+                        <StatPill icon={Megaphone} label={t("search.stats.announcements")} value={announcementsCount} />
+                        <StatPill icon={Gamepad2} label={t("search.stats.games")} value={gamesCount} />
+                        <StatPill icon={SearchIcon} label={t("search.stats.total")} value={q ? totalCount : 0} />
                     </div>
                 </div>
             </div>
@@ -262,26 +267,26 @@ export default function Search() {
                 <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <EmptyCard
                         icon={SearchIcon}
-                        title="Search anything"
-                        desc="Try game names, announcement titles, section names, or file names."
+                        title={t("search.emptyStates.noQuery.card1.title")}
+                        desc={t("search.emptyStates.noQuery.card1.desc")}
                     />
                     <EmptyCard
                         icon={Sparkles}
-                        title="Pro tip"
-                        desc="Use short keywords like “baccarat”, “pack”, “thumbnail”, “promo”, etc."
+                        title={t("search.emptyStates.noQuery.card2.title")}
+                        desc={t("search.emptyStates.noQuery.card2.desc")}
                     />
                 </div>
             ) : null}
 
             {q && isLoading ? (
                 <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-6 text-white/70 text-sm">
-                    Searching...
+                    {t("search.states.searching")}
                 </div>
             ) : null}
 
             {q && !isLoading && error ? (
                 <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-6 text-red-400 text-sm">
-                    {error?.message || "Search failed"}
+                    {error?.message || t("search.states.failed")}
                 </div>
             ) : null}
 
@@ -289,8 +294,8 @@ export default function Search() {
                 <div className="mt-6">
                     <EmptyCard
                         icon={SearchIcon}
-                        title="No results"
-                        desc={`No results found for "${q}". Try a shorter keyword.`}
+                        title={t("search.emptyStates.noResults.title")}
+                        desc={t("search.emptyStates.noResults.desc", { q })}
                     />
                 </div>
             ) : null}
@@ -301,19 +306,20 @@ export default function Search() {
                         <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
                             <div className="flex items-center justify-between mb-3">
                                 <div className="text-white font-semibold text-lg">
-                                    Announcements <span className="text-white/50">({announcementsCount})</span>
+                                    {t("search.panels.announcements.title")}{" "}
+                                    <span className="text-white/50">({announcementsCount})</span>
                                 </div>
                                 <Link to="/announcements" className="text-primary text-sm font-semibold hover:opacity-80">
-                                    View all
+                                    {t("search.actions.viewAll")}
                                 </Link>
                             </div>
 
                             {announcementsCount === 0 ? (
-                                <div className="text-white/60 text-sm">No matching announcements.</div>
+                                <div className="text-white/60 text-sm">{t("search.panels.announcements.empty")}</div>
                             ) : (
                                 <div className="space-y-3">
                                     {matchedAnnouncements.map((a) => {
-                                        const title = a.title || a.name || "Untitled";
+                                        const title = a.title || a.name || t("search.common.untitled");
                                         const body = a.body || a.content || a.description || "";
                                         return (
                                             <Link
@@ -345,15 +351,17 @@ export default function Search() {
                     <div className="lg:col-span-8 space-y-4">
                         <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
                             <div className="text-white font-semibold text-lg">
-                                Games <span className="text-white/50">({gamesCount})</span>
+                                {t("search.panels.games.title")} <span className="text-white/50">({gamesCount})</span>
                             </div>
-                            <div className="text-white/60 text-sm mt-1">
-                                Expand a game to view matched sections and files.
-                            </div>
+                            <div className="text-white/60 text-sm mt-1">{t("search.panels.games.hint")}</div>
                         </div>
 
                         {gamesCount === 0 ? (
-                            <EmptyCard icon={Gamepad2} title="No matching games" desc="Try a different keyword." />
+                            <EmptyCard
+                                icon={Gamepad2}
+                                title={t("search.panels.games.emptyTitle")}
+                                desc={t("search.panels.games.emptyDesc")}
+                            />
                         ) : (
                             <div className="space-y-4">
                                 {matchedGames.map((g) => (

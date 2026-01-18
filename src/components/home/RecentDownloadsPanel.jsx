@@ -4,6 +4,7 @@ import { getAuth } from "firebase/auth";
 import { useDownloadsStore } from "../../store/downloadsStore";
 import { getExt, isImage, buildDownloadUrl, storagePathFromFirebaseUrl, downloadViaIframe } from "../../utils/fileUtils";
 import { sleep } from "../../utils/utils";
+import { useTranslation } from "react-i18next";
 
 function RecentDownloadSkeletonRow() {
     return (
@@ -75,6 +76,7 @@ function TooltipIconButton({ label, disabled, onClick, children }) {
 }
 
 export default function RecentDownloadsPanel({ items = [], loading = false, error = null, skeletonCount = 5 }) {
+    const { t } = useTranslation();
     const upsertDownload = useDownloadsStore((s) => s.upsertDownload);
     const [downloadingKey, setDownloadingKey] = useState(null);
 
@@ -95,7 +97,7 @@ export default function RecentDownloadsPanel({ items = [], loading = false, erro
     };
 
     const handleDownload = async (f) => {
-        const name = f.fileName || "download";
+        const name = f.fileName || t("downloads.untitled");
         const stableKey = stableKeyOf(f);
         if (!stableKey) return;
 
@@ -105,20 +107,20 @@ export default function RecentDownloadsPanel({ items = [], loading = false, erro
             const storagePath = f.storagePath || (f.fileURL ? storagePathFromFirebaseUrl(f.fileURL) : null);
 
             if (!storagePath) {
-                alert("Missing storagePath and cannot extract it from fileURL.");
+                alert(t("downloads.missingStoragePath"));
                 return;
             }
 
             const auth = getAuth();
             const token = await auth.currentUser?.getIdToken();
             if (!token) {
-                alert("Not authenticated. Please login again.");
+                alert(t("downloads.notAuthenticated"));
                 return;
             }
 
             const url = buildDownloadUrl(storagePath, name, token);
             if (!url) {
-                alert("Missing VITE_DOWNLOAD_FILE_URL");
+                alert(t("downloads.missingDownloadUrl"));
                 return;
             }
 
@@ -138,7 +140,7 @@ export default function RecentDownloadsPanel({ items = [], loading = false, erro
 
             await sleep(300);
         } catch (e) {
-            alert(e?.message || "Download failed");
+            alert(e?.message || t("downloads.downloadFailed"));
         } finally {
             setDownloadingKey((cur) => (cur === stableKey ? null : cur));
         }
@@ -164,17 +166,17 @@ export default function RecentDownloadsPanel({ items = [], loading = false, erro
                         <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-primary/15 border border-primary/30">
                             <DownloadCloud className="h-4 w-4 text-primary" />
                         </span>
-                        Recent Downloads
+                        {t("downloads.title")}
                     </div>
-                    <div className="text-xs text-white/60 mt-1">Quick access to your latest downloaded assets</div>
+                    <div className="text-xs text-white/60 mt-1">{t("downloads.subtitle")}</div>
                 </div>
             </div>
 
             <div className="rounded-xl overflow-hidden border border-white/10 bg-background/10 flex-1 min-h-0">
                 <div className="hidden md:grid grid-cols-[56px_minmax(0,1fr)_150px_90px] items-center gap-3 px-4 py-3 text-xs font-bold text-white/80 bg-white/5">
                     <div />
-                    <div>Filename</div>
-                    <div>Downloaded</div>
+                    <div>{t("downloads.table.filename")}</div>
+                    <div>{t("downloads.table.downloaded")}</div>
                     <div className="text-right" />
                 </div>
 
@@ -189,21 +191,24 @@ export default function RecentDownloadsPanel({ items = [], loading = false, erro
                 {!loading && error && <div className="text-sm text-red-400 py-6 text-center">{error}</div>}
 
                 {!loading && !error && items.length === 0 && (
-                    <div className="text-sm text-white/60 py-6 text-center">No downloads yet.</div>
+                    <div className="text-sm text-white/60 py-6 text-center">{t("downloads.empty")}</div>
                 )}
 
                 {showMobileScroller && (
                     <div className="md:hidden border-t border-white/10">
                         <div className="px-4 pt-3 pb-2 flex items-center justify-between">
-                            <div className="text-xs font-semibold text-white/70">Recent</div>
+                            <div className="text-xs font-semibold text-white/70">{t("downloads.recent")}</div>
                             <div className="text-[11px] text-white/50">
-                                Showing {Math.min(mobileItems.length, mobileMaxItems)} {mobileItems.length >= mobileMaxItems ? "+" : ""} items
+                                {t("downloads.showing", {
+                                    count: Math.min(mobileItems.length, mobileMaxItems),
+                                    plus: mobileItems.length >= mobileMaxItems ? "+" : ""
+                                })}
                             </div>
                         </div>
 
                         <div className="overflow-y-auto px-0" style={{ maxHeight: `${mobileScrollHeight}px` }}>
                             {mobileItems.map((f, idx) => {
-                                const name = f.fileName || "Untitled";
+                                const name = f.fileName || t("downloads.untitled");
                                 const ext = getExt(name);
                                 const thumb = f.thumbURL || f.thumb || f.thumbnail || (isImage(ext) ? f.fileURL : null);
 
@@ -230,24 +235,22 @@ export default function RecentDownloadsPanel({ items = [], loading = false, erro
                                                 <div className="flex h-10 w-10 items-center justify-center">{icon}</div>
 
                                                 <div className="min-w-0 flex-1">
-                                                    <div className="text-sm font-semibold text-white leading-snug break-words whitespace-normal">
-                                                        {name}
-                                                    </div>
+                                                    <div className="text-sm font-semibold text-white leading-snug break-words whitespace-normal">{name}</div>
                                                     <div className="mt-1 text-xs text-white/60">
-                                                        {sectionTitle ? <span className="break-words">{sectionTitle}</span> : <span>-</span>}
+                                                        {sectionTitle ? <span className="break-words">{sectionTitle}</span> : <span>{t("downloads.dash")}</span>}
                                                         {ext ? <span>{` • ${ext}`}</span> : null}
                                                     </div>
 
                                                     <div className="mt-2 grid grid-cols-1 gap-1 text-xs">
                                                         <div className="flex items-center justify-between gap-3">
-                                                            <span className="text-white/50">Downloaded</span>
-                                                            <span className="text-white/80 text-right break-words">{downloadedAt || "-"}</span>
+                                                            <span className="text-white/50">{t("downloads.table.downloaded")}</span>
+                                                            <span className="text-white/80 text-right break-words">{downloadedAt || t("downloads.dash")}</span>
                                                         </div>
                                                     </div>
                                                 </div>
 
                                                 <TooltipIconButton
-                                                    label={isDownloading ? "Downloading…" : "Download"}
+                                                    label={isDownloading ? t("downloads.downloading") : t("downloads.download")}
                                                     disabled={isDownloading}
                                                     onClick={async (e) => {
                                                         e.preventDefault();
@@ -270,7 +273,7 @@ export default function RecentDownloadsPanel({ items = [], loading = false, erro
                 {!loading &&
                     !error &&
                     desktopItems.map((f, idx) => {
-                        const name = f.fileName || "Untitled";
+                        const name = f.fileName || t("downloads.untitled");
                         const ext = getExt(name);
                         const thumb = f.thumbURL || f.thumb || f.thumbnail || (isImage(ext) ? f.fileURL : null);
 
@@ -315,7 +318,7 @@ export default function RecentDownloadsPanel({ items = [], loading = false, erro
 
                                 <div className="text-right">
                                     <TooltipIconButton
-                                        label={isDownloading ? "Downloading…" : "Download"}
+                                        label={isDownloading ? t("downloads.downloading") : t("downloads.download")}
                                         disabled={isDownloading}
                                         onClick={async (e) => {
                                             e.preventDefault();

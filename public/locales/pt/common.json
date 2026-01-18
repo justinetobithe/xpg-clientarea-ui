@@ -1,0 +1,814 @@
+{
+    "auth": {
+        "login": {
+            "title": "Login de Cliente",
+            "pendingTitle": "Aprovação pendente",
+            "pendingHint": "Assim que aprovado, você poderá fazer login e o acesso será concedido automaticamente.",
+            "useAnotherAccount": "Usar outra conta",
+            "placeholders": {
+                "email": "Digite o e-mail",
+                "password": "Digite a senha"
+            },
+            "remember": "Lembrar-me neste dispositivo",
+            "button": {
+                "login": "Entrar",
+                "loggingIn": "Entrando..."
+            },
+            "links": {
+                "forgot": "Esqueceu a senha?",
+                "createAccount": "Criar uma conta?",
+                "register": "Registrar uma nova conta"
+            },
+            "toast": {
+                "welcomeTitle": "Bem-vindo!",
+                "welcomeDesc": "Acesso concedido. Redirecionando...",
+                "pendingTitle": "Aprovação pendente",
+                "failedTitle": "Falha no login"
+            },
+            "errors": {
+                "invalidEmail": "Por favor, insira um e-mail válido",
+                "passwordMin": "A senha deve ter pelo menos 6 caracteres",
+                "invalidCredentials": "E-mail ou senha inválidos.",
+                "tooManyRequests": "Muitas tentativas. Por favor, tente novamente mais tarde.",
+                "failedGeneric": "Falha no login. Por favor, tente novamente.",
+                "notApproved": "Sua conta está pendente de aprovação. Por favor, aguarde a aprovação do administrador."
+            }
+        },
+        "register": {
+            "pending": {
+                "title": "Solicitação enviada",
+                "subtitle": "Sua conta está pendente de aprovação do administrador.",
+                "cardTitle": "E-mail enviado",
+                "hint": "Assim que aprovado, você poderá fazer login e o sistema concederá acesso automaticamente.",
+                "goLogin": "Ir para o login",
+                "submitAnother": "Enviar outra solicitação",
+                "alreadyHave": "Já tem uma conta?",
+                "signIn": "Entrar"
+            },
+            "title": "Por favor, leia antes de se inscrever",
+            "intro": {
+                "p1": "A Área do Cliente contém ativos de marketing, demos e outros dados úteis para nossos jogos e marcas.",
+                "p2": "Você deve ser um cliente para acessar o sistema. Apenas e-mails corporativos são permitidos.",
+                "p3": "Sua inscrição será revisada antes que o acesso seja concedido.",
+                "p4": "Por favor, não compartilhe ativos externamente sem permissão."
+            },
+            "placeholders": {
+                "fullName": "Nome completo",
+                "company": "Empresa",
+                "department": "Departamento",
+                "email": "E-mail",
+                "password": "Senha",
+                "confirmPassword": "Confirmar Senha"
+            },
+            "checkbox": {
+                "newsletter": "Assinar a newsletter?",
+                "noticePrefix": "Eu li e entendi o conteúdo completo",
+                "privacyPrefix": "Eu concordo com"
+            },
+            "policy": {
+                "cookie": "Política de Cookies",
+                "privacy": "Política de Privacidade"
+            },
+            "recaptcha": {
+                "loading": "Carregando verificação..."
+            },
+            "button": {
+                "requestAccess": "Solicitar acesso",
+                "registering": "Registrando..."
+            },
+            "footer": {
+                "alreadyHave": "Já tem uma conta?",
+                "signIn": "Entrar"
+            },
+            "toast": {
+                "submittedTitle": "Registro enviado",
+                "submittedDesc": "Sua conta está pendente de aprovação do administrador.",
+                "failedTitle": "Falha no registro"
+            },
+            "errors": {
+                "fullNameRequired": "O nome completo é obrigatório",
+                "companyRequired": "A empresa é obrigatória",
+                "departmentRequired": "O departamento é obrigatório",
+                "emailValid": "E-mail válido obrigatório",
+                "passwordMin": "A senha deve ter pelo menos 6 caracteres",
+                "confirmPassword": "Confirme sua senha",
+                "recaptchaComplete": "Por favor, complete o reCAPTCHA",
+                "passwordMismatch": "As senhas não coincidem",
+                "policiesRequired": "Por favor, aceite as políticas obrigatórias",
+                "emailInUse": "Este e-mail já está em uso. Por favor, use outro e-mail ou faça login.",
+                "invalidEmail": "Endereço de e-mail inválido.",
+                "weakPassword": "A senha é muito fraca.",
+                "failedGeneric": "Não foi possível registrar. Tente novamente.",
+                "recaptchaMissing": "reCAPTCHA não configurado. Contate o administrador.",
+                "recaptchaInvalid": "Falha no reCAPTCHA. Tente novamente.",
+                "verifyUrlMissing": "RECAPTCHA_VERIFY_URL_MISSING"
+            }
+        },
+        "reset": {
+            "title": "Definir nova senha",
+            "loading": "Carregando...",
+            "statuses": {
+                "invalid": "Link inválido",
+                "notFound": "Link não encontrado",
+                "expired": "Link expirado",
+                "used": "Link já utilizado",
+                "error": "Algo deu errado",
+                "valid": "Link válido"
+            },
+            "labels": {
+                "validity": "Validade: {{date}}",
+                "email": "E-mail: {{email}}",
+                "validUntil": "Válido até: {{date}}",
+                "status": "Status: {{status}}"
+            },
+            "placeholders": {
+                "newPassword": "Nova senha (mín. 8 caracteres)",
+                "confirmPassword": "Confirmar nova senha"
+            },
+            "button": {
+                "requestNew": "Solicitar novo link de redefinição",
+                "backToLogin": "Voltar ao login",
+                "update": "Atualizar senha",
+                "updating": "Atualizando..."
+            },
+            "toast": {
+                "invalidPasswordTitle": "Senha inválida",
+                "invalidPasswordDesc": "A senha deve ter pelo menos 8 caracteres.",
+                "mismatchTitle": "Inconsistência",
+                "mismatchDesc": "As senhas não coincidem.",
+                "updatedTitle": "Senha atualizada",
+                "updatedDesc": "Agora você pode fazer login com sua nova senha.",
+                "failedTitle": "Falha na redefinição",
+                "failedDesc": "Falha na redefinição. O link pode estar expirado ou inválido."
+            }
+        },
+        "forgot": {
+            "title": "Redefinir senha",
+            "subtitle": "Digite seu e-mail e enviaremos um link de redefinição.",
+            "labels": {
+                "email": "E-mail"
+            },
+            "placeholders": {
+                "email": "Digite o e-mail"
+            },
+            "button": {
+                "send": "Enviar link de redefinição",
+                "sending": "Enviando..."
+            },
+            "sent": {
+                "title": "Verifique sua caixa de entrada",
+                "subtitle": "Se o e-mail existir, você receberá um link de redefinição em breve.",
+                "backToLogin": "Voltar ao login",
+                "createAccount": "Criar uma conta"
+            },
+            "links": {
+                "backToLogin": "Voltar ao login"
+            },
+            "toast": {
+                "sentTitle": "E-mail enviado",
+                "sentDesc": "Se o e-mail existir, você receberá um link de redefinição em breve.",
+                "failedTitle": "Falha na redefinição"
+            },
+            "errors": {
+                "invalidEmail": "Por favor, insira um e-mail válido",
+                "failedGeneric": "Não foi possível enviar o e-mail de redefinição. Tente novamente."
+            },
+            "email": {
+                "fullName": "Membro XPG",
+                "subject": "Redefina sua senha XPG",
+                "body": {
+                    "hello": "Olá,",
+                    "receivedRequest": "Recebemos uma solicitação para redefinir sua senha XPG.",
+                    "validFor": "Este link é válido por <strong>{{minutes}} minutos</strong>.",
+                    "cta": "Redefinir Senha",
+                    "fallback": "Se o botão não funcionar, copie este link:",
+                    "ignore": "Se você não solicitou isso, pode ignorar este e-mail.",
+                    "signature": "Equipe XPG"
+                }
+            }
+        }
+    },
+    "policies": {
+        "meta": {
+            "updatedDate": "Out 2025",
+            "product": "Área do Cliente XPG",
+            "lastUpdated": "Última atualização: {{date}}"
+        },
+        "cookie": {
+            "title": "Política de Cookies",
+            "intro": "Utilizamos cookies e tecnologias semelhantes para operar a Área do Cliente, lembrar preferências, analisar desempenho e manter as contas seguras. Você pode gerenciar os cookies nas configurações do seu navegador. Desativar cookies essenciais pode impactar a funcionalidade.",
+            "table": {
+                "type": "Tipo",
+                "purpose": "Finalidade",
+                "examples": "Exemplos"
+            },
+            "rows": {
+                "essential": {
+                    "type": "Essencial",
+                    "purpose": "Autenticação, gerenciamento de sessão, segurança",
+                    "examples": "auth_session, csrf_token"
+                },
+                "preferences": {
+                    "type": "Preferências",
+                    "purpose": "Idioma, configurações de interface",
+                    "examples": "lang, theme_mode"
+                },
+                "analytics": {
+                    "type": "Análise",
+                    "purpose": "Métricas de uso para melhorar o desempenho e conteúdo",
+                    "examples": "analytics_id, perf_sample"
+                }
+            },
+            "managing": {
+                "title": "Gerenciando Cookies",
+                "body": "A maioria dos navegadores permite bloquear ou excluir cookies. Você também pode usar modos de privacidade integrados ou extensões dedicadas para limitar o rastreamento."
+            }
+        },
+        "privacy": {
+            "title": "Política de Privacidade",
+            "intro": "Esta política descreve como coletamos, usamos e protegemos informações relacionadas à Área do Cliente XPG. A Área do Cliente destina-se a parceiros de negócios autorizados e contém ativos de marketing, demos e materiais relacionados.",
+            "sections": {
+                "collect": {
+                    "title": "Informações que Coletamos",
+                    "body": "Dados da conta, como nome, empresa, departamento e e-mail comercial. Dados de uso, como páginas visualizadas, downloads, dispositivo e região aproximada. Registros operacionais para segurança e prevenção de fraudes."
+                },
+                "use": {
+                    "title": "Como Usamos as Informações",
+                    "body": "Para fornecer acesso seguro, personalizar conteúdo, entregar avisos, melhorar o desempenho e cumprir obrigações legais. Podemos agregar dados de uso para entender a adoção do produto e a qualidade do conteúdo."
+                },
+                "sharing": {
+                    "title": "Compartilhamento",
+                    "body": "Não vendemos dados pessoais. O compartilhamento limitado pode ocorrer com provedores de infraestrutura, análise ou serviços anti-abuso sob contratos que exigem confidencialidade e salvaguardas apropriadas."
+                },
+                "security": {
+                    "title": "Segurança",
+                    "body": "O acesso é autenticado e monitorado. Os dados são transmitidos via TLS e armazenados com controles baseados em funções. Incidentes são revisados e mitigados de acordo com procedimentos internos."
+                },
+                "retention": {
+                    "title": "Retenção",
+                    "body": "Retemos registros de conta e auditoria pelo tempo necessário para fornecer o serviço e atender aos requisitos legais e contratuais. Você pode solicitar a exclusão, sujeito às obrigações aplicáveis."
+                },
+                "choices": {
+                    "title": "Suas Escolhas",
+                    "body": "Você pode atualizar os detalhes do perfil, optar por não receber e-mails de marketing e solicitar acesso ou exclusão de seus dados entrando em contato com seu representante XPG."
+                },
+                "contact": {
+                    "title": "Contato",
+                    "body": "Para consultas de privacidade, contate privacy@xpg.com."
+                }
+            }
+        }
+    },
+    "navbar": {
+        "links": {
+            "home": "Início",
+            "announcements": "Anúncios",
+            "apiDocs": "Documentos da API",
+            "settings": "Configurações"
+        },
+        "collections": "Coleções",
+        "searchPlaceholder": "Buscar...",
+        "logout": "Sair",
+        "open": "Abrir",
+        "loading": "Carregando...",
+        "accountFallback": "Conta",
+        "clientArea": "Área do Cliente",
+        "language": {
+            "title": "Idioma",
+            "header": "Idioma",
+            "subtitle": "Selecione seu idioma de preferência",
+            "active": "ATIVO"
+        },
+        "mobile": {
+            "liveGames": "Jogos ao Vivo",
+            "noLiveGames": "Nenhum jogo ao vivo encontrado.",
+            "other": "Outro"
+        }
+    },
+    "home": {
+        "welcomeBadge": "BEM-VINDO À",
+        "title": "ÁREA DO CLIENTE"
+    },
+    "footer": {
+        "disclaimer": "O logotipo e os materiais gráficos da XPG Live são propriedade intelectual exclusiva da XPG Live e não podem ser copiados, reproduzidos, distribuídos ou exibidos sem o consentimento prévio por escrito da XPG Live. A XPG Live opera em total conformidade com as regulamentações de jogos em diversas jurisdições. Estamos comprometidos em proteger sua privacidade.",
+        "copyright": "Copyright © 2008 - 2025 XPG. Todos os Direitos Reservados.",
+        "certTitle": "Ver Certificado iTech",
+        "certAlt": "iTech Lab"
+    },
+    "downloads": {
+        "title": "Downloads Recentes",
+        "subtitle": "Acesso rápido aos seus últimos ativos baixados",
+        "table": {
+            "filename": "Nome do arquivo",
+            "downloaded": "Baixado"
+        },
+        "empty": "Nenhum download ainda.",
+        "recent": "Recente",
+        "showing": "Mostrando {{count}} {{plus}} itens",
+        "dash": "-",
+        "download": "Baixar",
+        "downloading": "Baixando...",
+        "missingStoragePath": "Caminho de armazenamento ausente e não é possível extraí-lo da fileURL.",
+        "notAuthenticated": "Não autenticado. Por favor, faça login novamente.",
+        "missingDownloadUrl": "VITE_DOWNLOAD_FILE_URL ausente",
+        "downloadFailed": "Falha no download",
+        "open": "Abrir",
+        "untitled": "Sem título"
+    },
+    "announcements": {
+        "title": "Anúncios Para Você",
+        "subtitle": "Últimas atualizações e avisos na sua área do cliente",
+        "seeMore": "Ver Mais",
+        "empty": "Nenhum anúncio ainda.",
+        "swipe": "Deslizar",
+        "swipeHint": "Deslize para a esquerda/direita para ver mais anúncios",
+        "openDetails": "Abrir detalhes",
+        "untitled": "Sem título",
+        "modal": {
+            "fallbackTitle": "Anúncio",
+            "noContent": "Nenhum conteúdo fornecido.",
+            "viewMarketingPack": "Ver Pacote de Marketing"
+        },
+        "details": {
+            "crumb": "Início / Anúncios / Detalhes",
+            "loadingTitle": "Carregando...",
+            "fallbackTitle": "Anúncio",
+            "back": "Voltar",
+            "backToAnnouncements": "Voltar para Anúncios",
+            "noContent": "Nenhum conteúdo fornecido.",
+            "viewMarketingPack": "Ver Pacote de Marketing",
+            "notFound": {
+                "title": "Anúncio não encontrado",
+                "subtitle": "O anúncio solicitado não pôde ser carregado."
+            },
+            "recommended": {
+                "title": "Recomendado",
+                "empty": "Nenhuma recomendação ainda."
+            }
+        },
+        "page": {
+            "crumb": "Início / Anúncios",
+            "title": "Anúncios",
+            "subtitle": "Atualizações importantes, lançamentos e comunicações com o cliente",
+            "searchPlaceholder": "Buscar anúncios...",
+            "fallbackTitle": "Anúncio",
+            "older": "Mais antigos",
+            "openToReadMore": "Abra para ler mais.",
+            "open": "Abrir",
+            "noContent": "Nenhum conteúdo fornecido.",
+            "viewMarketingPack": "Ver Pacote de Marketing",
+            "empty": {
+                "title": "Nenhum anúncio encontrado",
+                "subtitle": "Tente ajustar suas palavras-chave de busca."
+            }
+        }
+    },
+    "games": {
+        "sort": {
+            "defaultOrder": "Ordem Padrão",
+            "nameAsc": "Nome (A-Z)",
+            "nameDesc": "Nome (Z-A)"
+        },
+        "types": {
+            "title": "Tipos de Jogo",
+            "prev": "Anterior",
+            "next": "Próximo",
+            "loading": "Carregando...",
+            "empty": "Nenhum tipo de jogo encontrado.",
+            "swipeHint": "Deslize para a esquerda/direita para visualizar"
+        },
+        "list": {
+            "allGames": "Todos os Jogos",
+            "typeGames": "Jogos {{type}}",
+            "clearType": "Limpar Tipo",
+            "searchPlaceholder": "Buscar jogos...",
+            "failedToLoad": "Falha ao carregar jogos",
+            "noGamesFound": "Nenhum jogo encontrado."
+        },
+        "pagination": {
+            "prev": "Anterior",
+            "next": "Próximo",
+            "page": "Página",
+            "mobileHint": "Mostrando mais páginas no celular"
+        },
+        "image": {
+            "noImage": "Sem Imagem"
+        },
+        "untitled": "Sem título"
+    },
+    "gameDetails": {
+        "tabs": {
+            "assets": "Ativos",
+            "related": "Relacionados"
+        },
+        "search": {
+            "placeholder": "Buscar"
+        },
+        "filters": {
+            "show": "Mostrar Filtros",
+            "hide": "Ocultar Filtros"
+        },
+        "sort": {
+            "recent": "Atualizado Recentemente",
+            "alpha": "Alfabético"
+        },
+        "zip": {
+            "button": "ZIP ({{count}})",
+            "assetsFallback": "ativos"
+        },
+        "selection": {
+            "clear": "Limpar",
+            "selected": "{{count}} arquivo selecionado",
+            "selected_plural": "{{count}} arquivos selecionados"
+        },
+        "table": {
+            "preview": "Prévia",
+            "fileName": "Nome do Arquivo",
+            "details": "Detalhes",
+            "actions": "Ações"
+        },
+        "empty": {
+            "noFiles": "Nenhum arquivo encontrado."
+        },
+        "mobile": {
+            "actionsBelow": "Ações estão abaixo"
+        },
+        "file": {
+            "fileLabel": "ARQUIVO",
+            "dash": "—",
+            "added": "Adicionado em {{date}}"
+        },
+        "actions": {
+            "download": "Baixar",
+            "preview": "Prévia"
+        },
+        "pagination": {
+            "prev": "Anterior",
+            "next": "Próximo",
+            "pageOf": "Página {{page}} de {{total}}"
+        },
+        "related": {
+            "viewAssets": "Ver ativos",
+            "empty": {
+                "title": "Nenhum jogo relacionado encontrado",
+                "subtitle": "Não conseguimos encontrar outros jogos {{name}} no momento.",
+                "this": "este",
+                "browseAll": "Navegar em todos os jogos"
+            }
+        },
+        "collections": {
+            "addToCollection": "Adicionar à Coleção",
+            "addTo": "Adicionar a:",
+            "empty": "Nenhuma coleção ainda.",
+            "untitled": "Sem título",
+            "alreadyIn": "Já está nesta coleção",
+            "tapToAdd": "Toque para adicionar",
+            "added": "Adicionado",
+            "already": "Já",
+            "createNew": "Criar Nova Coleção",
+            "createCollection": "Criar Coleção",
+            "namePlaceholder": "Nome da coleção",
+            "processing": "Processando",
+            "create": "Criar",
+            "cancel": "Cancelar",
+            "newCollectionFallback": "Nova Coleção",
+            "sheet": {
+                "title": "Adicionar à Coleção",
+                "subtitle": "Escolha uma coleção abaixo ou crie uma nova."
+            },
+            "stages": {
+                "creating": "Criando coleção",
+                "addingFile": "Adicionando arquivo à coleção",
+                "done": "Concluído"
+            }
+        },
+        "download": {
+            "defaultName": "download"
+        },
+        "alerts": {
+            "missingStoragePath": "Caminho de armazenamento ausente. Salve snapshot.ref.fullPath durante o upload.",
+            "downloadFailed": "Falha no download",
+            "zipFailed": "Falha no download do ZIP",
+            "createCollectionFailed": "Falha ao criar coleção"
+        }
+    },
+    "filtersPanel": {
+        "fileTypes": "Tipos de Arquivo",
+        "fileTags": "Tags de Arquivo",
+        "followUs": "Siga-nos",
+        "contactUs": "Contate-nos",
+        "selectedBadge": "{{count}} selecionados",
+        "social": {
+            "facebook": "Facebook",
+            "twitter": "X / Twitter",
+            "instagram": "Instagram",
+            "handleTitle": "@XPG Live",
+            "handleSub": "@xpg.live"
+        },
+        "contact": {
+            "phone": "+421 911 628 998",
+            "email": "info@xprogaming.com",
+            "location": "Bratislava, Eslováquia"
+        }
+    },
+    "previewModal": {
+        "download": "Baixar",
+        "noInlinePreview": "Nenhuma prévia disponível para este tipo de arquivo.",
+        "pdfTitle": "PDF",
+        "addedAt": "Adicionado em {{date}}",
+        "position": "{{index}} de {{total}}",
+        "close": "Fechar",
+        "prev": "Anterior",
+        "next": "Próximo"
+    },
+    "row": {
+        "prev": "Anterior",
+        "next": "Próximo",
+        "announcementCoverAlt": "Capa do anúncio",
+        "noImage": "Sem Imagem",
+        "new": "Novo",
+        "readAnnouncement": "Ler Anúncio",
+        "viewMarketingPack": "Ver Pacote de Marketing",
+        "empty": "Nada por aqui ainda."
+    },
+    "settings": {
+        "crumb": "Início / Configurações da Conta",
+        "title": "Configurações da Conta",
+        "subtitle": "Atualize sua conta e dados de perfil",
+        "sections": {
+            "general": "Configurações Gerais",
+            "password": "Alterar Senha",
+            "delete": "Excluir Conta"
+        },
+        "changePassword": {
+            "title": "Alterar Senha",
+            "subtitle": "Por segurança, verificaremos sua senha atual primeiro.",
+            "fields": {
+                "current": "Senha Atual",
+                "new": "Nova Senha",
+                "confirm": "Confirmar Nova Senha"
+            },
+            "button": {
+                "save": "Salvar Alterações",
+                "saving": "Salvando..."
+            },
+            "messages": {
+                "required": "Todos os campos são obrigatórios.",
+                "mismatch": "As novas senhas não coincidem.",
+                "success": "Senha alterada com sucesso!",
+                "failed": "Falha ao alterar senha"
+            }
+        },
+        "deleteAccount": {
+            "title": "Excluir Conta",
+            "subtitle": "Isso removerá permanentemente seu acesso.",
+            "warningPrefix": "Esta ação é",
+            "irreversible": "irreversível",
+            "fields": {
+                "password": "Confirmar com Senha",
+                "deleteStorage": "Também excluir meus arquivos de armazenamento (opcional)"
+            },
+            "button": {
+                "delete": "Excluir Conta",
+                "deleting": "Excluindo..."
+            },
+            "confirm": "Excluir sua conta permanentemente? Isso não pode ser desfeito.",
+            "messages": {
+                "passwordRequired": "A senha é obrigatória.",
+                "failed": "Falha ao excluir conta"
+            }
+        },
+        "general": {
+            "title": "Configurações Gerais",
+            "subtitle": "Atualize seus detalhes de perfil e preferências.",
+            "fields": {
+                "name": "Nome",
+                "email": "E-mail",
+                "company": "Empresa",
+                "department": "Departamento",
+                "timezone": "Fuso Horário",
+                "newsletter": "Inscrito na newsletter?"
+            },
+            "button": {
+                "save": "Salvar Alterações",
+                "saving": "Salvando..."
+            },
+            "messages": {
+                "success": "Detalhes atualizados com sucesso!",
+                "failed": "Falha ao atualizar detalhes"
+            },
+            "departments": {
+                "Operations": "Operações",
+                "Game Development": "Desenvolvimento de Jogos",
+                "Compliance & Legal": "Conformidade e Jurídico",
+                "Finance & Accounting": "Finanças e Contabilidade",
+                "Marketing & Promotions": "Marketing e Promoções",
+                "Player Support": "Suporte ao Jogador",
+                "IT & Infrastructure": "TI e Infraestrutura",
+                "Product Management": "Gestão de Produtos",
+                "Sales & Business Development": "Vendas e Desenvolvimento de Negócios",
+                "HR & Talent Acquisition": "RH e Aquisição de Talentos",
+                "Executive Management": "Gestão Executiva",
+                "Other": "Outro"
+            }
+        },
+        "yes": "Sim",
+        "no": "Não"
+    },
+    "collectionsDrawer": {
+        "title": "Coleções",
+        "subtitle": "Organize e baixe seus ativos selecionados",
+        "empty": "Nenhuma coleção ainda. Crie sua primeira para começar a agrupar arquivos.",
+        "common": {
+            "somethingWentWrong": "Algo deu errado."
+        },
+        "defaults": {
+            "newCollection": "Nova Coleção",
+            "collectionTitle": "Coleção",
+            "collection": "coleção",
+            "download": "baixar",
+            "untitledCollection": "Coleção Sem Título"
+        },
+        "status": {
+            "completed": "Concluído",
+            "inProgress": "Em andamento"
+        },
+        "stats": {
+            "totalCollections": "Total de coleções",
+            "files_one": "{{count}} arquivo",
+            "files_other": "{{count}} arquivos"
+        },
+        "actions": {
+            "close": "Fechar",
+            "newCollection": "Nova Coleção",
+            "rename": "Renomear",
+            "save": "Salvar",
+            "cancel": "Cancelar",
+            "delete": "Excluir",
+            "prepareDownload": "Preparar Download",
+            "showFileDetails": "Mostrar detalhes do arquivo",
+            "hideFileDetails": "Ocultar detalhes do arquivo",
+            "toggleCompleted": "Alternar concluído",
+            "removeFile": "Remover arquivo"
+        },
+        "files": {
+            "title_one": "Arquivos ({{count}})",
+            "title_other": "Arquivos ({{count}})",
+            "totalSize": "Tamanho total: {{size}}",
+            "empty": "Nenhum arquivo nesta coleção ainda.",
+            "loading": "Carregando arquivos...",
+            "untitledFile": "Arquivo sem título",
+            "filePreviewAlt": "Prévia do arquivo"
+        },
+        "confirm": {
+            "title": "Excluir esta coleção?",
+            "subtitle": "Isso não pode ser desfeito. Os arquivos em si não serão excluídos."
+        },
+        "errors": {
+            "missingDownloadUrl": "VITE_DOWNLOAD_FILE_URL ausente",
+            "notAuthenticated": "Não autenticado. Por favor, faça login novamente.",
+            "downloadFailedWithStatus": "Falha no download ({{status}})",
+            "prepareDownloadFailed": "Falha ao preparar download"
+        },
+        "toast": {
+            "create": {
+                "title": "Criando coleção",
+                "desc": "Por favor, aguarde..."
+            },
+            "created": {
+                "title": "Coleção criada",
+                "desc": "Você pode renomeá-la agora."
+            },
+            "createFailed": {
+                "title": "Falha ao criar"
+            },
+            "rename": {
+                "title": "Renomeando coleção",
+                "desc": "Salvando alterações..."
+            },
+            "renamed": {
+                "title": "Renomeada",
+                "desc": "Nome da coleção atualizado."
+            },
+            "renameFailed": {
+                "title": "Falha ao renomear"
+            },
+            "updateStatus": {
+                "title": "Atualizando status",
+                "desc": "Por favor, aguarde..."
+            },
+            "updated": {
+                "title": "Atualizado",
+                "desc": "Status da coleção salvo."
+            },
+            "updateFailed": {
+                "title": "Falha na atualização"
+            },
+            "delete": {
+                "title": "Excluindo coleção",
+                "desc": "Removendo..."
+            },
+            "deleted": {
+                "title": "Excluída",
+                "desc": "Coleção removida."
+            },
+            "deleteFailed": {
+                "title": "Falha ao excluir"
+            },
+            "prepare": {
+                "title": "Preparando download",
+                "desc": "Gerando ZIP para \"{{name}}\"..."
+            },
+            "downloadReady": {
+                "title": "Download pronto",
+                "desc": "O ZIP foi gerado."
+            },
+            "prepareFailed": {
+                "title": "Falha ao preparar download"
+            },
+            "removeFile": {
+                "title": "Removendo arquivo",
+                "desc": "Atualizando coleção..."
+            },
+            "removed": {
+                "title": "Removido",
+                "desc": "Arquivo removido da coleção."
+            },
+            "removeFailed": {
+                "title": "Falha ao remover"
+            }
+        }
+    },
+    "search": {
+        "crumb": "Início / Busca",
+        "title": "Busca",
+        "subtitle": "Busque anúncios, jogos, seções e arquivos.",
+        "header": {
+            "queryLabel": "Termo:"
+        },
+        "hero": {
+            "resultsFor": "Resultados para",
+            "startSearching": "Começar a buscar",
+            "showingMatched": "Mostrando conteúdo correspondente em toda a sua área do cliente.",
+            "useNavbarHint": "Use a barra de busca na navegação e pressione Enter."
+        },
+        "stats": {
+            "announcements": "Anúncios",
+            "games": "Jogos",
+            "total": "Total"
+        },
+        "states": {
+            "searching": "Buscando...",
+            "failed": "Falha na busca"
+        },
+        "emptyStates": {
+            "noQuery": {
+                "card1": {
+                    "title": "Busque qualquer coisa",
+                    "desc": "Tente nomes de jogos, títulos de anúncios, nomes de seções ou nomes de arquivos."
+                },
+                "card2": {
+                    "title": "Dica",
+                    "desc": "Use palavras-chave curtas como “bacará”, “pacote”, “miniatura”, “promo”, etc."
+                }
+            },
+            "noResults": {
+                "title": "Nenhum resultado",
+                "desc": "Nenhum resultado encontrado para \"{{q}}\". Tente uma palavra-chave mais curta."
+            }
+        },
+        "panels": {
+            "announcements": {
+                "title": "Anúncios",
+                "empty": "Nenhum anúncio correspondente."
+            },
+            "games": {
+                "title": "Jogos",
+                "hint": "Expanda um jogo para visualizar seções e arquivos correspondentes.",
+                "emptyTitle": "Nenhum jogo correspondente",
+                "emptyDesc": "Tente uma palavra-chave diferente."
+            }
+        },
+        "gameCard": {
+            "matchingFound": "Seções/arquivos correspondentes encontrados",
+            "noMatching": "Nenhuma seção/arquivo correspondente neste jogo",
+            "noSectionsFound": "Nenhuma seção encontrada.",
+            "noMatchingFiles": "Nenhum arquivo correspondente."
+        },
+        "actions": {
+            "open": "Abrir",
+            "viewAll": "Ver todos",
+            "expand": "Expandir",
+            "collapse": "Recolher"
+        },
+        "common": {
+            "dash": "-",
+            "untitled": "Sem título",
+            "section": "Seção",
+            "file": "Arquivo",
+            "noDescription": "Nenhuma descrição.",
+            "filesCount_one": "{{count}} arquivo",
+            "filesCount_other": "{{count}} arquivos"
+        }
+    }
+}

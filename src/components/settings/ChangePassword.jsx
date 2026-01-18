@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Fieldset, Field, Input, Label } from "@headlessui/react";
 import { Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useAuthStore } from "../../store/authStore";
 
 export default function ChangePassword() {
+    const { t } = useTranslation();
     const changePassword = useAuthStore((s) => s.changePassword);
 
     const [currentPassword, setCurrentPassword] = useState("");
@@ -18,13 +20,13 @@ export default function ChangePassword() {
         setIsError(false);
 
         if (!currentPassword || !newPassword || !confirmPassword) {
-            setMessage("All fields are required.");
+            setMessage(t("settings.changePassword.messages.required"));
             setIsError(true);
             return;
         }
 
         if (newPassword !== confirmPassword) {
-            setMessage("New passwords do not match.");
+            setMessage(t("settings.changePassword.messages.mismatch"));
             setIsError(true);
             return;
         }
@@ -32,12 +34,12 @@ export default function ChangePassword() {
         setIsSaving(true);
         try {
             await changePassword(currentPassword, newPassword);
-            setMessage("Password changed successfully!");
+            setMessage(t("settings.changePassword.messages.success"));
             setCurrentPassword("");
             setNewPassword("");
             setConfirmPassword("");
         } catch (e) {
-            setMessage(e?.message || String(e) || "Failed to change password");
+            setMessage(e?.message || String(e) || t("settings.changePassword.messages.failed"));
             setIsError(true);
         } finally {
             setIsSaving(false);
@@ -59,14 +61,26 @@ export default function ChangePassword() {
 
     return (
         <Fieldset className="bg-card p-6 rounded-2xl border border-border">
-            <div className="text-white font-semibold text-lg mb-1">Change Password</div>
-            <div className="text-white/60 text-sm mb-6">For security, we’ll verify your current password first.</div>
+            <div className="text-white font-semibold text-lg mb-1">{t("settings.changePassword.title")}</div>
+            <div className="text-white/60 text-sm mb-6">{t("settings.changePassword.subtitle")}</div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-x-8">
-                <PasswordInputField label="Current Password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
+                <PasswordInputField
+                    label={t("settings.changePassword.fields.current")}
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                />
                 <div className="hidden md:block" />
-                <PasswordInputField label="New Password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
-                <PasswordInputField label="Confirm New Password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+                <PasswordInputField
+                    label={t("settings.changePassword.fields.new")}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                />
+                <PasswordInputField
+                    label={t("settings.changePassword.fields.confirm")}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                />
             </div>
 
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3 mt-6">
@@ -80,9 +94,10 @@ export default function ChangePassword() {
                     onClick={handleSave}
                     disabled={isSaving}
                     className="inline-flex items-center justify-center gap-2 bg-primary hover:opacity-90 text-black font-bold py-2.5 px-6 rounded-xl transition disabled:opacity-50"
+                    type="button"
                 >
                     {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
-                    {isSaving ? "Saving..." : "Save Changes"}
+                    {isSaving ? t("settings.changePassword.button.saving") : t("settings.changePassword.button.save")}
                 </button>
             </div>
         </Fieldset>

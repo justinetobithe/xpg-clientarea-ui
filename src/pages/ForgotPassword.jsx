@@ -8,6 +8,7 @@ import { useToast } from "../contexts/ToastContext";
 import { db } from "../firebase";
 import { doc, setDoc, serverTimestamp, Timestamp } from "firebase/firestore";
 import axios from "axios";
+import { useTranslation } from "react-i18next";
 
 const schema = z.object({
     email: z.string().email("Please enter a valid email"),
@@ -20,6 +21,7 @@ function makeToken() {
 }
 
 export default function ForgotPassword() {
+    const { t } = useTranslation();
     const nav = useNavigate();
     const { showToast } = useToast();
     const [err, setErr] = useState("");
@@ -56,37 +58,37 @@ export default function ForgotPassword() {
             const expiryMinutes = 30;
 
             await axios.post(`${import.meta.env.VITE_XPG_API_URL}/api/send-mail`, {
-                full_name: "XPG Member",
+                full_name: t("auth.forgot.email.fullName"),
                 email: cleanEmail,
-                subject: "Reset your XPG password",
+                subject: t("auth.forgot.email.subject"),
                 body: `
-          <p>Hello,</p>
-          <p>We received a request to reset your XPG password.</p>
-          <p>This link is valid for <strong>${expiryMinutes} minutes</strong>.</p>
+          <p>${t("auth.forgot.email.body.hello")}</p>
+          <p>${t("auth.forgot.email.body.receivedRequest")}</p>
+          <p>${t("auth.forgot.email.body.validFor", { minutes: expiryMinutes })}</p>
           <p style="margin:16px 0;">
             <a href="${resetUrl}"
                style="display:inline-block;padding:12px 18px;border-radius:10px;text-decoration:none;font-weight:700;background:#FF8D47;color:#fff;">
-              Reset Password
+              ${t("auth.forgot.email.body.cta")}
             </a>
           </p>
           <p style="font-size:12px;margin:6px 0;">
-            If the button doesn't work, copy this link: <a href="${resetUrl}">${resetUrl}</a>
+            ${t("auth.forgot.email.body.fallback")} <a href="${resetUrl}">${resetUrl}</a>
           </p>
-          <p>If you did not request this, you can ignore this email.</p>
-          <p style="margin-top: 16px;"><strong>XPG Team</strong></p>
+          <p>${t("auth.forgot.email.body.ignore")}</p>
+          <p style="margin-top: 16px;"><strong>${t("auth.forgot.email.body.signature")}</strong></p>
         `,
             });
 
             setSent(true);
             showToast({
                 variant: "success",
-                title: "Email sent",
-                description: "If the email exists, you will receive a reset link shortly.",
+                title: t("auth.forgot.toast.sentTitle"),
+                description: t("auth.forgot.toast.sentDesc"),
             });
         } catch (e) {
-            const msg = "Unable to send reset email. Please try again.";
+            const msg = t("auth.forgot.errors.failedGeneric");
             setErr(msg);
-            showToast({ variant: "error", title: "Reset failed", description: msg });
+            showToast({ variant: "error", title: t("auth.forgot.toast.failedTitle"), description: msg });
         }
     };
 
@@ -100,13 +102,13 @@ export default function ForgotPassword() {
                     <img src="/image/logo-white.png" alt="Logo" className="h-[90px]" />
                 </div>
 
-                <h1 className="text-center text-xl font-semibold text-white mb-2">Reset password</h1>
-                <p className="text-center text-white/70 text-sm mb-6">Enter your email and we’ll send you a reset link.</p>
+                <h1 className="text-center text-xl font-semibold text-white mb-2">{t("auth.forgot.title")}</h1>
+                <p className="text-center text-white/70 text-sm mb-6">{t("auth.forgot.subtitle")}</p>
 
                 {sent ? (
                     <div className="rounded-lg border border-white/10 bg-black/30 p-4">
-                        <div className="text-white/90 font-semibold">Check your inbox</div>
-                        <div className="text-white/70 text-sm mt-1">If the email exists, you will receive a reset link shortly.</div>
+                        <div className="text-white/90 font-semibold">{t("auth.forgot.sent.title")}</div>
+                        <div className="text-white/70 text-sm mt-1">{t("auth.forgot.sent.subtitle")}</div>
 
                         <div className="mt-5 flex flex-col gap-3">
                             <button
@@ -114,14 +116,14 @@ export default function ForgotPassword() {
                                 onClick={() => nav("/login")}
                                 className="w-full rounded-md bg-primary px-6 py-3 text-base font-semibold text-primary-foreground hover:opacity-90"
                             >
-                                Back to login
+                                {t("auth.forgot.sent.backToLogin")}
                             </button>
 
                             <Link
                                 to="/register"
                                 className="w-full text-center rounded-md border border-white/15 bg-transparent px-6 py-3 text-base font-semibold text-white/90 hover:bg-white/5"
                             >
-                                Create an account
+                                {t("auth.forgot.sent.createAccount")}
                             </Link>
                         </div>
                     </div>
@@ -129,14 +131,18 @@ export default function ForgotPassword() {
                     <form onSubmit={handleSubmit(onSubmit)}>
                         <Fieldset className="space-y-5">
                             <Field>
-                                <Label className="sr-only">Email</Label>
+                                <Label className="sr-only">{t("auth.forgot.labels.email")}</Label>
                                 <Input
                                     type="email"
-                                    placeholder="Enter email"
+                                    placeholder={t("auth.forgot.placeholders.email")}
                                     {...register("email")}
                                     className="w-full rounded-md border border-input bg-background/10 px-4 py-3 text-base text-white placeholder:text-white/50 outline-none focus:ring-2 focus:ring-ring"
                                 />
-                                {errors.email && <div className="text-sm text-red-400 mt-1">{errors.email.message}</div>}
+                                {errors.email && (
+                                    <div className="text-sm text-red-400 mt-1">
+                                        {errors.email.message || t("auth.forgot.errors.invalidEmail")}
+                                    </div>
+                                )}
                             </Field>
 
                             {err && <div className="text-sm text-red-400">{err}</div>}
@@ -145,7 +151,7 @@ export default function ForgotPassword() {
                                 disabled={isSubmitting}
                                 className="w-fit mx-auto block mt-2 rounded-md bg-primary px-9 py-3 text-base font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
                             >
-                                {isSubmitting ? "Sending..." : "Send reset link"}
+                                {isSubmitting ? t("auth.forgot.button.sending") : t("auth.forgot.button.send")}
                             </button>
                         </Fieldset>
                     </form>
@@ -153,7 +159,7 @@ export default function ForgotPassword() {
 
                 <div className="text-center text-sm mt-6">
                     <Link to="/login" className="text-primary hover:underline">
-                        Back to login
+                        {t("auth.forgot.links.backToLogin")}
                     </Link>
                 </div>
             </div>

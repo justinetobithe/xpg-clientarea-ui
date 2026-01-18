@@ -17,6 +17,7 @@ import {
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import { getAuth } from "firebase/auth";
+import { useTranslation } from "react-i18next";
 import { useCollectionsStore } from "../store/collectionsStore";
 import { useAuthStore } from "../store/authStore";
 import { useToast } from "../contexts/ToastContext";
@@ -80,6 +81,7 @@ function useFakeProgress(active, onTick) {
 }
 
 export default function CollectionsDrawer() {
+    const { t } = useTranslation();
     const {
         drawerOpen,
         closeDrawer,
@@ -150,19 +152,21 @@ export default function CollectionsDrawer() {
         setCreating(true);
 
         const toastId = showProgressToast({
-            title: "Creating collection",
-            description: "Please wait…",
+            title: t("collectionsDrawer.toast.create.title"),
+            description: t("collectionsDrawer.toast.create.desc"),
             initialProgress: 8,
         });
         createToastIdRef.current = toastId;
 
+        const defaultName = t("collectionsDrawer.defaults.newCollection");
+
         try {
-            const newId = await createCollection(user.uid, "New Collection");
+            const newId = await createCollection(user.uid, defaultName);
             await createProg.finish();
 
             await finishToast(toastId, {
-                title: "Collection created",
-                description: "You can rename it now.",
+                title: t("collectionsDrawer.toast.created.title"),
+                description: t("collectionsDrawer.toast.created.desc"),
                 variant: "success",
                 duration: 2600,
             });
@@ -171,14 +175,14 @@ export default function CollectionsDrawer() {
 
             if (newId) {
                 setEditingId(newId);
-                setEditingName("New Collection");
-                setEditingOriginal("New Collection");
+                setEditingName(defaultName);
+                setEditingOriginal(defaultName);
             }
         } catch (e) {
             createToastIdRef.current = null;
             await finishToast(toastId, {
-                title: "Failed to create",
-                description: e?.message || "Something went wrong.",
+                title: t("collectionsDrawer.toast.createFailed.title"),
+                description: e?.message || t("collectionsDrawer.common.somethingWentWrong"),
                 variant: "error",
                 duration: 4500,
             });
@@ -211,8 +215,8 @@ export default function CollectionsDrawer() {
         }
 
         const toastId = showProgressToast({
-            title: "Renaming collection",
-            description: "Saving changes…",
+            title: t("collectionsDrawer.toast.rename.title"),
+            description: t("collectionsDrawer.toast.rename.desc"),
             initialProgress: 15,
         });
 
@@ -224,15 +228,15 @@ export default function CollectionsDrawer() {
             cancelEdit();
 
             await finishToast(toastId, {
-                title: "Renamed",
-                description: "Collection name updated.",
+                title: t("collectionsDrawer.toast.renamed.title"),
+                description: t("collectionsDrawer.toast.renamed.desc"),
                 variant: "success",
                 duration: 2200,
             });
         } catch (e) {
             await finishToast(toastId, {
-                title: "Rename failed",
-                description: e?.message || "Something went wrong.",
+                title: t("collectionsDrawer.toast.renameFailed.title"),
+                description: e?.message || t("collectionsDrawer.common.somethingWentWrong"),
                 variant: "error",
                 duration: 4500,
             });
@@ -261,8 +265,8 @@ export default function CollectionsDrawer() {
         if (!c?.id) return;
 
         const toastId = showProgressToast({
-            title: "Updating status",
-            description: "Please wait…",
+            title: t("collectionsDrawer.toast.updateStatus.title"),
+            description: t("collectionsDrawer.toast.updateStatus.desc"),
             initialProgress: 18,
         });
 
@@ -273,15 +277,15 @@ export default function CollectionsDrawer() {
             updateToast(toastId, { progress: 95 });
 
             await finishToast(toastId, {
-                title: "Updated",
-                description: "Collection status saved.",
+                title: t("collectionsDrawer.toast.updated.title"),
+                description: t("collectionsDrawer.toast.updated.desc"),
                 variant: "success",
                 duration: 2200,
             });
         } catch (e) {
             await finishToast(toastId, {
-                title: "Update failed",
-                description: e?.message || "Something went wrong.",
+                title: t("collectionsDrawer.toast.updateFailed.title"),
+                description: e?.message || t("collectionsDrawer.common.somethingWentWrong"),
                 variant: "error",
                 duration: 4500,
             });
@@ -297,8 +301,8 @@ export default function CollectionsDrawer() {
 
         const id = confirmDeleteId;
         const toastId = showProgressToast({
-            title: "Deleting collection",
-            description: "Removing…",
+            title: t("collectionsDrawer.toast.delete.title"),
+            description: t("collectionsDrawer.toast.delete.desc"),
             initialProgress: 12,
         });
 
@@ -309,15 +313,15 @@ export default function CollectionsDrawer() {
             updateToast(toastId, { progress: 95 });
 
             await finishToast(toastId, {
-                title: "Deleted",
-                description: "Collection removed.",
+                title: t("collectionsDrawer.toast.deleted.title"),
+                description: t("collectionsDrawer.toast.deleted.desc"),
                 variant: "success",
                 duration: 2400,
             });
         } catch (e) {
             await finishToast(toastId, {
-                title: "Delete failed",
-                description: e?.message || "Something went wrong.",
+                title: t("collectionsDrawer.toast.deleteFailed.title"),
+                description: e?.message || t("collectionsDrawer.common.somethingWentWrong"),
                 variant: "error",
                 duration: 4500,
             });
@@ -334,8 +338,8 @@ export default function CollectionsDrawer() {
 
     const buildDownloadUrl = (storagePath, filename) => {
         const base = import.meta.env.VITE_DOWNLOAD_FILE_URL;
-        if (!base) throw new Error("Missing VITE_DOWNLOAD_FILE_URL");
-        return `${base}?path=${encodeURIComponent(storagePath)}&name=${encodeURIComponent(filename || "download")}`;
+        if (!base) throw new Error(t("collectionsDrawer.errors.missingDownloadUrl"));
+        return `${base}?path=${encodeURIComponent(storagePath)}&name=${encodeURIComponent(filename || t("collectionsDrawer.defaults.download"))}`;
     };
 
     const storagePathFromFirebaseUrl = (fileURL) => {
@@ -353,10 +357,10 @@ export default function CollectionsDrawer() {
         const url = buildDownloadUrl(storagePath, filename);
         const a = getAuth();
         const token = await a.currentUser?.getIdToken?.();
-        if (!token) throw new Error("Not authenticated");
+        if (!token) throw new Error(t("collectionsDrawer.errors.notAuthenticated"));
 
         const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
-        if (!res.ok) throw new Error(`Download failed (${res.status})`);
+        if (!res.ok) throw new Error(t("collectionsDrawer.errors.downloadFailedWithStatus", { status: res.status }));
         return await res.blob();
     };
 
@@ -367,15 +371,16 @@ export default function CollectionsDrawer() {
         setDownloadError("");
         setDownloadingId(collection.id);
 
+        const cName = collection.name || t("collectionsDrawer.defaults.collectionTitle");
         const toastId = showProgressToast({
-            title: "Preparing download",
-            description: `Building ZIP for "${collection.name || "Collection"}"…`,
+            title: t("collectionsDrawer.toast.prepare.title"),
+            description: t("collectionsDrawer.toast.prepare.desc", { name: cName }),
             initialProgress: 10,
         });
 
         try {
             const zip = new JSZip();
-            const folderName = safeZipName(collection.name || "collection");
+            const folderName = safeZipName(collection.name || t("collectionsDrawer.defaults.collection"));
             const folder = zip.folder(folderName) || zip;
 
             const seenNames = new Map();
@@ -411,16 +416,16 @@ export default function CollectionsDrawer() {
             saveAs(content, `${folderName}.zip`);
 
             await finishToast(toastId, {
-                title: "Download ready",
-                description: "ZIP has been generated.",
+                title: t("collectionsDrawer.toast.downloadReady.title"),
+                description: t("collectionsDrawer.toast.downloadReady.desc"),
                 variant: "success",
                 duration: 2600,
             });
         } catch (e) {
-            setDownloadError(e?.message || "Prepare download failed");
+            setDownloadError(e?.message || t("collectionsDrawer.errors.prepareDownloadFailed"));
             await finishToast(toastId, {
-                title: "Prepare download failed",
-                description: e?.message || "Something went wrong.",
+                title: t("collectionsDrawer.toast.prepareFailed.title"),
+                description: e?.message || t("collectionsDrawer.common.somethingWentWrong"),
                 variant: "error",
                 duration: 5000,
             });
@@ -433,8 +438,8 @@ export default function CollectionsDrawer() {
         if (!collectionId || !itemId) return;
 
         const toastId = showProgressToast({
-            title: "Removing file",
-            description: "Updating collection…",
+            title: t("collectionsDrawer.toast.removeFile.title"),
+            description: t("collectionsDrawer.toast.removeFile.desc"),
             initialProgress: 18,
         });
 
@@ -445,15 +450,15 @@ export default function CollectionsDrawer() {
             updateToast(toastId, { progress: 95 });
 
             await finishToast(toastId, {
-                title: "Removed",
-                description: "File removed from collection.",
+                title: t("collectionsDrawer.toast.removed.title"),
+                description: t("collectionsDrawer.toast.removed.desc"),
                 variant: "success",
                 duration: 2200,
             });
         } catch (e) {
             await finishToast(toastId, {
-                title: "Remove failed",
-                description: e?.message || "Something went wrong.",
+                title: t("collectionsDrawer.toast.removeFailed.title"),
+                description: e?.message || t("collectionsDrawer.common.somethingWentWrong"),
                 variant: "error",
                 duration: 4500,
             });
@@ -490,13 +495,16 @@ export default function CollectionsDrawer() {
                         <Dialog.Panel className="relative h-full w-full max-w-md bg-[#151620] border-l border-border shadow-xl flex flex-col">
                             <div className="flex items-center justify-between px-5 py-4 border-b border-border">
                                 <div className="min-w-0">
-                                    <Dialog.Title className="text-lg font-semibold text-white">Collections</Dialog.Title>
-                                    <p className="text-xs text-white/60">Organise and download your selected assets</p>
+                                    <Dialog.Title className="text-lg font-semibold text-white">
+                                        {t("collectionsDrawer.title")}
+                                    </Dialog.Title>
+                                    <p className="text-xs text-white/60">{t("collectionsDrawer.subtitle")}</p>
                                 </div>
                                 <button
                                     type="button"
                                     onClick={closeDrawer}
                                     className="rounded-full p-1.5 text-white/70 hover:bg-white/10"
+                                    aria-label={t("collectionsDrawer.actions.close")}
                                 >
                                     <X size={18} />
                                 </button>
@@ -504,10 +512,11 @@ export default function CollectionsDrawer() {
 
                             <div className="px-5 py-3 border-b border-border flex items-center justify-between gap-3">
                                 <div className="text-xs md:text-sm text-white/70">
-                                    Total collections <span className="font-semibold text-white">{sortedCollections.length}</span>
+                                    {t("collectionsDrawer.stats.totalCollections")}{" "}
+                                    <span className="font-semibold text-white">{sortedCollections.length}</span>
                                     {globalStats.fileCount > 0 && (
                                         <span className="ml-2 text-white/60">
-                                            • {globalStats.fileCount} file{globalStats.fileCount === 1 ? "" : "s"} •{" "}
+                                            • {t("collectionsDrawer.stats.files", { count: globalStats.fileCount })} •{" "}
                                             {formatBytes(globalStats.totalBytes)}
                                         </span>
                                     )}
@@ -519,8 +528,12 @@ export default function CollectionsDrawer() {
                                     disabled={creating || !user}
                                     className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
                                 >
-                                    {creating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
-                                    New Collection
+                                    {creating ? (
+                                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                    ) : (
+                                        <Plus className="h-3.5 w-3.5" />
+                                    )}
+                                    {t("collectionsDrawer.actions.newCollection")}
                                 </button>
                             </div>
 
@@ -546,7 +559,7 @@ export default function CollectionsDrawer() {
 
                                 {!loading && sortedCollections.length === 0 && (
                                     <div className="text-center text-sm text-white/60 py-10">
-                                        No collections yet. Create your first one to start grouping files.
+                                        {t("collectionsDrawer.empty")}
                                     </div>
                                 )}
 
@@ -587,7 +600,7 @@ export default function CollectionsDrawer() {
                                                                 onClick={() => saveEdit(c.id)}
                                                                 disabled={busy || !editingName.trim()}
                                                                 className="inline-flex items-center justify-center rounded-md bg-primary px-2.5 py-2 text-xs font-bold text-black disabled:opacity-50"
-                                                                title="Save"
+                                                                title={t("collectionsDrawer.actions.save")}
                                                             >
                                                                 {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                                                             </button>
@@ -598,7 +611,7 @@ export default function CollectionsDrawer() {
                                                                 onClick={cancelEdit}
                                                                 disabled={busy}
                                                                 className="inline-flex items-center justify-center rounded-md border border-white/20 px-2.5 py-2 text-xs font-bold text-white/80 hover:bg-white/5 disabled:opacity-50"
-                                                                title="Cancel"
+                                                                title={t("collectionsDrawer.actions.cancel")}
                                                             >
                                                                 <X className="h-4 w-4" />
                                                             </button>
@@ -606,7 +619,7 @@ export default function CollectionsDrawer() {
                                                     ) : (
                                                         <div className="flex items-center gap-2 min-w-0">
                                                             <div className="text-base font-semibold text-white break-words min-w-0">
-                                                                {c.name || "Untitled Collection"}
+                                                                {c.name || t("collectionsDrawer.defaults.untitledCollection")}
                                                             </div>
                                                             <button
                                                                 type="button"
@@ -615,15 +628,19 @@ export default function CollectionsDrawer() {
                                                                 className="inline-flex items-center gap-1 text-[11px] text-white/60 hover:text-white"
                                                             >
                                                                 <Pencil className="h-3.5 w-3.5" />
-                                                                Rename
+                                                                {t("collectionsDrawer.actions.rename")}
                                                             </button>
                                                         </div>
                                                     )}
 
                                                     <div className="mt-0.5 text-xs text-white/70 flex flex-wrap items-center gap-2">
-                                                        <span>{c.isCompleted ? "Completed" : "In progress"}</span>
+                                                        <span>
+                                                            {c.isCompleted
+                                                                ? t("collectionsDrawer.status.completed")
+                                                                : t("collectionsDrawer.status.inProgress")}
+                                                        </span>
                                                         <span className="inline-flex items-center rounded-full bg-black/40 px-2.5 py-0.5 text-[11px] text-white/80">
-                                                            {items.length} file{items.length === 1 ? "" : "s"}
+                                                            {t("collectionsDrawer.stats.files", { count: items.length })}
                                                         </span>
                                                         <span className="inline-flex items-center rounded-full bg-black/40 px-2.5 py-0.5 text-[11px] text-white/80">
                                                             {formatBytes(collectionBytes)}
@@ -637,7 +654,9 @@ export default function CollectionsDrawer() {
                                                         className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80 disabled:opacity-50"
                                                     >
                                                         {itemsBusy ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
-                                                        {isExpanded ? "Hide file details" : "Show file details"}
+                                                        {isExpanded
+                                                            ? t("collectionsDrawer.actions.hideFileDetails")
+                                                            : t("collectionsDrawer.actions.showFileDetails")}
                                                     </button>
                                                 </div>
 
@@ -646,6 +665,7 @@ export default function CollectionsDrawer() {
                                                     onClick={() => toggleCompleted(c)}
                                                     disabled={busy}
                                                     className="flex-shrink-0 inline-flex items-center justify-center rounded-full p-1.5 text-emerald-400 hover:bg-emerald-500/10 disabled:opacity-50"
+                                                    aria-label={t("collectionsDrawer.actions.toggleCompleted")}
                                                 >
                                                     {c.isCompleted ? <CheckCircle2 className="h-5 w-5" /> : <Circle className="h-5 w-5" />}
                                                 </button>
@@ -658,8 +678,12 @@ export default function CollectionsDrawer() {
                                                     disabled={downloadingId === c.id || items.length === 0 || itemsBusy}
                                                     className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-primary px-3 py-2 text-xs md:text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50"
                                                 >
-                                                    {downloadingId === c.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-                                                    Prepare Download
+                                                    {downloadingId === c.id ? (
+                                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                                    ) : (
+                                                        <Download className="h-4 w-4" />
+                                                    )}
+                                                    {t("collectionsDrawer.actions.prepareDownload")}
                                                 </button>
 
                                                 <button
@@ -668,20 +692,28 @@ export default function CollectionsDrawer() {
                                                     disabled={busy}
                                                     className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-red-500/70 px-3 py-2 text-xs md:text-sm font-semibold text-red-100 hover:bg-red-500/10 disabled:opacity-60"
                                                 >
-                                                    {busy && confirmDeleteId === c.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                                                    Delete
+                                                    {busy && confirmDeleteId === c.id ? (
+                                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                                    ) : (
+                                                        <Trash2 className="h-4 w-4" />
+                                                    )}
+                                                    {t("collectionsDrawer.actions.delete")}
                                                 </button>
                                             </div>
 
                                             {isExpanded ? (
                                                 <div className="mt-2 rounded-md bg-black/40 px-3 py-2">
                                                     <div className="flex items-center justify-between mb-2">
-                                                        <div className="text-xs text-white/70">Files ({items.length})</div>
-                                                        <div className="text-xs text-white/70">Total size: {formatBytes(collectionBytes)}</div>
+                                                        <div className="text-xs text-white/70">
+                                                            {t("collectionsDrawer.files.title", { count: items.length })}
+                                                        </div>
+                                                        <div className="text-xs text-white/70">
+                                                            {t("collectionsDrawer.files.totalSize", { size: formatBytes(collectionBytes) })}
+                                                        </div>
                                                     </div>
 
                                                     {items.length === 0 && !itemsBusy ? (
-                                                        <div className="text-xs text-white/50">No files in this collection yet.</div>
+                                                        <div className="text-xs text-white/50">{t("collectionsDrawer.files.empty")}</div>
                                                     ) : null}
 
                                                     {!itemsBusy && items.length > 0 ? (
@@ -697,7 +729,7 @@ export default function CollectionsDrawer() {
                                                                             {thumbSrc ? (
                                                                                 <img
                                                                                     src={thumbSrc}
-                                                                                    alt={item.fileName || "File preview"}
+                                                                                    alt={item.fileName || t("collectionsDrawer.files.filePreviewAlt")}
                                                                                     className="w-full h-full object-cover"
                                                                                     loading="lazy"
                                                                                 />
@@ -707,7 +739,9 @@ export default function CollectionsDrawer() {
                                                                         </div>
 
                                                                         <div className="flex-1 min-w-0">
-                                                                            <div className="truncate text-[13px]">{item.fileName || "Untitled file"}</div>
+                                                                            <div className="truncate text-[13px]">
+                                                                                {item.fileName || t("collectionsDrawer.files.untitledFile")}
+                                                                            </div>
                                                                             <div className="text-[11px] text-white/45 truncate">{item.sectionTitle || ""}</div>
                                                                         </div>
 
@@ -717,6 +751,7 @@ export default function CollectionsDrawer() {
                                                                                 type="button"
                                                                                 onClick={() => removeItem(c.id, item.id)}
                                                                                 className="p-1 rounded-full text-white/70 hover:bg-red-500/20 hover:text-red-200"
+                                                                                aria-label={t("collectionsDrawer.actions.removeFile")}
                                                                             >
                                                                                 <X className="w-3.5 h-3.5" />
                                                                             </button>
@@ -726,7 +761,7 @@ export default function CollectionsDrawer() {
                                                             })}
                                                         </ul>
                                                     ) : (
-                                                        <div className="text-xs text-white/60">Loading files…</div>
+                                                        <div className="text-xs text-white/60">{t("collectionsDrawer.files.loading")}</div>
                                                     )}
                                                 </div>
                                             ) : null}
@@ -748,8 +783,8 @@ export default function CollectionsDrawer() {
                                 <div className="absolute inset-x-0 bottom-0 px-4 pb-4">
                                     <div className="rounded-lg border border-red-500/60 bg-red-950/95 px-4 py-3 text-xs text-red-50 flex items-center justify-between gap-3">
                                         <div>
-                                            <div className="font-semibold mb-0.5">Delete this collection?</div>
-                                            <div className="text-[11px] opacity-90">This cannot be undone. Files themselves will not be deleted.</div>
+                                            <div className="font-semibold mb-0.5">{t("collectionsDrawer.confirm.title")}</div>
+                                            <div className="text-[11px] opacity-90">{t("collectionsDrawer.confirm.subtitle")}</div>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <button
@@ -757,14 +792,14 @@ export default function CollectionsDrawer() {
                                                 onClick={() => setConfirmDeleteId(null)}
                                                 className="rounded-md border border-red-400/70 px-2.5 py-1 text-[11px] font-semibold hover:bg-red-900/80"
                                             >
-                                                Cancel
+                                                {t("collectionsDrawer.actions.cancel")}
                                             </button>
                                             <button
                                                 type="button"
                                                 onClick={performDelete}
                                                 className="rounded-md bg-red-500 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-red-400"
                                             >
-                                                Delete
+                                                {t("collectionsDrawer.actions.delete")}
                                             </button>
                                         </div>
                                     </div>

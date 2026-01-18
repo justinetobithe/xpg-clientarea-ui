@@ -1,16 +1,22 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import PageShell from "../components/common/PageShell";
 import GeneralSettings from "../components/settings/GeneralSettings";
 import ChangePassword from "../components/settings/ChangePassword";
 import DeleteAccount from "../components/settings/DeleteAccount";
 
-const settingsSections = [
-    { id: "general", label: "General Settings", component: GeneralSettings },
-    { id: "password", label: "Change Password", component: ChangePassword },
-    { id: "delete", label: "Delete Account", component: DeleteAccount }
-];
-
 export default function Settings() {
+    const { t } = useTranslation();
+
+    const settingsSections = useMemo(
+        () => [
+            { id: "general", label: t("settings.sections.general"), component: GeneralSettings },
+            { id: "password", label: t("settings.sections.password"), component: ChangePassword },
+            { id: "delete", label: t("settings.sections.delete"), component: DeleteAccount }
+        ],
+        [t]
+    );
+
     const [activeSection, setActiveSection] = useState(settingsSections[0].id);
 
     const ActiveComponent = useMemo(() => {
@@ -18,13 +24,13 @@ export default function Settings() {
             settingsSections.find((s) => s.id === activeSection)?.component ||
             settingsSections[0].component
         );
-    }, [activeSection]);
+    }, [activeSection, settingsSections]);
 
     return (
         <PageShell
-            crumb="Home / Account Settings"
-            title="Account Settings"
-            subtitle="Update your account and profile data"
+            crumb={t("settings.crumb")}
+            title={t("settings.title")}
+            subtitle={t("settings.subtitle")}
         >
             <div className="flex flex-col md:flex-row md:gap-8 md:items-start">
                 <aside className="md:w-64 md:shrink-0 md:sticky md:top-24">
@@ -42,6 +48,7 @@ export default function Settings() {
                                                 ? "bg-primary text-black shadow-md"
                                                 : "text-white/70 hover:bg-white/5 hover:text-white"
                                         ].join(" ")}
+                                        type="button"
                                     >
                                         {section.label}
                                     </button>

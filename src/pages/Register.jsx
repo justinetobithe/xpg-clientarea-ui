@@ -13,37 +13,16 @@ import { useToast } from "../contexts/ToastContext";
 import CookiePolicy from "../components/CookiePolicy";
 import PrivacyPolicy from "../components/PrivacyPolicy";
 import ReCAPTCHA from "react-google-recaptcha";
+import { useTranslation } from "react-i18next";
 
 const PENDING_KEY = "xpg_registration_pending_email";
 
-const schema = z
-    .object({
-        fullName: z.string().min(2, "Full name is required"),
-        company: z.string().min(2, "Company is required"),
-        department: z.string().min(2, "Department is required"),
-        email: z.string().email("Valid email required"),
-        password: z.string().min(6, "Password must be at least 6 characters"),
-        confirmPassword: z.string().min(6, "Confirm your password"),
-        newsletter: z.boolean().optional(),
-        notice: z.boolean(),
-        privacy: z.boolean(),
-        recaptchaToken: z.string().min(1, "Please complete the reCAPTCHA"),
-    })
-    .refine((v) => v.password === v.confirmPassword, {
-        message: "Passwords do not match",
-        path: ["confirmPassword"],
-    })
-    .refine((v) => v.notice && v.privacy, {
-        message: "Please accept required policies",
-        path: ["privacy"],
-    });
-
-function toUserMessage(err) {
+function toUserMessage(err, t) {
     const code = err?.code ? String(err.code) : "";
-    if (code === "auth/email-already-in-use") return "This email is already in use. Please use another email or log in.";
-    if (code === "auth/invalid-email") return "Invalid email address.";
-    if (code === "auth/weak-password") return "Password is too weak.";
-    return "Unable to register. Please try again.";
+    if (code === "auth/email-already-in-use") return t("auth.register.errors.emailInUse");
+    if (code === "auth/invalid-email") return t("auth.register.errors.invalidEmail");
+    if (code === "auth/weak-password") return t("auth.register.errors.weakPassword");
+    return t("auth.register.errors.failedGeneric");
 }
 
 async function verifyRecaptchaToken(token) {
@@ -53,7 +32,7 @@ async function verifyRecaptchaToken(token) {
     const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token }),
+        body: JSON.stringify({ token })
     });
 
     const data = await res.json().catch(() => ({}));
@@ -70,7 +49,7 @@ async function fetchIpInfo() {
             city: data.city || null,
             region: data.region || null,
             country: data.country_name || null,
-            loc: data.loc || null,
+            loc: data.loc || null
         };
     } catch {
         return null;
@@ -78,6 +57,7 @@ async function fetchIpInfo() {
 }
 
 export default function Register() {
+    const { t } = useTranslation();
     const nav = useNavigate();
     const { openDialog } = useDialog();
     const { showToast } = useToast();
@@ -98,6 +78,32 @@ export default function Register() {
     });
 
     const isPendingScreen = useMemo(() => !!submittedEmail, [submittedEmail]);
+
+    const schema = useMemo(
+        () =>
+            z
+                .object({
+                    fullName: z.string().min(2, t("auth.register.errors.fullNameRequired")),
+                    company: z.string().min(2, t("auth.register.errors.companyRequired")),
+                    department: z.string().min(2, t("auth.register.errors.departmentRequired")),
+                    email: z.string().email(t("auth.register.errors.emailValid")),
+                    password: z.string().min(6, t("auth.register.errors.passwordMin")),
+                    confirmPassword: z.string().min(6, t("auth.register.errors.confirmPassword")),
+                    newsletter: z.boolean().optional(),
+                    notice: z.boolean(),
+                    privacy: z.boolean(),
+                    recaptchaToken: z.string().min(1, t("auth.register.errors.recaptchaComplete"))
+                })
+                .refine((v) => v.password === v.confirmPassword, {
+                    message: t("auth.register.errors.passwordMismatch"),
+                    path: ["confirmPassword"]
+                })
+                .refine((v) => v.notice && v.privacy, {
+                    message: t("auth.register.errors.policiesRequired"),
+                    path: ["privacy"]
+                }),
+        [t]
+    );
 
     useEffect(() => {
         let cancelled = false;
@@ -153,7 +159,7 @@ export default function Register() {
         handleSubmit,
         setValue,
         watch,
-        formState: { errors },
+        formState: { errors }
     } = useForm({
         resolver: zodResolver(schema),
         defaultValues: {
@@ -166,8 +172,8 @@ export default function Register() {
             newsletter: false,
             notice: false,
             privacy: false,
-            recaptchaToken: "",
-        },
+            recaptchaToken: ""
+        }
     });
 
     const recaptchaToken = watch("recaptchaToken");
@@ -208,8 +214,8 @@ export default function Register() {
                     city: ipInfo?.city || null,
                     region: ipInfo?.region || null,
                     country: ipInfo?.country || null,
-                    coordinates: ipInfo?.loc || null,
-                },
+                    coordinates: ipInfo?.loc || null
+                }
             });
 
             await signOut(auth);
@@ -224,9 +230,9 @@ export default function Register() {
             setErr("");
 
             showToast({
-                title: "Registration submitted",
-                description: "Your account is pending admin approval.",
-                variant: "success",
+                title: t("auth.register.toast.submittedTitle"),
+                description: t("auth.register.toast.submittedDesc"),
+                variant: "success"
             });
         },
         onError: (error) => {
@@ -235,19 +241,19 @@ export default function Register() {
 
             const msg =
                 error?.message === "RECAPTCHA_VERIFY_URL_MISSING"
-                    ? "reCAPTCHA is not configured. Please contact the administrator."
+                    ? t("auth.register.errors.recaptchaMissing")
                     : error?.message === "RECAPTCHA_INVALID"
-                        ? "reCAPTCHA failed. Please try again."
-                        : toUserMessage(error);
+                        ? t("auth.register.errors.recaptchaInvalid")
+                        : toUserMessage(error, t);
 
             setErr(msg);
 
             showToast({
-                title: "Registration failed",
+                title: t("auth.register.toast.failedTitle"),
                 description: msg,
-                variant: "error",
+                variant: "error"
             });
-        },
+        }
     });
 
     const onSubmit = useCallback(
@@ -260,12 +266,12 @@ export default function Register() {
 
     const handleOpenCookiePolicy = (e) => {
         e.preventDefault();
-        openDialog("Cookie Policy", <CookiePolicy />);
+        openDialog(t("auth.register.policy.cookie"), <CookiePolicy />);
     };
 
     const handleOpenPrivacyPolicy = (e) => {
         e.preventDefault();
-        openDialog("Privacy Policy", <PrivacyPolicy />);
+        openDialog(t("auth.register.policy.privacy"), <PrivacyPolicy />);
     };
 
     const handleGoLogin = () => {
@@ -290,32 +296,35 @@ export default function Register() {
                         <img src="/image/logo-white.png" alt="Logo" className="h-[90px]" />
                     </div>
 
-                    <h1 className="text-center text-xl font-semibold text-white mb-2">Request submitted</h1>
-                    <p className="text-center text-white/80 text-sm">Your account is pending admin approval.</p>
+                    <h1 className="text-center text-xl font-semibold text-white mb-2">{t("auth.register.pending.title")}</h1>
+                    <p className="text-center text-white/80 text-sm">{t("auth.register.pending.subtitle")}</p>
 
                     <div className="mt-6 rounded-lg border border-white/10 bg-black/30 p-4">
-                        <div className="text-white/80 text-sm">Submitted email</div>
+                        <div className="text-white/80 text-sm">{t("auth.register.pending.cardTitle")}</div>
                         <div className="text-white font-semibold break-all">{submittedEmail}</div>
-                        <div className="text-white/60 text-xs mt-2">Once approved, you can sign in and the system will grant access automatically.</div>
+                        <div className="text-white/60 text-xs mt-2">{t("auth.register.pending.hint")}</div>
                     </div>
 
                     <div className="mt-6 flex flex-col gap-3">
-                        <button onClick={handleGoLogin} className="w-full rounded-md bg-primary px-6 py-3 text-base font-semibold text-primary-foreground hover:opacity-90">
-                            Go to login
+                        <button
+                            onClick={handleGoLogin}
+                            className="w-full rounded-md bg-primary px-6 py-3 text-base font-semibold text-primary-foreground hover:opacity-90"
+                        >
+                            {t("auth.register.pending.goLogin")}
                         </button>
 
                         <button
                             onClick={handleClearPending}
                             className="w-full rounded-md border border-white/15 bg-transparent px-6 py-3 text-base font-semibold text-white/90 hover:bg-white/5"
                         >
-                            Submit another request
+                            {t("auth.register.pending.submitAnother")}
                         </button>
                     </div>
 
                     <div className="text-center text-sm mt-6 text-white/70">
-                        Already have an account?{" "}
+                        {t("auth.register.pending.alreadyHave")}{" "}
                         <Link to="/login" className="text-primary hover:underline">
-                            Sign in
+                            {t("auth.register.pending.signIn")}
                         </Link>
                     </div>
                 </div>
@@ -333,13 +342,13 @@ export default function Register() {
                     <img src="/image/logo-white.png" alt="Logo" className="h-[90px]" />
                 </div>
 
-                <h1 className="text-center text-xl font-semibold text-white mb-5">Please read before signing up</h1>
+                <h1 className="text-center text-xl font-semibold text-white mb-5">{t("auth.register.title")}</h1>
 
                 <div className="text-sm leading-relaxed text-white/80 space-y-3 mb-7 max-h-56 overflow-auto pr-2 scrollbar-hide">
-                    <p>The Client Area contains marketing assets, demos and other useful data for our games and brands.</p>
-                    <p>You must be a customer to access the system. Only company emails are allowed.</p>
-                    <p>Your application will be reviewed before access is granted.</p>
-                    <p>Please do not share assets externally without permission.</p>
+                    <p>{t("auth.register.intro.p1")}</p>
+                    <p>{t("auth.register.intro.p2")}</p>
+                    <p>{t("auth.register.intro.p3")}</p>
+                    <p>{t("auth.register.intro.p4")}</p>
                 </div>
 
                 <form onSubmit={handleSubmit(onSubmit)}>
@@ -347,7 +356,7 @@ export default function Register() {
                         <Field className="md:col-span-2">
                             <Label className="sr-only">Full name</Label>
                             <Input
-                                placeholder="Full name"
+                                placeholder={t("auth.register.placeholders.fullName")}
                                 {...register("fullName")}
                                 className="w-full rounded-md border border-input bg-background/10 px-4 py-3 text-base text-white placeholder:text-white/50 outline-none focus:ring-2 focus:ring-ring"
                             />
@@ -357,7 +366,7 @@ export default function Register() {
                         <Field>
                             <Label className="sr-only">Company</Label>
                             <Input
-                                placeholder="Company"
+                                placeholder={t("auth.register.placeholders.company")}
                                 {...register("company")}
                                 className="w-full rounded-md border border-input bg-background/10 px-4 py-3 text-base text-white placeholder:text-white/50 outline-none focus:ring-2 focus:ring-ring"
                             />
@@ -367,7 +376,7 @@ export default function Register() {
                         <Field>
                             <Label className="sr-only">Department</Label>
                             <Input
-                                placeholder="Department"
+                                placeholder={t("auth.register.placeholders.department")}
                                 {...register("department")}
                                 className="w-full rounded-md border border-input bg-background/10 px-4 py-3 text-base text-white placeholder:text-white/50 outline-none focus:ring-2 focus:ring-ring"
                             />
@@ -377,7 +386,7 @@ export default function Register() {
                         <Field className="md:col-span-2">
                             <Label className="sr-only">Email</Label>
                             <Input
-                                placeholder="Email"
+                                placeholder={t("auth.register.placeholders.email")}
                                 {...register("email")}
                                 className="w-full rounded-md border border-input bg-background/10 px-4 py-3 text-base text-white placeholder:text-white/50 outline-none focus:ring-2 focus:ring-ring"
                             />
@@ -388,7 +397,7 @@ export default function Register() {
                             <Label className="sr-only">Password</Label>
                             <Input
                                 type="password"
-                                placeholder="Password"
+                                placeholder={t("auth.register.placeholders.password")}
                                 {...register("password")}
                                 className="w-full rounded-md border border-input bg-background/10 px-4 py-3 text-base text-white placeholder:text-white/50 outline-none focus:ring-2 focus:ring-ring"
                             />
@@ -399,7 +408,7 @@ export default function Register() {
                             <Label className="sr-only">Confirm password</Label>
                             <Input
                                 type="password"
-                                placeholder="Confirm Password"
+                                placeholder={t("auth.register.placeholders.confirmPassword")}
                                 {...register("confirmPassword")}
                                 className="w-full rounded-md border border-input bg-background/10 px-4 py-3 text-base text-white placeholder:text-white/50 outline-none focus:ring-2 focus:ring-ring"
                             />
@@ -409,22 +418,22 @@ export default function Register() {
                         <div className="md:col-span-2 space-y-3 pt-1">
                             <label className="flex items-center gap-3 text-sm text-white/90">
                                 <input type="checkbox" {...register("newsletter")} />
-                                Subscribe to the newsletter?
+                                {t("auth.register.checkbox.newsletter")}
                             </label>
 
                             <label className="flex items-center gap-3 text-sm text-white/90">
                                 <input type="checkbox" {...register("notice")} />
-                                I have read and understood the full{" "}
+                                <span>{t("auth.register.checkbox.noticePrefix")}&nbsp;</span>
                                 <button type="button" onClick={handleOpenCookiePolicy} className="text-primary hover:underline">
-                                    Cookie Policy
+                                    {t("auth.register.policy.cookie")}
                                 </button>
                             </label>
 
                             <label className="flex items-center gap-3 text-sm text-white/90">
                                 <input type="checkbox" {...register("privacy")} />
-                                I agree to the{" "}
+                                <span>{t("auth.register.checkbox.privacyPrefix")}&nbsp;</span>
                                 <button type="button" onClick={handleOpenPrivacyPolicy} className="text-primary hover:underline">
-                                    Privacy Policy
+                                    {t("auth.register.policy.privacy")}
                                 </button>
                             </label>
 
@@ -441,7 +450,7 @@ export default function Register() {
                                     theme="dark"
                                 />
                             ) : (
-                                <div className="text-sm text-white/70">Loading verification…</div>
+                                <div className="text-sm text-white/70">{t("auth.register.recaptcha.loading")}</div>
                             )}
                             {errors.recaptchaToken && <div className="text-sm text-red-400">{errors.recaptchaToken.message}</div>}
                         </div>
@@ -451,16 +460,16 @@ export default function Register() {
                                 disabled={registerMutation.isPending || !recaptchaToken}
                                 className="w-fit mx-auto block rounded-md bg-primary px-9 py-3 text-base font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
                             >
-                                {registerMutation.isPending ? "Registering..." : "Request access"}
+                                {registerMutation.isPending ? t("auth.register.button.registering") : t("auth.register.button.requestAccess")}
                             </button>
                         </div>
                     </Fieldset>
                 </form>
 
-                <div className="text-center text-sm mt-8 text-white/80">Already have an account?</div>
+                <div className="text-center text-sm mt-8 text-white/80">{t("auth.register.footer.alreadyHave")}</div>
                 <div className="text-center mt-2">
                     <Link to="/login" className="text-sm text-primary hover:underline">
-                        Sign in
+                        {t("auth.register.footer.signIn")}
                     </Link>
                 </div>
             </div>

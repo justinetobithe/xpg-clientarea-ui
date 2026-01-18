@@ -6,8 +6,11 @@ import HeroBanner from "../components/common/HeroBanner";
 import { useAuthStore } from "../store/authStore";
 import { useDownloadsStore } from "../store/downloadsStore";
 import { useAnnouncementStore } from "../store/announcementStore";
+import { useTranslation } from "react-i18next";
 
 export default function Home() {
+    const { t } = useTranslation();
+
     const user = useAuthStore((s) => s.user);
 
     const downloads = useDownloadsStore((s) => s.downloads);
@@ -44,12 +47,13 @@ export default function Home() {
                         <div className="inline-flex items-center gap-2 rounded-full border border-white/35 bg-black/40 px-5 py-1.5 mb-4 backdrop-blur-sm">
                             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.9)] animate-pulse" />
                             <span className="text-[11px] md:text-xs font-semibold tracking-[0.32em] text-white/70">
-                                WELCOME TO THE
+                                {t("home.welcomeBadge")}
                             </span>
                         </div>
+
                         <h1 className="text-4xl md:text-6xl lg:text-[4.5rem] font-black tracking-tight leading-tight">
                             <span className="block bg-gradient-to-r from-white via-amber-200 to-orange-400 bg-clip-text text-transparent drop-shadow-[0_14px_40px_rgba(0,0,0,0.95)]">
-                                CLIENT AREA
+                                {t("home.title")}
                             </span>
                         </h1>
                     </div>

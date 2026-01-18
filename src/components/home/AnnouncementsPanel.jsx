@@ -2,6 +2,7 @@ import { Fragment, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Dialog, Transition } from "@headlessui/react";
 import { X, ExternalLink, Sparkles } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 function AnnouncementSkeletonCard() {
     return (
@@ -37,12 +38,13 @@ const formatLongDate = (val) => {
 };
 
 export default function AnnouncementsPanel({ items = [], loading = false, error = null, skeletonCount = 3 }) {
+    const { t } = useTranslation();
     const [detail, setDetail] = useState(null);
     const list = useMemo(() => (Array.isArray(items) ? items : []), [items]);
 
     const Card = ({ a }) => {
         const dateLabel = formatDate(a.date || a.createdAt);
-        const title = a.title || "Untitled";
+        const title = a.title || t("announcements.untitled");
         const desc = toText(a.description || a.content || "");
 
         return (
@@ -78,7 +80,9 @@ export default function AnnouncementsPanel({ items = [], loading = false, error 
                         {!!desc && <div className="text-xs md:text-sm text-white/70 line-clamp-2 mt-2">{desc}</div>}
 
                         <div className="mt-4 flex items-center gap-2">
-                            <span className="text-xs text-primary font-semibold group-hover:underline">Open details</span>
+                            <span className="text-xs text-primary font-semibold group-hover:underline">
+                                {t("announcements.openDetails")}
+                            </span>
                             {a.ctaLabel && a.ctaURL && <span className="text-[11px] text-white/50">• {a.ctaLabel}</span>}
                         </div>
                     </div>
@@ -95,13 +99,13 @@ export default function AnnouncementsPanel({ items = [], loading = false, error 
                         <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-primary/15 border border-primary/30">
                             <Sparkles className="h-4 w-4 text-primary" />
                         </span>
-                        Announcements For You
+                        {t("announcements.title")}
                     </div>
-                    <div className="text-xs text-white/60 mt-1">Latest updates and notices in your client area</div>
+                    <div className="text-xs text-white/60 mt-1">{t("announcements.subtitle")}</div>
                 </div>
 
                 <Link to="/announcements" className="text-xs text-primary hover:underline font-semibold">
-                    See More
+                    {t("announcements.seeMore")}
                 </Link>
             </div>
 
@@ -117,7 +121,7 @@ export default function AnnouncementsPanel({ items = [], loading = false, error 
                 {!loading && error && <div className="text-sm text-red-400 py-6 text-center">{error}</div>}
 
                 {!loading && !error && list.length === 0 && (
-                    <div className="text-sm text-white/60 py-8 text-center">No announcements yet.</div>
+                    <div className="text-sm text-white/60 py-8 text-center">{t("announcements.empty")}</div>
                 )}
 
                 {!loading && !error && list.length > 0 && (
@@ -136,7 +140,7 @@ export default function AnnouncementsPanel({ items = [], loading = false, error 
                         <div className="md:hidden -mx-5">
                             <div className="px-5">
                                 <div className="flex items-center justify-between mb-3">
-                                    <div className="text-xs font-semibold text-white/70">Swipe</div>
+                                    <div className="text-xs font-semibold text-white/70">{t("announcements.swipe")}</div>
                                     <div className="flex gap-1.5">
                                         {list.slice(0, 6).map((a, i) => (
                                             <span key={a.id || i} className="h-1.5 w-1.5 rounded-full bg-white/25" />
@@ -153,7 +157,7 @@ export default function AnnouncementsPanel({ items = [], loading = false, error 
                                 ))}
                             </div>
 
-                            <div className="px-5 mt-3 text-[11px] text-white/50">Swipe left/right to see more announcements</div>
+                            <div className="px-5 mt-3 text-[11px] text-white/50">{t("announcements.swipeHint")}</div>
                         </div>
                     </>
                 )}
@@ -190,7 +194,7 @@ export default function AnnouncementsPanel({ items = [], loading = false, error 
                                             <div className="h-56 md:h-72 bg-black/40">
                                                 <img
                                                     src={detail.imageURL}
-                                                    alt={detail?.title || "Announcement"}
+                                                    alt={detail?.title || t("announcements.modal.fallbackTitle")}
                                                     className="w-full h-full object-cover"
                                                     loading="lazy"
                                                 />
@@ -211,7 +215,7 @@ export default function AnnouncementsPanel({ items = [], loading = false, error 
 
                                         <div className="absolute bottom-0 left-0 right-0 p-5 md:p-6">
                                             <Dialog.Title className="text-xl md:text-2xl font-extrabold text-white leading-snug">
-                                                {detail?.title || "Announcement"}
+                                                {detail?.title || t("announcements.modal.fallbackTitle")}
                                             </Dialog.Title>
                                             <div className="mt-2 flex flex-wrap items-center gap-2">
                                                 <span className="text-[11px] px-2 py-1 rounded-full bg-black/40 border border-white/10 text-white/70">
@@ -233,7 +237,9 @@ export default function AnnouncementsPanel({ items = [], loading = false, error 
                                                 dangerouslySetInnerHTML={{ __html: detail.content }}
                                             />
                                         ) : (
-                                            <div className="text-white/80 text-sm">{toText(detail?.description || "") || "No content provided."}</div>
+                                            <div className="text-white/80 text-sm">
+                                                {toText(detail?.description || "") || t("announcements.modal.noContent")}
+                                            </div>
                                         )}
 
                                         {(detail?.ctaLabel && detail?.ctaURL) || detail?.packURL ? (
@@ -257,7 +263,7 @@ export default function AnnouncementsPanel({ items = [], loading = false, error 
                                                         rel="noreferrer"
                                                         className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.03] text-white font-semibold px-4 py-2.5 text-sm hover:bg-white/[0.06] transition"
                                                     >
-                                                        View Marketing Pack
+                                                        {t("announcements.modal.viewMarketingPack")}
                                                         <ExternalLink className="h-4 w-4" />
                                                     </a>
                                                 )}

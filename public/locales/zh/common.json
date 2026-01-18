@@ -1,0 +1,814 @@
+{
+    "auth": {
+        "login": {
+            "title": "客户登录",
+            "pendingTitle": "待审核",
+            "pendingHint": "一旦获得批准，您可以登录，系统将自动授予访问权限。",
+            "useAnotherAccount": "使用其他账号",
+            "placeholders": {
+                "email": "输入电子邮箱",
+                "password": "输入密码"
+            },
+            "remember": "在此设备上记住我",
+            "button": {
+                "login": "登录",
+                "loggingIn": "正在登录..."
+            },
+            "links": {
+                "forgot": "忘记密码？",
+                "createAccount": "创建账号？",
+                "register": "注册新账号"
+            },
+            "toast": {
+                "welcomeTitle": "欢迎！",
+                "welcomeDesc": "已获得访问权限。正在跳转...",
+                "pendingTitle": "待审核",
+                "failedTitle": "登录失败"
+            },
+            "errors": {
+                "invalidEmail": "请输入有效的电子邮箱",
+                "passwordMin": "密码长度必须至少为 6 个字符",
+                "invalidCredentials": "邮箱或密码无效。",
+                "tooManyRequests": "尝试次数过多。请稍后再试。",
+                "failedGeneric": "登录失败。请重试。",
+                "notApproved": "您的账号正在等待审核。请等待管理员批准。"
+            }
+        },
+        "register": {
+            "pending": {
+                "title": "申请已提交",
+                "subtitle": "您的账号正在等待管理员审核。",
+                "cardTitle": "提交的邮箱",
+                "hint": "一旦获得批准，您可以登录，系统将自动授予访问权限。",
+                "goLogin": "去登录",
+                "submitAnother": "提交另一个申请",
+                "alreadyHave": "已有账号？",
+                "signIn": "登录"
+            },
+            "title": "注册前请阅读",
+            "intro": {
+                "p1": "客户专区包含我们游戏和品牌的营销资产、演示版本及其他有用数据。",
+                "p2": "您必须是客户才能访问该系统。仅限使用公司邮箱。",
+                "p3": "您的申请将在授予访问权限前经过审核。",
+                "p4": "未经允许，请勿将资产共享给外部。"
+            },
+            "placeholders": {
+                "fullName": "姓名",
+                "company": "公司",
+                "department": "部门",
+                "email": "电子邮箱",
+                "password": "密码",
+                "confirmPassword": "确认密码"
+            },
+            "checkbox": {
+                "newsletter": "订阅新闻通讯？",
+                "noticePrefix": "我已阅读并理解全部",
+                "privacyPrefix": "我同意"
+            },
+            "policy": {
+                "cookie": "Cookie 政策",
+                "privacy": "隐私政策"
+            },
+            "recaptcha": {
+                "loading": "正在加载验证..."
+            },
+            "button": {
+                "requestAccess": "申请访问权限",
+                "registering": "正在注册..."
+            },
+            "footer": {
+                "alreadyHave": "已有账号？",
+                "signIn": "登录"
+            },
+            "toast": {
+                "submittedTitle": "注册申请已提交",
+                "submittedDesc": "您的账号正在等待管理员审核。",
+                "failedTitle": "注册失败"
+            },
+            "errors": {
+                "fullNameRequired": "姓名是必填项",
+                "companyRequired": "公司是必填项",
+                "departmentRequired": "部门是必填项",
+                "emailValid": "需要有效的电子邮箱",
+                "passwordMin": "密码长度必须至少为 6 个字符",
+                "confirmPassword": "请确认您的密码",
+                "recaptchaComplete": "请完成 reCAPTCHA 验证",
+                "passwordMismatch": "两次输入的密码不一致",
+                "policiesRequired": "请接受必要的政策",
+                "emailInUse": "此邮箱已被使用。请使用其他邮箱或直接登录。",
+                "invalidEmail": "电子邮箱地址无效。",
+                "weakPassword": "密码强度太弱。",
+                "failedGeneric": "无法注册。请重试。",
+                "recaptchaMissing": "reCAPTCHA 未配置。请联系管理员。",
+                "recaptchaInvalid": "reCAPTCHA 验证失败。请重试。",
+                "verifyUrlMissing": "缺少 RECAPTCHA_VERIFY_URL"
+            }
+        },
+        "reset": {
+            "title": "设置新密码",
+            "loading": "正在加载...",
+            "statuses": {
+                "invalid": "无效链接",
+                "notFound": "未找到链接",
+                "expired": "链接已过期",
+                "used": "链接已被使用",
+                "error": "出错了",
+                "valid": "链接有效"
+            },
+            "labels": {
+                "validity": "有效期：{{date}}",
+                "email": "邮箱：{{email}}",
+                "validUntil": "有效期至：{{date}}",
+                "status": "状态：{{status}}"
+            },
+            "placeholders": {
+                "newPassword": "新密码（最少 8 个字符）",
+                "confirmPassword": "确认新密码"
+            },
+            "button": {
+                "requestNew": "申请新的重置链接",
+                "backToLogin": "返回登录",
+                "update": "更新密码",
+                "updating": "正在更新..."
+            },
+            "toast": {
+                "invalidPasswordTitle": "密码无效",
+                "invalidPasswordDesc": "密码长度必须至少为 8 个字符。",
+                "mismatchTitle": "不匹配",
+                "mismatchDesc": "密码不一致。",
+                "updatedTitle": "密码已更新",
+                "updatedDesc": "您现在可以使用新密码登录。",
+                "failedTitle": "重置失败",
+                "failedDesc": "重置失败。链接可能已过期或无效。"
+            }
+        },
+        "forgot": {
+            "title": "重置密码",
+            "subtitle": "输入您的邮箱，我们将向您发送重置链接。",
+            "labels": {
+                "email": "电子邮箱"
+            },
+            "placeholders": {
+                "email": "输入电子邮箱"
+            },
+            "button": {
+                "send": "发送重置链接",
+                "sending": "正在发送..."
+            },
+            "sent": {
+                "title": "检查您的收件箱",
+                "subtitle": "如果该邮箱存在，您很快就会收到重置链接。",
+                "backToLogin": "返回登录",
+                "createAccount": "创建账号"
+            },
+            "links": {
+                "backToLogin": "返回登录"
+            },
+            "toast": {
+                "sentTitle": "邮件已发送",
+                "sentDesc": "如果该邮箱存在，您很快就会收到重置链接。",
+                "failedTitle": "重置失败"
+            },
+            "errors": {
+                "invalidEmail": "请输入有效的电子邮箱",
+                "failedGeneric": "无法发送重置邮件。请重试。"
+            },
+            "email": {
+                "fullName": "XPG 会员",
+                "subject": "重置您的 XPG 密码",
+                "body": {
+                    "hello": "您好，",
+                    "receivedRequest": "我们收到了重置您 XPG 密码的申请。",
+                    "validFor": "此链接的有效期为 <strong>{{minutes}} 分钟</strong>。",
+                    "cta": "重置密码",
+                    "fallback": "如果按钮无法点击，请复制此链接：",
+                    "ignore": "如果您没有提交此申请，可以忽略此邮件。",
+                    "signature": "XPG 团队"
+                }
+            }
+        }
+    },
+    "policies": {
+        "meta": {
+            "updatedDate": "2025年10月",
+            "product": "XPG 客户专区",
+            "lastUpdated": "最近更新：{{date}}"
+        },
+        "cookie": {
+            "title": "Cookie 政策",
+            "intro": "我们使用 Cookie 和类似技术来运行客户专区、记住偏好、分析性能并保障账号安全。您可以在浏览器设置中管理 Cookie。禁用必要的 Cookie 可能会影响功能使用。",
+            "table": {
+                "type": "类型",
+                "purpose": "用途",
+                "examples": "示例"
+            },
+            "rows": {
+                "essential": {
+                    "type": "必要",
+                    "purpose": "身份验证、会话管理、安全",
+                    "examples": "auth_session, csrf_token"
+                },
+                "preferences": {
+                    "type": "偏好",
+                    "purpose": "语言、界面设置",
+                    "examples": "lang, theme_mode"
+                },
+                "analytics": {
+                    "type": "分析",
+                    "purpose": "用于改进性能和内容的指标",
+                    "examples": "analytics_id, perf_sample"
+                }
+            },
+            "managing": {
+                "title": "管理 Cookie",
+                "body": "大多数浏览器允许您阻止或删除 Cookie。您也可以使用内置的隐私模式或专门的扩展程序来限制跟踪。"
+            }
+        },
+        "privacy": {
+            "title": "隐私政策",
+            "intro": "本政策说明了我们如何收集、使用和保护与 XPG 客户专区相关的信息。客户专区面向授权的业务合作伙伴，包含营销资产、演示版本及相关材料。",
+            "sections": {
+                "collect": {
+                    "title": "我们收集的信息",
+                    "body": "账号数据，如姓名、公司、部门和业务邮箱。使用数据，如查看的页面、下载记录、设备及大致地区。用于安全和防欺诈的运行日志。"
+                },
+                "use": {
+                    "title": "我们如何使用信息",
+                    "body": "提供安全访问、个性化内容、发送通知、提升性能以及履行法律义务。我们可能会汇总使用数据，以了解产品的使用情况和内容质量。"
+                },
+                "sharing": {
+                    "title": "信息共享",
+                    "body": "我们不会出售个人数据。可能会与基础设施提供商、分析或防滥用服务提供商共享有限的数据，这些服务受合同约束，要求保密并采取适当的保障措施。"
+                },
+                "security": {
+                    "title": "安全",
+                    "body": "访问经过身份验证并受到监控。数据通过 TLS 传输，并存储在具有角色访问控制的系统中。安全事件将根据内部程序进行审查和处理。"
+                },
+                "retention": {
+                    "title": "数据保留",
+                    "body": "我们将在提供服务以及满足法律和合同要求所需的时间内保留账号和审计记录。您可以根据相关义务要求删除数据。"
+                },
+                "choices": {
+                    "title": "您的选择",
+                    "body": "您可以更新个人资料详情、退订营销邮件，并通过联系您的 XPG 代表要求访问或删除您的数据。"
+                },
+                "contact": {
+                    "title": "联系方式",
+                    "body": "如有隐私方面的咨询，请联系 privacy@xpg.com。"
+                }
+            }
+        }
+    },
+    "navbar": {
+        "links": {
+            "home": "首页",
+            "announcements": "公告",
+            "apiDocs": "API 文档",
+            "settings": "设置"
+        },
+        "collections": "收藏夹",
+        "searchPlaceholder": "搜索...",
+        "logout": "退出登录",
+        "open": "打开",
+        "loading": "加载中...",
+        "accountFallback": "账号",
+        "clientArea": "客户专区",
+        "language": {
+            "title": "语言",
+            "header": "语言",
+            "subtitle": "选择您偏好的语言",
+            "active": "当前"
+        },
+        "mobile": {
+            "liveGames": "真人游戏",
+            "noLiveGames": "未找到真人游戏。",
+            "other": "其他"
+        }
+    },
+    "home": {
+        "welcomeBadge": "欢迎来到",
+        "title": "客户专区"
+    },
+    "footer": {
+        "disclaimer": "XPG Live 的标志和图形材料是 XPG Live 的独家知识产权，未经 XPG Live 事先书面许可，不得复制、再造、传播或展示。XPG Live 在多个司法管辖区完全遵守博弈法规。我们致力于保护您的隐私。",
+        "copyright": "版权所有 © 2008 - 2025 XPG。保留所有权利。",
+        "certTitle": "查看 iTech 证书",
+        "certAlt": "iTech 实验室"
+    },
+    "downloads": {
+        "title": "最近下载",
+        "subtitle": "快速访问您最新下载的资产",
+        "table": {
+            "filename": "文件名",
+            "downloaded": "下载日期"
+        },
+        "empty": "尚无下载记录。",
+        "recent": "最近",
+        "showing": "显示 {{count}} {{plus}} 个项目",
+        "dash": "-",
+        "download": "下载",
+        "downloading": "正在下载...",
+        "missingStoragePath": "缺少存储路径，无法从文件 URL 中提取。",
+        "notAuthenticated": "未授权，请重新登录。",
+        "missingDownloadUrl": "缺少 VITE_DOWNLOAD_FILE_URL",
+        "downloadFailed": "下载失败",
+        "open": "打开",
+        "untitled": "无标题"
+    },
+    "announcements": {
+        "title": "您的公告",
+        "subtitle": "客户专区中的最新更新和通知",
+        "seeMore": "查看更多",
+        "empty": "尚无公告。",
+        "swipe": "滑动",
+        "swipeHint": "向左/右滑动查看更多公告",
+        "openDetails": "查看详情",
+        "untitled": "无标题",
+        "modal": {
+            "fallbackTitle": "公告",
+            "noContent": "未提供内容。",
+            "viewMarketingPack": "查看营销素材包"
+        },
+        "details": {
+            "crumb": "首页 / 公告 / 详情",
+            "loadingTitle": "正在加载...",
+            "fallbackTitle": "公告",
+            "back": "返回",
+            "backToAnnouncements": "返回公告列表",
+            "noContent": "未提供内容。",
+            "viewMarketingPack": "查看营销素材包",
+            "notFound": {
+                "title": "未找到公告",
+                "subtitle": "无法加载所请求的公告。"
+            },
+            "recommended": {
+                "title": "推荐",
+                "empty": "暂无推荐。"
+            }
+        },
+        "page": {
+            "crumb": "首页 / 公告",
+            "title": "公告",
+            "subtitle": "重要更新、发布和客户沟通",
+            "searchPlaceholder": "搜索公告...",
+            "fallbackTitle": "公告",
+            "older": "更早",
+            "openToReadMore": "打开阅读更多内容。",
+            "open": "打开",
+            "noContent": "未提供内容。",
+            "viewMarketingPack": "查看营销素材包",
+            "empty": {
+                "title": "未找到公告",
+                "subtitle": "请尝试调整搜索关键词。"
+            }
+        }
+    },
+    "games": {
+        "sort": {
+            "defaultOrder": "默认排序",
+            "nameAsc": "名称 (A-Z)",
+            "nameDesc": "名称 (Z-A)"
+        },
+        "types": {
+            "title": "游戏类型",
+            "prev": "上一个",
+            "next": "下一个",
+            "loading": "加载中...",
+            "empty": "未找到游戏类型。",
+            "swipeHint": "向左/右滑动查看"
+        },
+        "list": {
+            "allGames": "所有游戏",
+            "typeGames": "{{type}} 游戏",
+            "clearType": "清除类型",
+            "searchPlaceholder": "搜索游戏...",
+            "failedToLoad": "加载游戏失败",
+            "noGamesFound": "未找到游戏。"
+        },
+        "pagination": {
+            "prev": "上一页",
+            "next": "下一页",
+            "page": "页码",
+            "mobileHint": "移动端显示更多页码"
+        },
+        "image": {
+            "noImage": "暂无图片"
+        },
+        "untitled": "无标题"
+    },
+    "gameDetails": {
+        "tabs": {
+            "assets": "资源",
+            "related": "相关"
+        },
+        "search": {
+            "placeholder": "搜索"
+        },
+        "filters": {
+            "show": "显示筛选",
+            "hide": "隐藏筛选"
+        },
+        "sort": {
+            "recent": "最近更新",
+            "alpha": "字母顺序"
+        },
+        "zip": {
+            "button": "打包下载 ({{count}})",
+            "assetsFallback": "资源"
+        },
+        "selection": {
+            "clear": "清除",
+            "selected": "已选择 {{count}} 个文件",
+            "selected_plural": "已选择 {{count}} 个文件"
+        },
+        "table": {
+            "preview": "预览",
+            "fileName": "文件名",
+            "details": "详情",
+            "actions": "操作"
+        },
+        "empty": {
+            "noFiles": "未找到文件。"
+        },
+        "mobile": {
+            "actionsBelow": "操作在下方"
+        },
+        "file": {
+            "fileLabel": "文件",
+            "dash": "—",
+            "added": "添加于 {{date}}"
+        },
+        "actions": {
+            "download": "下载",
+            "preview": "预览"
+        },
+        "pagination": {
+            "prev": "上一页",
+            "next": "下一页",
+            "pageOf": "第 {{page}} 页，共 {{total}} 页"
+        },
+        "related": {
+            "viewAssets": "查看资源",
+            "empty": {
+                "title": "未找到相关游戏",
+                "subtitle": "目前无法找到其他 {{name}} 游戏。",
+                "this": "该",
+                "browseAll": "浏览所有游戏"
+            }
+        },
+        "collections": {
+            "addToCollection": "添加到收藏夹",
+            "addTo": "添加至：",
+            "empty": "尚无收藏夹。",
+            "untitled": "无标题",
+            "alreadyIn": "已在此收藏夹中",
+            "tapToAdd": "点击添加",
+            "added": "已添加",
+            "already": "已经存在",
+            "createNew": "创建新收藏夹",
+            "createCollection": "创建收藏夹",
+            "namePlaceholder": "收藏夹名称",
+            "processing": "处理中",
+            "create": "创建",
+            "cancel": "取消",
+            "newCollectionFallback": "新收藏夹",
+            "sheet": {
+                "title": "添加到收藏夹",
+                "subtitle": "选择下方收藏夹，或创建一个新的。"
+            },
+            "stages": {
+                "creating": "正在创建收藏夹",
+                "addingFile": "正在将文件添加到收藏夹",
+                "done": "完成"
+            }
+        },
+        "download": {
+            "defaultName": "下载"
+        },
+        "alerts": {
+            "missingStoragePath": "缺少存储路径。请在上传期间保存 snapshot.ref.fullPath。",
+            "downloadFailed": "下载失败",
+            "zipFailed": "ZIP 下载失败",
+            "createCollectionFailed": "创建收藏夹失败"
+        }
+    },
+    "filtersPanel": {
+        "fileTypes": "文件类型",
+        "fileTags": "文件标签",
+        "followUs": "关注我们",
+        "contactUs": "联系我们",
+        "selectedBadge": "已选 {{count}} 项",
+        "social": {
+            "facebook": "Facebook",
+            "twitter": "X / Twitter",
+            "instagram": "Instagram",
+            "handleTitle": "@XPG Live",
+            "handleSub": "@xpg.live"
+        },
+        "contact": {
+            "phone": "+421 911 628 998",
+            "email": "info@xprogaming.com",
+            "location": "斯洛伐克，布拉迪斯拉发"
+        }
+    },
+    "previewModal": {
+        "download": "下载",
+        "noInlinePreview": "此文件类型不支持在线预览。",
+        "pdfTitle": "PDF",
+        "addedAt": "添加于 {{date}}",
+        "position": "第 {{index}} 个，共 {{total}} 个",
+        "close": "关闭",
+        "prev": "上一个",
+        "next": "下一个"
+    },
+    "row": {
+        "prev": "上一个",
+        "next": "下一个",
+        "announcementCoverAlt": "公告封面",
+        "noImage": "暂无图片",
+        "new": "新",
+        "readAnnouncement": "阅读公告",
+        "viewMarketingPack": "查看营销素材包",
+        "empty": "这里还没有内容。"
+    },
+    "settings": {
+        "crumb": "首页 / 账号设置",
+        "title": "账号设置",
+        "subtitle": "更新您的账号和个人资料数据",
+        "sections": {
+            "general": "常规设置",
+            "password": "修改密码",
+            "delete": "注销账号"
+        },
+        "changePassword": {
+            "title": "修改密码",
+            "subtitle": "为了安全起见，我们将先验证您的当前密码。",
+            "fields": {
+                "current": "当前密码",
+                "new": "新密码",
+                "confirm": "确认新密码"
+            },
+            "button": {
+                "save": "保存更改",
+                "saving": "正在保存..."
+            },
+            "messages": {
+                "required": "所有字段均为必填项。",
+                "mismatch": "新密码不匹配。",
+                "success": "密码修改成功！",
+                "failed": "修改密码失败"
+            }
+        },
+        "deleteAccount": {
+            "title": "注销账号",
+            "subtitle": "这将永久移除您的访问权限。",
+            "warningPrefix": "此操作是",
+            "irreversible": "不可逆的",
+            "fields": {
+                "password": "使用密码确认",
+                "deleteStorage": "同时删除我的存储文件（可选）"
+            },
+            "button": {
+                "delete": "注销账号",
+                "deleting": "正在注销..."
+            },
+            "confirm": "确定要永久注销您的账号吗？此操作无法撤销。",
+            "messages": {
+                "passwordRequired": "需要密码。",
+                "failed": "注销账号失败"
+            }
+        },
+        "general": {
+            "title": "常规设置",
+            "subtitle": "更新您的个人资料详情和偏好。",
+            "fields": {
+                "name": "姓名",
+                "email": "电子邮箱",
+                "company": "公司",
+                "department": "部门",
+                "timezone": "时区",
+                "newsletter": "是否订阅新闻通讯？"
+            },
+            "button": {
+                "save": "保存更改",
+                "saving": "正在保存..."
+            },
+            "messages": {
+                "success": "详情更新成功！",
+                "failed": "更新详情失败"
+            },
+            "departments": {
+                "Operations": "运营部",
+                "Game Development": "游戏开发部",
+                "Compliance & Legal": "合规与法务部",
+                "Finance & Accounting": "财务与会计部",
+                "Marketing & Promotions": "营销与推广部",
+                "Player Support": "玩家支持部",
+                "IT & Infrastructure": "IT 与基础设施部",
+                "Product Management": "产品管理部",
+                "Sales & Business Development": "销售与业务拓展部",
+                "HR & Talent Acquisition": "人力资源与人才招聘部",
+                "Executive Management": "行政管理部",
+                "Other": "其他"
+            }
+        },
+        "yes": "是",
+        "no": "否"
+    },
+    "collectionsDrawer": {
+        "title": "收藏夹",
+        "subtitle": "整理并下载您选择的资产",
+        "empty": "尚无收藏夹。创建您的第一个收藏夹来开始对文件进行归类。",
+        "common": {
+            "somethingWentWrong": "出错了。"
+        },
+        "defaults": {
+            "newCollection": "新收藏夹",
+            "collectionTitle": "收藏夹",
+            "collection": "收藏夹",
+            "download": "下载",
+            "untitledCollection": "无标题收藏夹"
+        },
+        "status": {
+            "completed": "已完成",
+            "inProgress": "进行中"
+        },
+        "stats": {
+            "totalCollections": "收藏夹总数",
+            "files_one": "{{count}} 个文件",
+            "files_other": "{{count}} 个文件"
+        },
+        "actions": {
+            "close": "关闭",
+            "newCollection": "新收藏夹",
+            "rename": "重命名",
+            "save": "保存",
+            "cancel": "取消",
+            "delete": "删除",
+            "prepareDownload": "准备下载",
+            "showFileDetails": "显示文件详情",
+            "hideFileDetails": "隐藏文件详情",
+            "toggleCompleted": "切换完成状态",
+            "removeFile": "移除文件"
+        },
+        "files": {
+            "title_one": "文件 ({{count}})",
+            "title_other": "文件 ({{count}})",
+            "totalSize": "总大小：{{size}}",
+            "empty": "此收藏夹中尚无文件。",
+            "loading": "正在加载文件...",
+            "untitledFile": "无标题文件",
+            "filePreviewAlt": "文件预览"
+        },
+        "confirm": {
+            "title": "删除此收藏夹？",
+            "subtitle": "此操作无法撤销。文件本身不会被删除。"
+        },
+        "errors": {
+            "missingDownloadUrl": "缺少 VITE_DOWNLOAD_FILE_URL",
+            "notAuthenticated": "未授权，请重新登录。",
+            "downloadFailedWithStatus": "下载失败 ({{status}})",
+            "prepareDownloadFailed": "准备下载失败"
+        },
+        "toast": {
+            "create": {
+                "title": "正在创建收藏夹",
+                "desc": "请稍候..."
+            },
+            "created": {
+                "title": "收藏夹已创建",
+                "desc": "您现在可以对其重命名。"
+            },
+            "createFailed": {
+                "title": "创建失败"
+            },
+            "rename": {
+                "title": "正在重命名收藏夹",
+                "desc": "正在保存更改..."
+            },
+            "renamed": {
+                "title": "已重命名",
+                "desc": "收藏夹名称已更新。"
+            },
+            "renameFailed": {
+                "title": "重命名失败"
+            },
+            "updateStatus": {
+                "title": "正在更新状态",
+                "desc": "请稍候..."
+            },
+            "updated": {
+                "title": "已更新",
+                "desc": "收藏夹状态已保存。"
+            },
+            "updateFailed": {
+                "title": "更新失败"
+            },
+            "delete": {
+                "title": "正在删除收藏夹",
+                "desc": "正在移除..."
+            },
+            "deleted": {
+                "title": "已删除",
+                "desc": "收藏夹已移除。"
+            },
+            "deleteFailed": {
+                "title": "删除失败"
+            },
+            "prepare": {
+                "title": "正在准备下载",
+                "desc": "正在为“{{name}}”生成压缩包..."
+            },
+            "downloadReady": {
+                "title": "下载已就绪",
+                "desc": "压缩包已生成。"
+            },
+            "prepareFailed": {
+                "title": "准备下载失败"
+            },
+            "removeFile": {
+                "title": "正在移除文件",
+                "desc": "正在更新收藏夹..."
+            },
+            "removed": {
+                "title": "已移除",
+                "desc": "文件已从收藏夹中移除。"
+            },
+            "removeFailed": {
+                "title": "移除失败"
+            }
+        }
+    },
+    "search": {
+        "crumb": "首页 / 搜索",
+        "title": "搜索",
+        "subtitle": "搜索公告、游戏、板块和文件。",
+        "header": {
+            "queryLabel": "查询："
+        },
+        "hero": {
+            "resultsFor": "搜索结果：",
+            "startSearching": "开始搜索",
+            "showingMatched": "显示客户专区中匹配的内容。",
+            "useNavbarHint": "在导航栏搜索框中输入并按回车键。"
+        },
+        "stats": {
+            "announcements": "公告",
+            "games": "游戏",
+            "total": "总计"
+        },
+        "states": {
+            "searching": "正在搜索...",
+            "failed": "搜索失败"
+        },
+        "emptyStates": {
+            "noQuery": {
+                "card1": {
+                    "title": "搜索任何内容",
+                    "desc": "试着输入游戏名称、公告标题、板块名称或文件名。"
+                },
+                "card2": {
+                    "title": "专家提示",
+                    "desc": "使用简短的关键词，如“baccarat”（百家乐）、“pack”（素材包）、“thumbnail”（缩略图）、“promo”（推广）等。"
+                }
+            },
+            "noResults": {
+                "title": "无结果",
+                "desc": "未找到与“{{q}}”匹配的结果。请尝试使用更短的关键词。"
+            }
+        },
+        "panels": {
+            "announcements": {
+                "title": "公告",
+                "empty": "没有匹配的公告。"
+            },
+            "games": {
+                "title": "游戏",
+                "hint": "展开游戏以查看匹配的板块和文件。",
+                "emptyTitle": "没有匹配的游戏",
+                "emptyDesc": "请尝试不同的关键词。"
+            }
+        },
+        "gameCard": {
+            "matchingFound": "找到匹配的板块/文件",
+            "noMatching": "此游戏中没有匹配的板块/文件",
+            "noSectionsFound": "未找到板块。",
+            "noMatchingFiles": "没有匹配的文件。"
+        },
+        "actions": {
+            "open": "打开",
+            "viewAll": "查看全部",
+            "expand": "展开",
+            "collapse": "收起"
+        },
+        "common": {
+            "dash": "-",
+            "untitled": "无标题",
+            "section": "板块",
+            "file": "文件",
+            "noDescription": "暂无描述。",
+            "filesCount_one": "{{count}} 个文件",
+            "filesCount_other": "{{count}} 个文件"
+        }
+    }
+}

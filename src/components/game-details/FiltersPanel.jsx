@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Facebook, Instagram, Twitter, Mail, Phone, MapPin, ChevronDown } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 function Section({ title, open, onToggle, children, badge }) {
     return (
@@ -25,9 +26,7 @@ function Section({ title, open, onToggle, children, badge }) {
                 />
             </button>
 
-            <div className={open ? "px-4 pb-4" : "hidden"}>
-                {children}
-            </div>
+            <div className={open ? "px-4 pb-4" : "hidden"}>{children}</div>
         </div>
     );
 }
@@ -40,6 +39,8 @@ export default function FiltersPanel({
     selectedExts,
     setSelectedExts
 }) {
+    const { t } = useTranslation();
+
     const [openMobile, setOpenMobile] = useState({
         sections: true,
         tags: true,
@@ -52,10 +53,7 @@ export default function FiltersPanel({
         [selectedSectionNames]
     );
 
-    const selectedTagsCount = useMemo(
-        () => (selectedExts?.size ? selectedExts.size : 0),
-        [selectedExts]
-    );
+    const selectedTagsCount = useMemo(() => (selectedExts?.size ? selectedExts.size : 0), [selectedExts]);
 
     useEffect(() => {
         const onResize = () => {
@@ -80,11 +78,13 @@ export default function FiltersPanel({
         setSelectedExts(next);
     };
 
+    const selectedBadge = (count) => (count ? t("filtersPanel.selectedBadge", { count }) : undefined);
+
     return (
         <aside className="lg:col-span-3">
             <div className="bg-[#111318] border border-white/10 rounded-xl p-4 lg:sticky lg:top-6">
                 <div className="hidden lg:block">
-                    <div className="text-primary font-bold mb-2">File Types</div>
+                    <div className="text-primary font-bold mb-2">{t("filtersPanel.fileTypes")}</div>
 
                     <div className="space-y-2 mb-4">
                         {allSectionNames.map((name) => (
@@ -102,14 +102,11 @@ export default function FiltersPanel({
 
                     <div className="h-px bg-white/10 my-3" />
 
-                    <div className="text-primary font-bold mb-2">File Tags</div>
+                    <div className="text-primary font-bold mb-2">{t("filtersPanel.fileTags")}</div>
 
                     <div className="space-y-2 mb-4">
                         {allExtensions.map((ext) => (
-                            <label
-                                key={ext}
-                                className="flex items-start gap-2 text-sm text-white/90 leading-snug break-words"
-                            >
+                            <label key={ext} className="flex items-start gap-2 text-sm text-white/90 leading-snug break-words">
                                 <input
                                     type="checkbox"
                                     checked={selectedExts.has(ext)}
@@ -123,7 +120,7 @@ export default function FiltersPanel({
 
                     <div className="h-px bg-white/10 my-3" />
 
-                    <div className="text-primary font-bold mb-2">Follow Us</div>
+                    <div className="text-primary font-bold mb-2">{t("filtersPanel.followUs")}</div>
 
                     <div className="grid grid-cols-3 gap-2">
                         <a
@@ -131,7 +128,7 @@ export default function FiltersPanel({
                             target="_blank"
                             rel="noreferrer"
                             className="flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-2 py-2 text-white/80 hover:text-white hover:bg-white/[0.06]"
-                            aria-label="Facebook"
+                            aria-label={t("filtersPanel.social.facebook")}
                         >
                             <Facebook size={16} />
                             <span className="text-xs font-semibold">FB</span>
@@ -142,7 +139,7 @@ export default function FiltersPanel({
                             target="_blank"
                             rel="noreferrer"
                             className="flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-2 py-2 text-white/80 hover:text-white hover:bg-white/[0.06]"
-                            aria-label="X / Twitter"
+                            aria-label={t("filtersPanel.social.twitter")}
                         >
                             <Twitter size={16} />
                             <span className="text-xs font-semibold">X</span>
@@ -153,7 +150,7 @@ export default function FiltersPanel({
                             target="_blank"
                             rel="noreferrer"
                             className="flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-2 py-2 text-white/80 hover:text-white hover:bg-white/[0.06]"
-                            aria-label="Instagram"
+                            aria-label={t("filtersPanel.social.instagram")}
                         >
                             <Instagram size={16} />
                             <span className="text-xs font-semibold">IG</span>
@@ -161,13 +158,13 @@ export default function FiltersPanel({
                     </div>
 
                     <div className="mt-3 text-sm text-white/75">
-                        <div className="font-semibold text-white/90">@XPG Live</div>
-                        <div className="text-white/70">@xpg.live</div>
+                        <div className="font-semibold text-white/90">{t("filtersPanel.social.handleTitle")}</div>
+                        <div className="text-white/70">{t("filtersPanel.social.handleSub")}</div>
                     </div>
 
                     <div className="h-px bg-white/10 my-3" />
 
-                    <div className="text-primary font-bold mb-2">Contact Us</div>
+                    <div className="text-primary font-bold mb-2">{t("filtersPanel.contactUs")}</div>
 
                     <div className="space-y-2 text-sm text-white/80">
                         <a
@@ -175,7 +172,7 @@ export default function FiltersPanel({
                             className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 hover:bg-white/[0.06] hover:text-white"
                         >
                             <Phone size={16} className="text-white/70" />
-                            <span>+421 911 628 998</span>
+                            <span>{t("filtersPanel.contact.phone")}</span>
                         </a>
 
                         <a
@@ -183,20 +180,20 @@ export default function FiltersPanel({
                             className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 hover:bg-white/[0.06] hover:text-white"
                         >
                             <Mail size={16} className="text-white/70" />
-                            <span>info@xprogaming.com</span>
+                            <span>{t("filtersPanel.contact.email")}</span>
                         </a>
 
                         <div className="flex items-start gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
                             <MapPin size={16} className="text-white/70 mt-0.5" />
-                            <span>Bratislava, Slovakia</span>
+                            <span>{t("filtersPanel.contact.location")}</span>
                         </div>
                     </div>
                 </div>
 
                 <div className="lg:hidden space-y-3">
                     <Section
-                        title="File Types"
-                        badge={selectedSectionsCount ? `${selectedSectionsCount} selected` : undefined}
+                        title={t("filtersPanel.fileTypes")}
+                        badge={selectedBadge(selectedSectionsCount)}
                         open={openMobile.sections}
                         onToggle={() => setOpenMobile((p) => ({ ...p, sections: !p.sections }))}
                     >
@@ -216,17 +213,14 @@ export default function FiltersPanel({
                     </Section>
 
                     <Section
-                        title="File Tags"
-                        badge={selectedTagsCount ? `${selectedTagsCount} selected` : undefined}
+                        title={t("filtersPanel.fileTags")}
+                        badge={selectedBadge(selectedTagsCount)}
                         open={openMobile.tags}
                         onToggle={() => setOpenMobile((p) => ({ ...p, tags: !p.tags }))}
                     >
                         <div className="space-y-2">
                             {allExtensions.map((ext) => (
-                                <label
-                                    key={ext}
-                                    className="flex items-start gap-2 text-sm text-white/90 leading-snug break-words"
-                                >
+                                <label key={ext} className="flex items-start gap-2 text-sm text-white/90 leading-snug break-words">
                                     <input
                                         type="checkbox"
                                         checked={selectedExts.has(ext)}
@@ -240,7 +234,7 @@ export default function FiltersPanel({
                     </Section>
 
                     <Section
-                        title="Follow Us"
+                        title={t("filtersPanel.followUs")}
                         open={openMobile.follow}
                         onToggle={() => setOpenMobile((p) => ({ ...p, follow: !p.follow }))}
                     >
@@ -250,7 +244,7 @@ export default function FiltersPanel({
                                 target="_blank"
                                 rel="noreferrer"
                                 className="flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-2 py-2 text-white/80 hover:text-white hover:bg-white/[0.06]"
-                                aria-label="Facebook"
+                                aria-label={t("filtersPanel.social.facebook")}
                             >
                                 <Facebook size={16} />
                                 <span className="text-xs font-semibold">FB</span>
@@ -261,7 +255,7 @@ export default function FiltersPanel({
                                 target="_blank"
                                 rel="noreferrer"
                                 className="flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-2 py-2 text-white/80 hover:text-white hover:bg-white/[0.06]"
-                                aria-label="X / Twitter"
+                                aria-label={t("filtersPanel.social.twitter")}
                             >
                                 <Twitter size={16} />
                                 <span className="text-xs font-semibold">X</span>
@@ -272,7 +266,7 @@ export default function FiltersPanel({
                                 target="_blank"
                                 rel="noreferrer"
                                 className="flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-2 py-2 text-white/80 hover:text-white hover:bg-white/[0.06]"
-                                aria-label="Instagram"
+                                aria-label={t("filtersPanel.social.instagram")}
                             >
                                 <Instagram size={16} />
                                 <span className="text-xs font-semibold">IG</span>
@@ -280,13 +274,13 @@ export default function FiltersPanel({
                         </div>
 
                         <div className="mt-3 text-sm text-white/75">
-                            <div className="font-semibold text-white/90">@XPG Live</div>
-                            <div className="text-white/70">@xpg.live</div>
+                            <div className="font-semibold text-white/90">{t("filtersPanel.social.handleTitle")}</div>
+                            <div className="text-white/70">{t("filtersPanel.social.handleSub")}</div>
                         </div>
                     </Section>
 
                     <Section
-                        title="Contact Us"
+                        title={t("filtersPanel.contactUs")}
                         open={openMobile.contact}
                         onToggle={() => setOpenMobile((p) => ({ ...p, contact: !p.contact }))}
                     >
@@ -296,7 +290,7 @@ export default function FiltersPanel({
                                 className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 hover:bg-white/[0.06] hover:text-white"
                             >
                                 <Phone size={16} className="text-white/70" />
-                                <span>+421 911 628 998</span>
+                                <span>{t("filtersPanel.contact.phone")}</span>
                             </a>
 
                             <a
@@ -304,12 +298,12 @@ export default function FiltersPanel({
                                 className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 hover:bg-white/[0.06] hover:text-white"
                             >
                                 <Mail size={16} className="text-white/70" />
-                                <span>info@xprogaming.com</span>
+                                <span>{t("filtersPanel.contact.email")}</span>
                             </a>
 
                             <div className="flex items-start gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
                                 <MapPin size={16} className="text-white/70 mt-0.5" />
-                                <span>Bratislava, Slovakia</span>
+                                <span>{t("filtersPanel.contact.location")}</span>
                             </div>
                         </div>
                     </Section>

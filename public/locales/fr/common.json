@@ -1,0 +1,370 @@
+{
+    "auth": {
+        "login": {
+            "title": "Connexion client",
+            "pendingTitle": "En attente d’approbation",
+            "pendingHint": "Une fois approuvé, vous pourrez vous connecter et l’accès sera accordé automatiquement.",
+            "useAnotherAccount": "Utiliser un autre compte",
+            "placeholders": {
+                "email": "Saisir l’e-mail",
+                "password": "Saisir le mot de passe"
+            },
+            "remember": "Se souvenir de moi sur cet appareil",
+            "button": {
+                "login": "Se connecter",
+                "loggingIn": "Connexion en cours..."
+            },
+            "links": {
+                "forgot": "Mot de passe oublié ?",
+                "createAccount": "Créer un compte ?",
+                "register": "Créer un nouveau compte"
+            },
+            "toast": {
+                "welcomeTitle": "Bienvenue !",
+                "welcomeDesc": "Accès accordé. Redirection…",
+                "pendingTitle": "En attente d’approbation",
+                "failedTitle": "Échec de la connexion"
+            },
+            "errors": {
+                "invalidEmail": "Veuillez saisir une adresse e-mail valide",
+                "passwordMin": "Le mot de passe doit contenir au moins 6 caractères",
+                "invalidCredentials": "Adresse e-mail ou mot de passe invalide.",
+                "tooManyRequests": "Trop de tentatives. Veuillez réessayer plus tard.",
+                "failedGeneric": "Échec de la connexion. Veuillez réessayer.",
+                "notApproved": "Votre compte est en attente d’approbation. Veuillez attendre la validation de l’administrateur."
+            }
+        },
+        "register": {
+            "pending": {
+                "title": "Demande envoyée",
+                "subtitle": "Votre compte est en attente d’approbation par l’administrateur.",
+                "cardTitle": "E-mail envoyé",
+                "hint": "Une fois approuvé, vous pourrez vous connecter et le système accordera l’accès automatiquement.",
+                "goLogin": "Aller à la connexion",
+                "submitAnother": "Envoyer une autre demande",
+                "alreadyHave": "Vous avez déjà un compte ?",
+                "signIn": "Se connecter"
+            },
+            "title": "Veuillez lire avant de vous inscrire",
+            "intro": {
+                "p1": "L’Espace Client contient des supports marketing, des démos et d’autres données utiles pour nos jeux et marques.",
+                "p2": "Vous devez être client pour accéder au système. Seules les adresses e-mail professionnelles sont autorisées.",
+                "p3": "Votre demande sera examinée avant l’octroi de l’accès.",
+                "p4": "Veuillez ne pas partager les ressources en externe sans autorisation."
+            },
+            "placeholders": {
+                "fullName": "Nom complet",
+                "company": "Entreprise",
+                "department": "Département",
+                "email": "E-mail",
+                "password": "Mot de passe",
+                "confirmPassword": "Confirmer le mot de passe"
+            },
+            "checkbox": {
+                "newsletter": "S’abonner à la newsletter ?",
+                "noticePrefix": "J’ai lu et compris l’intégralité de",
+                "privacyPrefix": "J’accepte la"
+            },
+            "policy": {
+                "cookie": "Politique de cookies",
+                "privacy": "Politique de confidentialité"
+            },
+            "recaptcha": {
+                "loading": "Chargement de la vérification…"
+            },
+            "button": {
+                "requestAccess": "Demander l’accès",
+                "registering": "Inscription en cours..."
+            },
+            "footer": {
+                "alreadyHave": "Vous avez déjà un compte ?",
+                "signIn": "Se connecter"
+            },
+            "toast": {
+                "submittedTitle": "Inscription envoyée",
+                "submittedDesc": "Votre compte est en attente d’approbation par l’administrateur.",
+                "failedTitle": "Échec de l’inscription"
+            },
+            "errors": {
+                "fullNameRequired": "Le nom complet est requis",
+                "companyRequired": "L’entreprise est requise",
+                "departmentRequired": "Le département est requis",
+                "emailValid": "Une adresse e-mail valide est requise",
+                "passwordMin": "Le mot de passe doit contenir au moins 6 caractères",
+                "confirmPassword": "Veuillez confirmer votre mot de passe",
+                "recaptchaComplete": "Veuillez compléter le reCAPTCHA",
+                "passwordMismatch": "Les mots de passe ne correspondent pas",
+                "policiesRequired": "Veuillez accepter les politiques requises",
+                "emailInUse": "Cette adresse e-mail est déjà utilisée. Veuillez en utiliser une autre ou vous connecter.",
+                "invalidEmail": "Adresse e-mail invalide.",
+                "weakPassword": "Le mot de passe est trop faible.",
+                "failedGeneric": "Impossible de s’inscrire. Veuillez réessayer.",
+                "recaptchaMissing": "reCAPTCHA n’est pas configuré. Veuillez contacter l’administrateur.",
+                "recaptchaInvalid": "Échec du reCAPTCHA. Veuillez réessayer.",
+                "verifyUrlMissing": "RECAPTCHA_VERIFY_URL_MISSING"
+            }
+        },
+        "reset": {
+            "title": "Définir un nouveau mot de passe",
+            "loading": "Chargement…",
+            "statuses": {
+                "invalid": "Lien invalide",
+                "notFound": "Lien introuvable",
+                "expired": "Lien expiré",
+                "used": "Lien déjà utilisé",
+                "error": "Une erreur s’est produite",
+                "valid": "Le lien est valide"
+            },
+            "labels": {
+                "validity": "Validité : {{date}}",
+                "email": "E-mail : {{email}}",
+                "validUntil": "Valide jusqu’au : {{date}}",
+                "status": "Statut : {{status}}"
+            },
+            "placeholders": {
+                "newPassword": "Nouveau mot de passe (min. 8 caractères)",
+                "confirmPassword": "Confirmer le nouveau mot de passe"
+            },
+            "button": {
+                "requestNew": "Demander un nouveau lien de réinitialisation",
+                "backToLogin": "Retour à la connexion",
+                "update": "Mettre à jour le mot de passe",
+                "updating": "Mise à jour..."
+            },
+            "toast": {
+                "invalidPasswordTitle": "Mot de passe invalide",
+                "invalidPasswordDesc": "Le mot de passe doit contenir au moins 8 caractères.",
+                "mismatchTitle": "Non concordant",
+                "mismatchDesc": "Les mots de passe ne correspondent pas.",
+                "updatedTitle": "Mot de passe mis à jour",
+                "updatedDesc": "Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.",
+                "failedTitle": "Échec de la réinitialisation",
+                "failedDesc": "Échec de la réinitialisation. Le lien peut être expiré ou invalide."
+            }
+        },
+        "forgot": {
+            "title": "Réinitialiser le mot de passe",
+            "subtitle": "Saisissez votre e-mail et nous vous enverrons un lien de réinitialisation.",
+            "labels": {
+                "email": "E-mail"
+            },
+            "placeholders": {
+                "email": "Saisir l’e-mail"
+            },
+            "button": {
+                "send": "Envoyer le lien de réinitialisation",
+                "sending": "Envoi en cours..."
+            },
+            "sent": {
+                "title": "Vérifiez votre boîte de réception",
+                "subtitle": "Si l’e-mail existe, vous recevrez un lien de réinitialisation sous peu.",
+                "backToLogin": "Retour à la connexion",
+                "createAccount": "Créer un compte"
+            },
+            "links": {
+                "backToLogin": "Retour à la connexion"
+            },
+            "toast": {
+                "sentTitle": "E-mail envoyé",
+                "sentDesc": "Si l’e-mail existe, vous recevrez un lien de réinitialisation sous peu.",
+                "failedTitle": "Échec de la réinitialisation"
+            },
+            "errors": {
+                "invalidEmail": "Veuillez saisir une adresse e-mail valide",
+                "failedGeneric": "Impossible d’envoyer l’e-mail de réinitialisation. Veuillez réessayer."
+            },
+            "email": {
+                "fullName": "Membre XPG",
+                "subject": "Réinitialisez votre mot de passe XPG",
+                "body": {
+                    "hello": "Bonjour,",
+                    "receivedRequest": "Nous avons reçu une demande de réinitialisation de votre mot de passe XPG.",
+                    "validFor": "Ce lien est valable pendant <strong>{{minutes}} minutes</strong>.",
+                    "cta": "Réinitialiser le mot de passe",
+                    "fallback": "Si le bouton ne fonctionne pas, copiez ce lien :",
+                    "ignore": "Si vous n’êtes pas à l’origine de cette demande, vous pouvez ignorer cet e-mail.",
+                    "signature": "Équipe XPG"
+                }
+            }
+        }
+    },
+    "policies": {
+        "meta": {
+            "updatedDate": "Octobre 2025",
+            "product": "Espace Client XPG",
+            "lastUpdated": "Dernière mise à jour : {{date}}"
+        },
+        "cookie": {
+            "title": "Politique de cookies",
+            "intro": "Nous utilisons des cookies et des technologies similaires pour faire fonctionner l’Espace Client, mémoriser les préférences, analyser les performances et sécuriser les comptes. Vous pouvez gérer les cookies dans les paramètres de votre navigateur. La désactivation des cookies essentiels peut affecter les fonctionnalités.",
+            "table": {
+                "type": "Type",
+                "purpose": "Finalité",
+                "examples": "Exemples"
+            },
+            "rows": {
+                "essential": {
+                    "type": "Essentiels",
+                    "purpose": "Authentification, gestion de session, sécurité",
+                    "examples": "auth_session, csrf_token"
+                },
+                "preferences": {
+                    "type": "Préférences",
+                    "purpose": "Langue, paramètres de l’interface",
+                    "examples": "lang, theme_mode"
+                },
+                "analytics": {
+                    "type": "Analytiques",
+                    "purpose": "Mesures d’utilisation pour améliorer les performances et le contenu",
+                    "examples": "analytics_id, perf_sample"
+                }
+            },
+            "managing": {
+                "title": "Gestion des cookies",
+                "body": "La plupart des navigateurs permettent de bloquer ou de supprimer les cookies. Vous pouvez également utiliser des modes de confidentialité intégrés ou des extensions dédiées pour limiter le suivi."
+            }
+        },
+        "privacy": {
+            "title": "Politique de confidentialité",
+            "intro": "Cette politique décrit la manière dont nous collectons, utilisons et protégeons les informations en lien avec l’Espace Client XPG. L’Espace Client est destiné aux partenaires commerciaux autorisés et contient des supports marketing, des démos et des contenus associés.",
+            "sections": {
+                "collect": {
+                    "title": "Informations que nous collectons",
+                    "body": "Données de compte telles que le nom, l’entreprise, le département et l’e-mail professionnel. Données d’utilisation telles que les pages consultées, les téléchargements, l’appareil et la région approximative. Journaux opérationnels à des fins de sécurité et de prévention de la fraude."
+                },
+                "use": {
+                    "title": "Comment nous utilisons les informations",
+                    "body": "Pour fournir un accès sécurisé, personnaliser le contenu, envoyer des notifications, améliorer les performances et respecter les obligations légales. Nous pouvons agréger les données d’utilisation afin de comprendre l’adoption des produits et la qualité du contenu."
+                },
+                "sharing": {
+                    "title": "Partage",
+                    "body": "Nous ne vendons pas de données personnelles. Un partage limité peut avoir lieu avec des fournisseurs d’infrastructure, des services d’analyse ou de lutte contre les abus, dans le cadre de contrats imposant la confidentialité et des garanties appropriées."
+                },
+                "security": {
+                    "title": "Sécurité",
+                    "body": "L’accès est authentifié et surveillé. Les données sont transmises via TLS et stockées avec des contrôles basés sur les rôles. Les incidents sont examinés et atténués conformément aux procédures internes."
+                },
+                "retention": {
+                    "title": "Conservation",
+                    "body": "Nous conservons les comptes et les journaux d’audit aussi longtemps que nécessaire pour fournir le service et respecter les exigences légales et contractuelles. Vous pouvez demander la suppression sous réserve des obligations applicables."
+                },
+                "choices": {
+                    "title": "Vos choix",
+                    "body": "Vous pouvez mettre à jour les informations de votre profil, vous désinscrire des e-mails marketing et demander l’accès ou la suppression de vos données en contactant votre représentant XPG."
+                },
+                "contact": {
+                    "title": "Contact",
+                    "body": "Pour toute question relative à la confidentialité, contactez privacy@xpg.com."
+                }
+            }
+        }
+    },
+    "navbar": {
+        "links": {
+            "home": "Accueil",
+            "announcements": "Annonces",
+            "apiDocs": "Documents API",
+            "settings": "Paramètres"
+        },
+        "collections": "Collections",
+        "searchPlaceholder": "Rechercher...",
+        "logout": "Déconnexion",
+        "open": "Ouvrir",
+        "loading": "Chargement...",
+        "accountFallback": "Compte",
+        "clientArea": "Espace Client",
+        "language": {
+            "title": "Langue",
+            "header": "Langue",
+            "subtitle": "Sélectionnez votre langue préférée",
+            "active": "ACTIF"
+        },
+        "mobile": {
+            "liveGames": "Jeux en direct",
+            "noLiveGames": "Aucun jeu en direct trouvé.",
+            "other": "Autres"
+        }
+    },
+    "home": {
+        "welcomeBadge": "BIENVENUE DANS L’",
+        "title": "ESPACE CLIENT"
+    },
+    "footer": {
+        "disclaimer": "Le logo et les éléments graphiques de XPG Live sont la propriété intellectuelle exclusive de XPG Live et ne peuvent être copiés, reproduits, distribués ou affichés sans l’autorisation écrite préalable de XPG Live. XPG Live opère en conformité totale avec les réglementations de jeu dans plusieurs juridictions. Nous nous engageons à protéger votre vie privée.",
+        "copyright": "Copyright © 2008 - 2025 XPG. Tous droits réservés.",
+        "certTitle": "Voir le certificat iTech",
+        "certAlt": "iTech Lab"
+    },
+    "search": {
+        "crumb": "Accueil / Recherche",
+        "title": "Recherche",
+        "subtitle": "Recherchez des annonces, des jeux, des sections et des fichiers.",
+        "header": {
+            "queryLabel": "Requête :"
+        },
+        "hero": {
+            "resultsFor": "Résultats pour",
+            "startSearching": "Commencer la recherche",
+            "showingMatched": "Affichage du contenu correspondant dans votre espace client.",
+            "useNavbarHint": "Utilisez la barre de recherche de la navigation et appuyez sur Entrée."
+        },
+        "stats": {
+            "announcements": "Annonces",
+            "games": "Jeux",
+            "total": "Total"
+        },
+        "states": {
+            "searching": "Recherche en cours...",
+            "failed": "Échec de la recherche"
+        },
+        "emptyStates": {
+            "noQuery": {
+                "card1": {
+                    "title": "Rechercher n’importe quoi",
+                    "desc": "Essayez les noms de jeux, les titres d’annonces, les noms de sections ou les noms de fichiers."
+                },
+                "card2": {
+                    "title": "Astuce pro",
+                    "desc": "Utilisez des mots-clés courts comme « baccarat », « pack », « thumbnail », « promo », etc."
+                }
+            },
+            "noResults": {
+                "title": "Aucun résultat",
+                "desc": "Aucun résultat trouvé pour \"{{q}}\". Essayez un mot-clé plus court."
+            }
+        },
+        "panels": {
+            "announcements": {
+                "title": "Annonces",
+                "empty": "Aucune annonce correspondante."
+            },
+            "games": {
+                "title": "Jeux",
+                "hint": "Développez un jeu pour afficher les sections et fichiers correspondants.",
+                "emptyTitle": "Aucun jeu correspondant",
+                "emptyDesc": "Essayez un autre mot-clé."
+            }
+        },
+        "gameCard": {
+            "matchingFound": "Sections/fichiers correspondants trouvés",
+            "noMatching": "Aucune section/fichier correspondant dans ce jeu",
+            "noSectionsFound": "Aucune section trouvée.",
+            "noMatchingFiles": "Aucun fichier correspondant."
+        },
+        "actions": {
+            "open": "Ouvrir",
+            "viewAll": "Tout afficher",
+            "expand": "Développer",
+            "collapse": "Réduire"
+        },
+        "common": {
+            "dash": "-",
+            "untitled": "Sans titre",
+            "section": "Section",
+            "file": "Fichier",
+            "noDescription": "Aucune description.",
+            "filesCount_one": "{{count}} fichier",
+            "filesCount_other": "{{count}} fichiers"
+        }
+    }
+}

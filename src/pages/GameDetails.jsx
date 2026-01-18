@@ -36,6 +36,7 @@ import {
     collectExtensions,
     collectSectionNames
 } from "../utils/fileUtils";
+import { useTranslation } from "react-i18next";
 
 const TABLE_COLS = "44px 160px minmax(260px, 1fr) 160px minmax(240px, 280px)";
 
@@ -145,6 +146,8 @@ function MobileCollectionSheet({
     addingMap,
     addedFlash
 }) {
+    const { t } = useTranslation();
+
     const url = file?._url || file?.url || file?.fileURL || "";
     const isCreatingThis = creatingForFile?.id === file?.id;
 
@@ -193,7 +196,7 @@ function MobileCollectionSheet({
                             <div className="px-4 pt-4 pb-3 border-b border-white/10">
                                 <div className="flex items-center justify-between gap-3">
                                     <Dialog.Title className="text-base font-extrabold text-white">
-                                        Add to Collection
+                                        {t("gameDetails.collections.sheet.title")}
                                     </Dialog.Title>
                                     <button
                                         type="button"
@@ -204,15 +207,13 @@ function MobileCollectionSheet({
                                     </button>
                                 </div>
 
-                                <div className="mt-1 text-xs text-white/60">
-                                    Pick a collection below, or create a new one.
-                                </div>
+                                <div className="mt-1 text-xs text-white/60">{t("gameDetails.collections.sheet.subtitle")}</div>
                             </div>
 
                             <div className="flex-1 min-h-0 px-4 py-3 overflow-y-auto overscroll-contain">
                                 {collections.length === 0 ? (
                                     <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm text-white/70">
-                                        No collections yet.
+                                        {t("gameDetails.collections.empty")}
                                     </div>
                                 ) : (
                                     <div className="space-y-2">
@@ -237,10 +238,10 @@ function MobileCollectionSheet({
                                                 >
                                                     <div className="min-w-0">
                                                         <div className="text-sm font-semibold text-white truncate">
-                                                            {c.name || "Untitled"}
+                                                            {c.name || t("gameDetails.collections.untitled")}
                                                         </div>
                                                         <div className="text-[11px] text-white/55 mt-0.5 truncate">
-                                                            {inCol ? "Already in this collection" : "Tap to add"}
+                                                            {inCol ? t("gameDetails.collections.alreadyIn") : t("gameDetails.collections.tapToAdd")}
                                                         </div>
                                                     </div>
 
@@ -251,8 +252,12 @@ function MobileCollectionSheet({
                                                         ) : (
                                                             <PlusSquare className="h-5 w-5 text-white/60" />
                                                         )}
-                                                        {flash === "added" ? <span className="text-[10px] text-emerald-300">Added</span> : null}
-                                                        {flash === "already" ? <span className="text-[10px] text-white/60">Already</span> : null}
+                                                        {flash === "added" ? (
+                                                            <span className="text-[10px] text-emerald-300">{t("gameDetails.collections.added")}</span>
+                                                        ) : null}
+                                                        {flash === "already" ? (
+                                                            <span className="text-[10px] text-white/60">{t("gameDetails.collections.already")}</span>
+                                                        ) : null}
                                                     </div>
                                                 </button>
                                             );
@@ -272,7 +277,7 @@ function MobileCollectionSheet({
                                         className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-black font-extrabold py-3"
                                     >
                                         <FolderPlus className="h-5 w-5" />
-                                        Create New Collection
+                                        {t("gameDetails.collections.createNew")}
                                     </button>
                                 ) : (
                                     <div className="space-y-2 pb-1">
@@ -280,7 +285,7 @@ function MobileCollectionSheet({
                                             autoFocus
                                             value={newCollectionName}
                                             onChange={(e) => setNewCollectionName(e.target.value)}
-                                            placeholder="Collection name"
+                                            placeholder={t("gameDetails.collections.namePlaceholder")}
                                             className="w-full px-4 py-3 text-sm rounded-xl bg-white text-black outline-none"
                                             disabled={creatingCollection}
                                         />
@@ -289,7 +294,7 @@ function MobileCollectionSheet({
                                             <div className="space-y-1">
                                                 <ProgressBar value={createProg.pct} />
                                                 <div className="text-[11px] text-white/60 flex items-center justify-between">
-                                                    <span className="truncate">{createStage || "Processing"}</span>
+                                                    <span className="truncate">{createStage || t("gameDetails.collections.processing")}</span>
                                                     <span className="shrink-0">{Math.min(99, Math.round(createProg.pct))}%</span>
                                                 </div>
                                             </div>
@@ -303,7 +308,7 @@ function MobileCollectionSheet({
                                                 className="rounded-xl bg-primary text-black font-extrabold py-3 inline-flex items-center justify-center gap-2 disabled:opacity-60"
                                             >
                                                 {creatingCollection ? <Loader2 className="h-5 w-5 animate-spin" /> : null}
-                                                Create
+                                                {t("gameDetails.collections.create")}
                                             </button>
                                             <button
                                                 type="button"
@@ -315,7 +320,7 @@ function MobileCollectionSheet({
                                                 disabled={creatingCollection}
                                                 className="rounded-xl border border-white/20 text-white font-semibold py-3 disabled:opacity-60 hover:bg-white/5"
                                             >
-                                                Cancel
+                                                {t("gameDetails.collections.cancel")}
                                             </button>
                                         </div>
                                     </div>
@@ -346,6 +351,8 @@ function AddToCollectionInline({
     addingMap,
     addedFlash
 }) {
+    const { t } = useTranslation();
+
     return (
         <Popover className="relative w-full">
             {({ open }) => (
@@ -361,7 +368,7 @@ function AddToCollectionInline({
                         className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-white/30 text-white text-xs font-semibold hover:bg-white/5 w-full"
                     >
                         <PlusSquare size={14} />
-                        Add to Collection
+                        {t("gameDetails.collections.addToCollection")}
                     </Popover.Button>
 
                     <Transition
@@ -374,10 +381,12 @@ function AddToCollectionInline({
                         leaveTo="opacity-0 translate-y-1"
                     >
                         <Popover.Panel className="absolute right-0 mt-2 w-[260px] rounded-xl border border-border bg-card shadow-xl p-2 z-20">
-                            <div className="px-2 py-1 text-xs font-bold text-white/70">Add to:</div>
+                            <div className="px-2 py-1 text-xs font-bold text-white/70">{t("gameDetails.collections.addTo")}</div>
 
                             <div className="max-h-48 overflow-y-auto scrollbar-hide">
-                                {collections.length === 0 && <div className="px-3 py-2 text-xs text-white/60">No collections yet.</div>}
+                                {collections.length === 0 && (
+                                    <div className="px-3 py-2 text-xs text-white/60">{t("gameDetails.collections.empty")}</div>
+                                )}
 
                                 {collections.map((c) => {
                                     const url = file?._url || file?.url || file?.fileURL || "";
@@ -397,13 +406,21 @@ function AddToCollectionInline({
                                                 busy ? "opacity-60" : ""
                                             ].join(" ")}
                                         >
-                                            <span className="truncate">{c.name}</span>
+                                            <span className="truncate">{c.name || t("gameDetails.collections.untitled")}</span>
 
                                             <span className="flex items-center gap-2">
                                                 {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                                                {inCol ? <Check size={16} className="text-emerald-400" /> : <PlusSquare size={16} className="opacity-60" />}
-                                                {flash === "added" ? <span className="text-[10px] text-emerald-300">Added</span> : null}
-                                                {flash === "already" ? <span className="text-[10px] text-white/60">Already</span> : null}
+                                                {inCol ? (
+                                                    <Check size={16} className="text-emerald-400" />
+                                                ) : (
+                                                    <PlusSquare size={16} className="opacity-60" />
+                                                )}
+                                                {flash === "added" ? (
+                                                    <span className="text-[10px] text-emerald-300">{t("gameDetails.collections.added")}</span>
+                                                ) : null}
+                                                {flash === "already" ? (
+                                                    <span className="text-[10px] text-white/60">{t("gameDetails.collections.already")}</span>
+                                                ) : null}
                                             </span>
                                         </button>
                                     );
@@ -421,7 +438,7 @@ function AddToCollectionInline({
                                     className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-white hover:bg-white/5"
                                 >
                                     <FolderPlus size={16} />
-                                    Create Collection
+                                    {t("gameDetails.collections.createCollection")}
                                 </button>
                             ) : (
                                 <div className="p-2 space-y-2">
@@ -429,7 +446,7 @@ function AddToCollectionInline({
                                         autoFocus
                                         value={newCollectionName}
                                         onChange={(e) => setNewCollectionName(e.target.value)}
-                                        placeholder="Collection name"
+                                        placeholder={t("gameDetails.collections.namePlaceholder")}
                                         className="w-full px-3 py-2 text-sm rounded-md bg-white text-black outline-none"
                                         disabled={creatingCollection}
                                     />
@@ -438,7 +455,7 @@ function AddToCollectionInline({
                                         <div className="space-y-1">
                                             <ProgressBar value={createProg.pct} />
                                             <div className="text-[11px] text-white/60 flex items-center justify-between">
-                                                <span>{createStage || "Processing"}</span>
+                                                <span>{createStage || t("gameDetails.collections.processing")}</span>
                                                 <span>{Math.min(99, Math.round(createProg.pct))}%</span>
                                             </div>
                                         </div>
@@ -451,7 +468,7 @@ function AddToCollectionInline({
                                             className="px-3 py-2 rounded-md bg-primary text-black text-xs font-bold disabled:opacity-60 inline-flex items-center justify-center gap-2"
                                         >
                                             {creatingCollection ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                                            Create
+                                            {t("gameDetails.collections.create")}
                                         </button>
                                         <button
                                             onClick={() => {
@@ -462,7 +479,7 @@ function AddToCollectionInline({
                                             disabled={creatingCollection}
                                             className="px-3 py-2 rounded-md border border-white/30 text-white text-xs font-semibold disabled:opacity-60"
                                         >
-                                            Cancel
+                                            {t("gameDetails.collections.cancel")}
                                         </button>
                                     </div>
                                 </div>
@@ -476,6 +493,8 @@ function AddToCollectionInline({
 }
 
 export default function GameDetails() {
+    const { t } = useTranslation();
+
     const { gameId } = useParams();
     const navigate = useNavigate();
     const user = useAuthStore((s) => s.user);
@@ -545,8 +564,8 @@ export default function GameDetails() {
     }, [user, gameId, game?.name, startRelatedListener, stopRelatedListener]);
 
     useEffect(() => {
-        const t = inputValue.trim();
-        const id = setTimeout(() => setSearchTerm(t), 450);
+        const t0 = inputValue.trim();
+        const id = setTimeout(() => setSearchTerm(t0), 450);
         return () => clearTimeout(id);
     }, [inputValue]);
 
@@ -712,10 +731,10 @@ export default function GameDetails() {
         if (!user?.uid || creatingCollection) return;
 
         setCreatingCollection(true);
-        setCreateStage("Creating collection");
+        setCreateStage(t("gameDetails.collections.stages.creating"));
         try {
             createProg.setPct(10);
-            const name = newCollectionName.trim() || "New Collection";
+            const name = newCollectionName.trim() || t("gameDetails.collections.newCollectionFallback");
             const id = await createCollection(user.uid, name);
 
             if (!id) {
@@ -723,17 +742,17 @@ export default function GameDetails() {
                 return;
             }
 
-            setCreateStage("Adding file to collection");
+            setCreateStage(t("gameDetails.collections.stages.addingFile"));
             createProg.setPct(65);
             await addFileToCollection(id, fileToCollectionPayload(file));
 
-            setCreateStage("Done");
+            setCreateStage(t("gameDetails.collections.stages.done"));
             await createProg.finishTo(100);
 
             setCreatingForFile(null);
             setNewCollectionName("");
         } catch (e) {
-            alert(e?.message || "Create collection failed");
+            alert(e?.message || t("gameDetails.alerts.createCollectionFailed"));
         } finally {
             await new Promise((r) => setTimeout(r, 150));
             setCreateStage("");
@@ -750,7 +769,7 @@ export default function GameDetails() {
     const handleDownload = async (file) => {
         try {
             const url = file?._url || file?.url || file?.fileURL;
-            const name = file?._name || file?.name || file?.fileName || "download";
+            const name = file?._name || file?.name || file?.fileName || t("gameDetails.download.defaultName");
 
             if (user?.uid) {
                 addDownload({
@@ -769,13 +788,13 @@ export default function GameDetails() {
 
             const storagePath = file?.storagePath || file?._storagePath || (url ? storagePathFromFirebaseUrl(url) : null);
             if (!storagePath) {
-                alert("Missing storagePath. Save snapshot.ref.fullPath during upload.");
+                alert(t("gameDetails.alerts.missingStoragePath"));
                 return;
             }
 
             await downloadViaIframe(storagePath, name);
         } catch (e) {
-            alert(e?.message || "Download failed");
+            alert(e?.message || t("gameDetails.alerts.downloadFailed"));
         }
     };
 
@@ -785,7 +804,7 @@ export default function GameDetails() {
         setZipping(true);
         try {
             const zip = new JSZip();
-            const folderName = (game?.name || "assets").replace(/[^\w.\-]+/g, "_").slice(0, 50);
+            const folderName = (game?.name || t("gameDetails.zip.assetsFallback")).replace(/[^\w.\-]+/g, "_").slice(0, 50);
             const folder = zip.folder(folderName) || zip;
 
             const seen = new Map();
@@ -819,7 +838,7 @@ export default function GameDetails() {
             saveAs(content, `${folderName}.zip`);
             clearSelected();
         } catch (e) {
-            alert(e?.message || "ZIP download failed");
+            alert(e?.message || t("gameDetails.alerts.zipFailed"));
         } finally {
             setZipping(false);
         }
@@ -850,8 +869,8 @@ export default function GameDetails() {
 
                 <Tab.Group>
                     <Tab.List className="flex gap-2 mb-4">
-                        {["Assets", "Related"].map((t) => (
-                            <Tab key={t} as={Fragment}>
+                        {[t("gameDetails.tabs.assets"), t("gameDetails.tabs.related")].map((tt) => (
+                            <Tab key={tt} as={Fragment}>
                                 {({ selected }) => (
                                     <button
                                         className={[
@@ -859,7 +878,7 @@ export default function GameDetails() {
                                             selected ? "bg-primary text-black border-primary" : "bg-transparent text-white/80 border-white/20 hover:bg-white/5"
                                         ].join(" ")}
                                     >
-                                        {t}
+                                        {tt}
                                     </button>
                                 )}
                             </Tab>
@@ -888,13 +907,13 @@ export default function GameDetails() {
                                                 <input
                                                     value={inputValue}
                                                     onChange={(e) => setInputValue(e.target.value)}
-                                                    placeholder="Search"
+                                                    placeholder={t("gameDetails.search.placeholder")}
                                                     className="w-full pl-9 pr-3 py-2 text-sm rounded-md bg-white text-black outline-none"
                                                 />
                                             </div>
 
                                             <button onClick={() => setShowLeftFilters((v) => !v)} className="text-sm text-white/80 hover:text-white w-fit">
-                                                {showLeftFilters ? "Hide Filters" : "Show Filters"}
+                                                {showLeftFilters ? t("gameDetails.filters.hide") : t("gameDetails.filters.show")}
                                             </button>
 
                                             <div className="md:ml-auto flex items-center gap-2">
@@ -903,8 +922,8 @@ export default function GameDetails() {
                                                     onChange={(e) => setSortBy(e.target.value)}
                                                     className="bg-[#111318] border border-white/20 rounded-md px-3 py-2 text-sm outline-none"
                                                 >
-                                                    <option value="recent">Recently Updated</option>
-                                                    <option value="alpha">Alphabetical</option>
+                                                    <option value="recent">{t("gameDetails.sort.recent")}</option>
+                                                    <option value="alpha">{t("gameDetails.sort.alpha")}</option>
                                                 </select>
 
                                                 <button
@@ -914,7 +933,7 @@ export default function GameDetails() {
                                                     className="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-primary text-black text-sm font-extrabold disabled:opacity-50"
                                                 >
                                                     {zipping ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download size={16} />}
-                                                    ZIP ({selectedFiles.length || 0})
+                                                    {t("gameDetails.zip.button", { count: selectedFiles.length || 0 })}
                                                 </button>
 
                                                 <button
@@ -923,14 +942,14 @@ export default function GameDetails() {
                                                     onClick={clearSelected}
                                                     className="inline-flex items-center gap-2 px-3 py-2 rounded-md border border-white/25 text-white text-sm font-semibold disabled:opacity-50 hover:bg-white/5"
                                                 >
-                                                    Clear
+                                                    {t("gameDetails.selection.clear")}
                                                 </button>
                                             </div>
                                         </div>
 
                                         {!!selectedFiles.length && (
                                             <div className="text-xs text-white/70">
-                                                Selected {selectedFiles.length} file{selectedFiles.length === 1 ? "" : "s"}.
+                                                {t("gameDetails.selection.selected", { count: selectedFiles.length })}
                                             </div>
                                         )}
                                     </div>
@@ -942,10 +961,10 @@ export default function GameDetails() {
                                                 style={{ gridTemplateColumns: TABLE_COLS }}
                                             >
                                                 <div />
-                                                <div>Preview</div>
-                                                <div>File Name</div>
-                                                <div>Details</div>
-                                                <div className="text-right pr-2">Actions</div>
+                                                <div>{t("gameDetails.table.preview")}</div>
+                                                <div>{t("gameDetails.table.fileName")}</div>
+                                                <div>{t("gameDetails.table.details")}</div>
+                                                <div className="text-right pr-2">{t("gameDetails.table.actions")}</div>
                                             </div>
 
                                             {(loadingSections || loadingGame) && (
@@ -956,7 +975,9 @@ export default function GameDetails() {
                                                 </div>
                                             )}
 
-                                            {!(loadingSections || loadingGame) && pageFiles.length === 0 && <div className="p-6 text-white/70 text-sm">No files found.</div>}
+                                            {!(loadingSections || loadingGame) && pageFiles.length === 0 && (
+                                                <div className="p-6 text-white/70 text-sm">{t("gameDetails.empty.noFiles")}</div>
+                                            )}
 
                                             {!(loadingSections || loadingGame) &&
                                                 pageFiles.map((f, idx) => {
@@ -989,7 +1010,8 @@ export default function GameDetails() {
                                                                     onChange={() => toggleSelected(k)}
                                                                 />
                                                                 <div className="text-xs text-white/60">
-                                                                    Actions are below • <span className="text-white/80 font-semibold">Add to Collection</span>
+                                                                    {t("gameDetails.mobile.actionsBelow")} •{" "}
+                                                                    <span className="text-white/80 font-semibold">{t("gameDetails.collections.addToCollection")}</span>
                                                                 </div>
                                                             </div>
 
@@ -1011,7 +1033,7 @@ export default function GameDetails() {
                                                                 ) : (
                                                                     <div className="flex flex-col items-center text-white/80">
                                                                         <File size={20} />
-                                                                        <div className="text-[10px] mt-1">{ext || "FILE"}</div>
+                                                                        <div className="text-[10px] mt-1">{ext || t("gameDetails.file.fileLabel")}</div>
                                                                     </div>
                                                                 )}
 
@@ -1038,16 +1060,14 @@ export default function GameDetails() {
                                                                 </div>
 
                                                                 <div className="text-xs text-white/60 mt-1 break-words whitespace-normal">
-                                                                    {f._sectionTitle} • {ext || "—"}
+                                                                    {f._sectionTitle} • {ext || t("gameDetails.file.dash")}
                                                                 </div>
                                                             </div>
 
                                                             <div className="text-xs text-white/70 pr-0 md:pr-3 min-w-0 mt-2 md:mt-0">
                                                                 {!!f._size && <div className="truncate">{f._size}</div>}
                                                                 {!!f._date && (
-                                                                    <div className="truncate">
-                                                                        Added {new Date(f._date).toLocaleDateString()}
-                                                                    </div>
+                                                                    <div className="truncate">{t("gameDetails.file.added", { date: new Date(f._date).toLocaleDateString() })}</div>
                                                                 )}
                                                             </div>
 
@@ -1059,7 +1079,7 @@ export default function GameDetails() {
                                                                             className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-primary text-black text-xs font-extrabold hover:opacity-90"
                                                                         >
                                                                             <Download size={14} />
-                                                                            Download
+                                                                            {t("gameDetails.actions.download")}
                                                                         </button>
 
                                                                         <button
@@ -1067,7 +1087,7 @@ export default function GameDetails() {
                                                                             className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-white/30 text-white text-xs font-semibold hover:bg-white/5"
                                                                         >
                                                                             <Eye size={14} />
-                                                                            Preview
+                                                                            {t("gameDetails.actions.preview")}
                                                                         </button>
                                                                     </div>
                                                                 </div>
@@ -1099,7 +1119,7 @@ export default function GameDetails() {
                                                                         className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-white/20 bg-white/[0.03] hover:bg-white/[0.06] text-white text-sm font-semibold"
                                                                     >
                                                                         <PlusSquare className="h-4 w-4 text-white/80" />
-                                                                        Add to Collection
+                                                                        {t("gameDetails.collections.addToCollection")}
                                                                     </button>
                                                                 </div>
                                                             </div>
@@ -1111,7 +1131,7 @@ export default function GameDetails() {
 
                                     <div className="flex items-center justify-between mt-4">
                                         <div className="text-primary font-bold text-sm">
-                                            Page {page} of {totalPages}
+                                            {t("gameDetails.pagination.pageOf", { page, total: totalPages })}
                                         </div>
 
                                         <div className="flex gap-2">
@@ -1121,7 +1141,7 @@ export default function GameDetails() {
                                                 className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-white/30 text-white text-sm disabled:opacity-40 hover:bg-white/5"
                                             >
                                                 <ChevronLeft size={16} />
-                                                Prev
+                                                {t("gameDetails.pagination.prev")}
                                             </button>
 
                                             <button
@@ -1129,7 +1149,7 @@ export default function GameDetails() {
                                                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                                                 className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-white/30 text-white text-sm disabled:opacity-40 hover:bg-white/5"
                                             >
-                                                Next
+                                                {t("gameDetails.pagination.next")}
                                                 <ChevronRight size={16} />
                                             </button>
                                         </div>
@@ -1150,16 +1170,16 @@ export default function GameDetails() {
 
                                 {!loadingRelated && promotionGames.length === 0 && (
                                     <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-center">
-                                        <div className="text-lg font-extrabold text-white">No related games found</div>
+                                        <div className="text-lg font-extrabold text-white">{t("gameDetails.related.empty.title")}</div>
                                         <div className="text-sm text-white/65 mt-2">
-                                            We couldn&apos;t find other <span className="text-white/90 font-semibold">{game?.name || "this"}</span> games right now.
+                                            {t("gameDetails.related.empty.subtitle", { name: game?.name || t("gameDetails.related.empty.this") })}
                                         </div>
                                         <button
                                             type="button"
                                             onClick={() => navigate("/")}
                                             className="mt-4 inline-flex items-center justify-center px-4 py-2 rounded-xl bg-primary text-black font-extrabold"
                                         >
-                                            Browse All Games
+                                            {t("gameDetails.related.empty.browseAll")}
                                         </button>
                                     </div>
                                 )}
@@ -1184,7 +1204,7 @@ export default function GameDetails() {
                                                     />
                                                 </div>
                                                 <div className="p-3 text-sm font-extrabold text-left text-white truncate">{g.name}</div>
-                                                <div className="px-3 pb-3 text-[11px] text-white/60 text-left">View assets</div>
+                                                <div className="px-3 pb-3 text-[11px] text-white/60 text-left">{t("gameDetails.related.viewAssets")}</div>
                                             </button>
                                         ))}
                                     </div>

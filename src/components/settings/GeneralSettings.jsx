@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useAuthStore } from "../../store/authStore";
 import { Listbox, Fieldset, Field, Input, Label, Switch } from "@headlessui/react";
 import { ChevronDown, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import allTimezones from "../../timezone.json";
 
 const departments = [
@@ -23,6 +24,7 @@ const formatTimezone = (tz) => String(tz || "").replace(/_/g, " ");
 const formattedTimezones = allTimezones.map(formatTimezone);
 
 export default function GeneralSettings() {
+    const { t } = useTranslation();
     const user = useAuthStore((s) => s.user);
     const updateUserDetails = useAuthStore((s) => s.updateUserDetails);
 
@@ -58,9 +60,9 @@ export default function GeneralSettings() {
                 timezone,
                 subscribedToNewsletter: subscribed
             });
-            setSaveMessage("Details updated successfully!");
+            setSaveMessage(t("settings.general.messages.success"));
         } catch (e) {
-            setSaveMessage(e?.message || String(e) || "Failed to update details");
+            setSaveMessage(e?.message || String(e) || t("settings.general.messages.failed"));
             setIsError(true);
         } finally {
             setIsSaving(false);
@@ -114,20 +116,38 @@ export default function GeneralSettings() {
 
     return (
         <Fieldset className="bg-card p-6 rounded-2xl border border-border">
-            <div className="text-white font-semibold text-lg mb-1">General Settings</div>
-            <div className="text-white/60 text-sm mb-6">Update your profile details and preferences.</div>
+            <div className="text-white font-semibold text-lg mb-1">{t("settings.general.title")}</div>
+            <div className="text-white/60 text-sm mb-6">{t("settings.general.subtitle")}</div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-x-8">
-                <InputField label="Name" value={name} onChange={(e) => setName(e.target.value)} />
-                <InputField label="Email" value={email} onChange={() => { }} disabled />
+                <InputField
+                    label={t("settings.general.fields.name")}
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                />
+                <InputField label={t("settings.general.fields.email")} value={email} onChange={() => { }} disabled />
 
-                <SelectDropdown label="Timezone" selected={timezone} setSelected={setTimezone} options={formattedTimezones} />
-                <InputField label="Company" value={company} onChange={(e) => setCompany(e.target.value)} />
+                <SelectDropdown
+                    label={t("settings.general.fields.timezone")}
+                    selected={timezone}
+                    setSelected={setTimezone}
+                    options={formattedTimezones}
+                />
+                <InputField
+                    label={t("settings.general.fields.company")}
+                    value={company}
+                    onChange={(e) => setCompany(e.target.value)}
+                />
 
-                <SelectDropdown label="Department" selected={department} setSelected={setDepartment} options={departments} />
+                <SelectDropdown
+                    label={t("settings.general.fields.department")}
+                    selected={department}
+                    setSelected={setDepartment}
+                    options={departments.map((d) => t(`settings.general.departments.${d}`))}
+                />
 
                 <Field className="flex flex-col justify-end">
-                    <Label className="text-sm font-medium text-white mb-1">Subscribed to newsletter?</Label>
+                    <Label className="text-sm font-medium text-white mb-1">{t("settings.general.fields.newsletter")}</Label>
                     <div className="flex items-center h-[40px] pt-1">
                         <Switch
                             checked={subscribed}
@@ -140,25 +160,26 @@ export default function GeneralSettings() {
                                     } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
                             />
                         </Switch>
-                        <span className="text-sm text-white/70">{subscribed ? "Yes" : "No"}</span>
+                        <span className="text-sm text-white/70">
+                            {subscribed ? t("settings.general.yes") : t("settings.general.no")}
+                        </span>
                     </div>
                 </Field>
             </div>
 
             <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3">
                 {saveMessage && (
-                    <span className={`text-sm ${isError ? "text-red-400" : "text-emerald-400"}`}>
-                        {saveMessage}
-                    </span>
+                    <span className={`text-sm ${isError ? "text-red-400" : "text-emerald-400"}`}>{saveMessage}</span>
                 )}
 
                 <button
                     onClick={handleSave}
                     disabled={isSaving}
                     className="inline-flex items-center justify-center gap-2 bg-primary hover:opacity-90 text-black font-bold py-2.5 px-6 rounded-xl transition disabled:opacity-50"
+                    type="button"
                 >
                     {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
-                    {isSaving ? "Saving..." : "Save Changes"}
+                    {isSaving ? t("settings.general.button.saving") : t("settings.general.button.save")}
                 </button>
             </div>
         </Fieldset>

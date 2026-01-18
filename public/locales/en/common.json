@@ -1,0 +1,814 @@
+{
+    "auth": {
+        "login": {
+            "title": "Client login",
+            "pendingTitle": "Pending approval",
+            "pendingHint": "Once approved, you can log in and access will be granted automatically.",
+            "useAnotherAccount": "Use another account",
+            "placeholders": {
+                "email": "Enter email",
+                "password": "Enter password"
+            },
+            "remember": "Remember me on this device",
+            "button": {
+                "login": "Login",
+                "loggingIn": "Logging in..."
+            },
+            "links": {
+                "forgot": "Forgot password?",
+                "createAccount": "Create an account?",
+                "register": "Register for a new account"
+            },
+            "toast": {
+                "welcomeTitle": "Welcome!",
+                "welcomeDesc": "Access granted. Redirecting…",
+                "pendingTitle": "Pending approval",
+                "failedTitle": "Login failed"
+            },
+            "errors": {
+                "invalidEmail": "Please enter a valid email",
+                "passwordMin": "Password must be at least 6 characters",
+                "invalidCredentials": "Invalid email or password.",
+                "tooManyRequests": "Too many attempts. Please try again later.",
+                "failedGeneric": "Login failed. Please try again.",
+                "notApproved": "Your account is pending approval. Please wait for admin approval."
+            }
+        },
+        "register": {
+            "pending": {
+                "title": "Request submitted",
+                "subtitle": "Your account is pending admin approval.",
+                "cardTitle": "Submitted email",
+                "hint": "Once approved, you can sign in and the system will grant access automatically.",
+                "goLogin": "Go to login",
+                "submitAnother": "Submit another request",
+                "alreadyHave": "Already have an account?",
+                "signIn": "Sign in"
+            },
+            "title": "Please read before signing up",
+            "intro": {
+                "p1": "The Client Area contains marketing assets, demos and other useful data for our games and brands.",
+                "p2": "You must be a customer to access the system. Only company emails are allowed.",
+                "p3": "Your application will be reviewed before access is granted.",
+                "p4": "Please do not share assets externally without permission."
+            },
+            "placeholders": {
+                "fullName": "Full name",
+                "company": "Company",
+                "department": "Department",
+                "email": "Email",
+                "password": "Password",
+                "confirmPassword": "Confirm Password"
+            },
+            "checkbox": {
+                "newsletter": "Subscribe to the newsletter?",
+                "noticePrefix": "I have read and understood the full",
+                "privacyPrefix": "I agree to the"
+            },
+            "policy": {
+                "cookie": "Cookie Policy",
+                "privacy": "Privacy Policy"
+            },
+            "recaptcha": {
+                "loading": "Loading verification…"
+            },
+            "button": {
+                "requestAccess": "Request access",
+                "registering": "Registering..."
+            },
+            "footer": {
+                "alreadyHave": "Already have an account?",
+                "signIn": "Sign in"
+            },
+            "toast": {
+                "submittedTitle": "Registration submitted",
+                "submittedDesc": "Your account is pending admin approval.",
+                "failedTitle": "Registration failed"
+            },
+            "errors": {
+                "fullNameRequired": "Full name is required",
+                "companyRequired": "Company is required",
+                "departmentRequired": "Department is required",
+                "emailValid": "Valid email required",
+                "passwordMin": "Password must be at least 6 characters",
+                "confirmPassword": "Confirm your password",
+                "recaptchaComplete": "Please complete the reCAPTCHA",
+                "passwordMismatch": "Passwords do not match",
+                "policiesRequired": "Please accept required policies",
+                "emailInUse": "This email is already in use. Please use another email or log in.",
+                "invalidEmail": "Invalid email address.",
+                "weakPassword": "Password is too weak.",
+                "failedGeneric": "Unable to register. Please try again.",
+                "recaptchaMissing": "reCAPTCHA is not configured. Please contact the administrator.",
+                "recaptchaInvalid": "reCAPTCHA failed. Please try again.",
+                "verifyUrlMissing": "RECAPTCHA_VERIFY_URL_MISSING"
+            }
+        },
+        "reset": {
+            "title": "Set new password",
+            "loading": "Loading…",
+            "statuses": {
+                "invalid": "Invalid link",
+                "notFound": "Link not found",
+                "expired": "Link expired",
+                "used": "Link already used",
+                "error": "Something went wrong",
+                "valid": "Link is valid"
+            },
+            "labels": {
+                "validity": "Validity: {{date}}",
+                "email": "Email: {{email}}",
+                "validUntil": "Valid until: {{date}}",
+                "status": "Status: {{status}}"
+            },
+            "placeholders": {
+                "newPassword": "New password (min 8 chars)",
+                "confirmPassword": "Confirm new password"
+            },
+            "button": {
+                "requestNew": "Request new reset link",
+                "backToLogin": "Back to login",
+                "update": "Update password",
+                "updating": "Updating..."
+            },
+            "toast": {
+                "invalidPasswordTitle": "Invalid password",
+                "invalidPasswordDesc": "Password must be at least 8 characters.",
+                "mismatchTitle": "Mismatch",
+                "mismatchDesc": "Passwords do not match.",
+                "updatedTitle": "Password updated",
+                "updatedDesc": "You can now login with your new password.",
+                "failedTitle": "Reset failed",
+                "failedDesc": "Reset failed. Link may be expired or invalid."
+            }
+        },
+        "forgot": {
+            "title": "Reset password",
+            "subtitle": "Enter your email and we’ll send you a reset link.",
+            "labels": {
+                "email": "Email"
+            },
+            "placeholders": {
+                "email": "Enter email"
+            },
+            "button": {
+                "send": "Send reset link",
+                "sending": "Sending..."
+            },
+            "sent": {
+                "title": "Check your inbox",
+                "subtitle": "If the email exists, you will receive a reset link shortly.",
+                "backToLogin": "Back to login",
+                "createAccount": "Create an account"
+            },
+            "links": {
+                "backToLogin": "Back to login"
+            },
+            "toast": {
+                "sentTitle": "Email sent",
+                "sentDesc": "If the email exists, you will receive a reset link shortly.",
+                "failedTitle": "Reset failed"
+            },
+            "errors": {
+                "invalidEmail": "Please enter a valid email",
+                "failedGeneric": "Unable to send reset email. Please try again."
+            },
+            "email": {
+                "fullName": "XPG Member",
+                "subject": "Reset your XPG password",
+                "body": {
+                    "hello": "Hello,",
+                    "receivedRequest": "We received a request to reset your XPG password.",
+                    "validFor": "This link is valid for <strong>{{minutes}} minutes</strong>.",
+                    "cta": "Reset Password",
+                    "fallback": "If the button doesn't work, copy this link:",
+                    "ignore": "If you did not request this, you can ignore this email.",
+                    "signature": "XPG Team"
+                }
+            }
+        }
+    },
+    "policies": {
+        "meta": {
+            "updatedDate": "Oct 2025",
+            "product": "XPG Client Area",
+            "lastUpdated": "Last updated: {{date}}"
+        },
+        "cookie": {
+            "title": "Cookie Policy",
+            "intro": "We use cookies and similar technologies to operate the Client Area, remember preferences, analyze performance, and keep accounts secure. You can manage cookies in your browser settings. Disabling essential cookies may impact functionality.",
+            "table": {
+                "type": "Type",
+                "purpose": "Purpose",
+                "examples": "Examples"
+            },
+            "rows": {
+                "essential": {
+                    "type": "Essential",
+                    "purpose": "Authentication, session management, security",
+                    "examples": "auth_session, csrf_token"
+                },
+                "preferences": {
+                    "type": "Preferences",
+                    "purpose": "Language, UI settings",
+                    "examples": "lang, theme_mode"
+                },
+                "analytics": {
+                    "type": "Analytics",
+                    "purpose": "Usage metrics to improve performance and content",
+                    "examples": "analytics_id, perf_sample"
+                }
+            },
+            "managing": {
+                "title": "Managing Cookies",
+                "body": "Most browsers allow you to block or delete cookies. You can also use built-in privacy modes or dedicated extensions to limit tracking."
+            }
+        },
+        "privacy": {
+            "title": "Privacy Policy",
+            "intro": "This policy describes how we collect, use, and protect information in connection with the XPG Client Area. The Client Area is intended for authorized business partners and contains marketing assets, demos, and related materials.",
+            "sections": {
+                "collect": {
+                    "title": "Information We Collect",
+                    "body": "Account data such as name, company, department, and business email. Usage data such as pages viewed, downloads, device, and approximate region. Operational logs for security and fraud prevention."
+                },
+                "use": {
+                    "title": "How We Use Information",
+                    "body": "To provide secure access, personalize content, deliver notices, improve performance, and comply with legal obligations. We may aggregate usage data to understand product adoption and content quality."
+                },
+                "sharing": {
+                    "title": "Sharing",
+                    "body": "We do not sell personal data. Limited sharing may occur with infrastructure providers, analytics, or anti-abuse services under contracts requiring confidentiality and appropriate safeguards."
+                },
+                "security": {
+                    "title": "Security",
+                    "body": "Access is authenticated and monitored. Data is transmitted over TLS and stored with role-based controls. Incidents are reviewed and mitigated according to internal procedures."
+                },
+                "retention": {
+                    "title": "Retention",
+                    "body": "We retain account and audit records for as long as necessary to provide the service and meet legal and contractual requirements. You may request deletion subject to applicable obligations."
+                },
+                "choices": {
+                    "title": "Your Choices",
+                    "body": "You can update profile details, opt out of marketing emails, and request access or deletion of your data by contacting your XPG representative."
+                },
+                "contact": {
+                    "title": "Contact",
+                    "body": "For privacy inquiries, contact privacy@xpg.com."
+                }
+            }
+        }
+    },
+    "navbar": {
+        "links": {
+            "home": "Home",
+            "announcements": "Announcements",
+            "apiDocs": "API Documents",
+            "settings": "Settings"
+        },
+        "collections": "Collections",
+        "searchPlaceholder": "Search...",
+        "logout": "Logout",
+        "open": "Open",
+        "loading": "Loading...",
+        "accountFallback": "Account",
+        "clientArea": "Client Area",
+        "language": {
+            "title": "Language",
+            "header": "Language",
+            "subtitle": "Select your preferred language",
+            "active": "ACTIVE"
+        },
+        "mobile": {
+            "liveGames": "Live Games",
+            "noLiveGames": "No live games found.",
+            "other": "Other"
+        }
+    },
+    "home": {
+        "welcomeBadge": "WELCOME TO THE",
+        "title": "CLIENT AREA"
+    },
+    "footer": {
+        "disclaimer": "XPG Live's logo and graphic materials are the exclusive intellectual property of XPG Live and may not be copied, reproduced, distributed, or displayed without prior written consent from XPG Live. XPG Live operates in full compliance with gaming regulations across multiple jurisdictions. We are committed to protecting your privacy.",
+        "copyright": "Copyright © 2008 - 2025 XPG. All Rights Reserved.",
+        "certTitle": "View iTech Certificate",
+        "certAlt": "iTech Lab"
+    },
+    "downloads": {
+        "title": "Recent Downloads",
+        "subtitle": "Quick access to your latest downloaded assets",
+        "table": {
+            "filename": "Filename",
+            "downloaded": "Downloaded"
+        },
+        "empty": "No downloads yet.",
+        "recent": "Recent",
+        "showing": "Showing {{count}} {{plus}} items",
+        "dash": "-",
+        "download": "Download",
+        "downloading": "Downloading…",
+        "missingStoragePath": "Missing storagePath and cannot extract it from fileURL.",
+        "notAuthenticated": "Not authenticated. Please login again.",
+        "missingDownloadUrl": "Missing VITE_DOWNLOAD_FILE_URL",
+        "downloadFailed": "Download failed",
+        "open": "Open",
+        "untitled": "Untitled"
+    },
+    "announcements": {
+        "title": "Announcements For You",
+        "subtitle": "Latest updates and notices in your client area",
+        "seeMore": "See More",
+        "empty": "No announcements yet.",
+        "swipe": "Swipe",
+        "swipeHint": "Swipe left/right to see more announcements",
+        "openDetails": "Open details",
+        "untitled": "Untitled",
+        "modal": {
+            "fallbackTitle": "Announcement",
+            "noContent": "No content provided.",
+            "viewMarketingPack": "View Marketing Pack"
+        },
+        "details": {
+            "crumb": "Home / Announcements / Details",
+            "loadingTitle": "Loading...",
+            "fallbackTitle": "Announcement",
+            "back": "Back",
+            "backToAnnouncements": "Back to Announcements",
+            "noContent": "No content provided.",
+            "viewMarketingPack": "View Marketing Pack",
+            "notFound": {
+                "title": "Announcement Not Found",
+                "subtitle": "The requested announcement could not be loaded."
+            },
+            "recommended": {
+                "title": "Recommended",
+                "empty": "No recommendations yet."
+            }
+        },
+        "page": {
+            "crumb": "Home / Announcements",
+            "title": "Announcements",
+            "subtitle": "Important updates, releases and client communications",
+            "searchPlaceholder": "Search announcements...",
+            "fallbackTitle": "Announcement",
+            "older": "Older",
+            "openToReadMore": "Open to read more.",
+            "open": "Open",
+            "noContent": "No content provided.",
+            "viewMarketingPack": "View Marketing Pack",
+            "empty": {
+                "title": "No announcements found",
+                "subtitle": "Try adjusting your search keywords."
+            }
+        }
+    },
+    "games": {
+        "sort": {
+            "defaultOrder": "Default Order",
+            "nameAsc": "Name (A-Z)",
+            "nameDesc": "Name (Z-A)"
+        },
+        "types": {
+            "title": "Game Types",
+            "prev": "Previous",
+            "next": "Next",
+            "loading": "Loading...",
+            "empty": "No game types found.",
+            "swipeHint": "Swipe left/right to view"
+        },
+        "list": {
+            "allGames": "All Games",
+            "typeGames": "{{type}} Games",
+            "clearType": "Clear Type",
+            "searchPlaceholder": "Search games...",
+            "failedToLoad": "Failed to load games",
+            "noGamesFound": "No games found."
+        },
+        "pagination": {
+            "prev": "Prev",
+            "next": "Next",
+            "page": "Page",
+            "mobileHint": "Showing more pages on mobile"
+        },
+        "image": {
+            "noImage": "No Image"
+        },
+        "untitled": "Untitled"
+    },
+    "gameDetails": {
+        "tabs": {
+            "assets": "Assets",
+            "related": "Related"
+        },
+        "search": {
+            "placeholder": "Search"
+        },
+        "filters": {
+            "show": "Show Filters",
+            "hide": "Hide Filters"
+        },
+        "sort": {
+            "recent": "Recently Updated",
+            "alpha": "Alphabetical"
+        },
+        "zip": {
+            "button": "ZIP ({{count}})",
+            "assetsFallback": "assets"
+        },
+        "selection": {
+            "clear": "Clear",
+            "selected": "Selected {{count}} file",
+            "selected_plural": "Selected {{count}} files"
+        },
+        "table": {
+            "preview": "Preview",
+            "fileName": "File Name",
+            "details": "Details",
+            "actions": "Actions"
+        },
+        "empty": {
+            "noFiles": "No files found."
+        },
+        "mobile": {
+            "actionsBelow": "Actions are below"
+        },
+        "file": {
+            "fileLabel": "FILE",
+            "dash": "—",
+            "added": "Added {{date}}"
+        },
+        "actions": {
+            "download": "Download",
+            "preview": "Preview"
+        },
+        "pagination": {
+            "prev": "Prev",
+            "next": "Next",
+            "pageOf": "Page {{page}} of {{total}}"
+        },
+        "related": {
+            "viewAssets": "View assets",
+            "empty": {
+                "title": "No related games found",
+                "subtitle": "We couldn’t find other {{name}} games right now.",
+                "this": "this",
+                "browseAll": "Browse All Games"
+            }
+        },
+        "collections": {
+            "addToCollection": "Add to Collection",
+            "addTo": "Add to:",
+            "empty": "No collections yet.",
+            "untitled": "Untitled",
+            "alreadyIn": "Already in this collection",
+            "tapToAdd": "Tap to add",
+            "added": "Added",
+            "already": "Already",
+            "createNew": "Create New Collection",
+            "createCollection": "Create Collection",
+            "namePlaceholder": "Collection name",
+            "processing": "Processing",
+            "create": "Create",
+            "cancel": "Cancel",
+            "newCollectionFallback": "New Collection",
+            "sheet": {
+                "title": "Add to Collection",
+                "subtitle": "Pick a collection below, or create a new one."
+            },
+            "stages": {
+                "creating": "Creating collection",
+                "addingFile": "Adding file to collection",
+                "done": "Done"
+            }
+        },
+        "download": {
+            "defaultName": "download"
+        },
+        "alerts": {
+            "missingStoragePath": "Missing storagePath. Save snapshot.ref.fullPath during upload.",
+            "downloadFailed": "Download failed",
+            "zipFailed": "ZIP download failed",
+            "createCollectionFailed": "Create collection failed"
+        }
+    },
+    "filtersPanel": {
+        "fileTypes": "File Types",
+        "fileTags": "File Tags",
+        "followUs": "Follow Us",
+        "contactUs": "Contact Us",
+        "selectedBadge": "{{count}} selected",
+        "social": {
+            "facebook": "Facebook",
+            "twitter": "X / Twitter",
+            "instagram": "Instagram",
+            "handleTitle": "@XPG Live",
+            "handleSub": "@xpg.live"
+        },
+        "contact": {
+            "phone": "+421 911 628 998",
+            "email": "info@xprogaming.com",
+            "location": "Bratislava, Slovakia"
+        }
+    },
+    "previewModal": {
+        "download": "Download",
+        "noInlinePreview": "No inline preview for this file type.",
+        "pdfTitle": "PDF",
+        "addedAt": "Added {{date}}",
+        "position": "{{index}} of {{total}}",
+        "close": "Close",
+        "prev": "Previous",
+        "next": "Next"
+    },
+    "row": {
+        "prev": "Previous",
+        "next": "Next",
+        "announcementCoverAlt": "Announcement cover",
+        "noImage": "No Image",
+        "new": "New",
+        "readAnnouncement": "Read Announcement",
+        "viewMarketingPack": "View Marketing Pack",
+        "empty": "Nothing here yet."
+    },
+    "settings": {
+        "crumb": "Home / Account Settings",
+        "title": "Account Settings",
+        "subtitle": "Update your account and profile data",
+        "sections": {
+            "general": "General Settings",
+            "password": "Change Password",
+            "delete": "Delete Account"
+        },
+        "changePassword": {
+            "title": "Change Password",
+            "subtitle": "For security, we’ll verify your current password first.",
+            "fields": {
+                "current": "Current Password",
+                "new": "New Password",
+                "confirm": "Confirm New Password"
+            },
+            "button": {
+                "save": "Save Changes",
+                "saving": "Saving..."
+            },
+            "messages": {
+                "required": "All fields are required.",
+                "mismatch": "New passwords do not match.",
+                "success": "Password changed successfully!",
+                "failed": "Failed to change password"
+            }
+        },
+        "deleteAccount": {
+            "title": "Delete Account",
+            "subtitle": "This will permanently remove your access.",
+            "warningPrefix": "This action is",
+            "irreversible": "irreversible",
+            "fields": {
+                "password": "Confirm with Password",
+                "deleteStorage": "Also delete my storage files (optional)"
+            },
+            "button": {
+                "delete": "Delete Account",
+                "deleting": "Deleting..."
+            },
+            "confirm": "Delete your account permanently? This cannot be undone.",
+            "messages": {
+                "passwordRequired": "Password is required.",
+                "failed": "Failed to delete account"
+            }
+        },
+        "general": {
+            "title": "General Settings",
+            "subtitle": "Update your profile details and preferences.",
+            "fields": {
+                "name": "Name",
+                "email": "Email",
+                "company": "Company",
+                "department": "Department",
+                "timezone": "Timezone",
+                "newsletter": "Subscribed to newsletter?"
+            },
+            "button": {
+                "save": "Save Changes",
+                "saving": "Saving..."
+            },
+            "messages": {
+                "success": "Details updated successfully!",
+                "failed": "Failed to update details"
+            },
+            "departments": {
+                "Operations": "Operations",
+                "Game Development": "Game Development",
+                "Compliance & Legal": "Compliance & Legal",
+                "Finance & Accounting": "Finance & Accounting",
+                "Marketing & Promotions": "Marketing & Promotions",
+                "Player Support": "Player Support",
+                "IT & Infrastructure": "IT & Infrastructure",
+                "Product Management": "Product Management",
+                "Sales & Business Development": "Sales & Business Development",
+                "HR & Talent Acquisition": "HR & Talent Acquisition",
+                "Executive Management": "Executive Management",
+                "Other": "Other"
+            }
+        },
+        "yes": "Yes",
+        "no": "No"
+    },
+    "collectionsDrawer": {
+        "title": "Collections",
+        "subtitle": "Organise and download your selected assets",
+        "empty": "No collections yet. Create your first one to start grouping files.",
+        "common": {
+            "somethingWentWrong": "Something went wrong."
+        },
+        "defaults": {
+            "newCollection": "New Collection",
+            "collectionTitle": "Collection",
+            "collection": "collection",
+            "download": "download",
+            "untitledCollection": "Untitled Collection"
+        },
+        "status": {
+            "completed": "Completed",
+            "inProgress": "In progress"
+        },
+        "stats": {
+            "totalCollections": "Total collections",
+            "files_one": "{{count}} file",
+            "files_other": "{{count}} files"
+        },
+        "actions": {
+            "close": "Close",
+            "newCollection": "New Collection",
+            "rename": "Rename",
+            "save": "Save",
+            "cancel": "Cancel",
+            "delete": "Delete",
+            "prepareDownload": "Prepare Download",
+            "showFileDetails": "Show file details",
+            "hideFileDetails": "Hide file details",
+            "toggleCompleted": "Toggle completed",
+            "removeFile": "Remove file"
+        },
+        "files": {
+            "title_one": "Files ({{count}})",
+            "title_other": "Files ({{count}})",
+            "totalSize": "Total size: {{size}}",
+            "empty": "No files in this collection yet.",
+            "loading": "Loading files…",
+            "untitledFile": "Untitled file",
+            "filePreviewAlt": "File preview"
+        },
+        "confirm": {
+            "title": "Delete this collection?",
+            "subtitle": "This cannot be undone. Files themselves will not be deleted."
+        },
+        "errors": {
+            "missingDownloadUrl": "Missing VITE_DOWNLOAD_FILE_URL",
+            "notAuthenticated": "Not authenticated. Please login again.",
+            "downloadFailedWithStatus": "Download failed ({{status}})",
+            "prepareDownloadFailed": "Prepare download failed"
+        },
+        "toast": {
+            "create": {
+                "title": "Creating collection",
+                "desc": "Please wait…"
+            },
+            "created": {
+                "title": "Collection created",
+                "desc": "You can rename it now."
+            },
+            "createFailed": {
+                "title": "Failed to create"
+            },
+            "rename": {
+                "title": "Renaming collection",
+                "desc": "Saving changes…"
+            },
+            "renamed": {
+                "title": "Renamed",
+                "desc": "Collection name updated."
+            },
+            "renameFailed": {
+                "title": "Rename failed"
+            },
+            "updateStatus": {
+                "title": "Updating status",
+                "desc": "Please wait…"
+            },
+            "updated": {
+                "title": "Updated",
+                "desc": "Collection status saved."
+            },
+            "updateFailed": {
+                "title": "Update failed"
+            },
+            "delete": {
+                "title": "Deleting collection",
+                "desc": "Removing…"
+            },
+            "deleted": {
+                "title": "Deleted",
+                "desc": "Collection removed."
+            },
+            "deleteFailed": {
+                "title": "Delete failed"
+            },
+            "prepare": {
+                "title": "Preparing download",
+                "desc": "Building ZIP for \"{{name}}\"…"
+            },
+            "downloadReady": {
+                "title": "Download ready",
+                "desc": "ZIP has been generated."
+            },
+            "prepareFailed": {
+                "title": "Prepare download failed"
+            },
+            "removeFile": {
+                "title": "Removing file",
+                "desc": "Updating collection…"
+            },
+            "removed": {
+                "title": "Removed",
+                "desc": "File removed from collection."
+            },
+            "removeFailed": {
+                "title": "Remove failed"
+            }
+        }
+    },
+    "search": {
+        "crumb": "Home / Search",
+        "title": "Search",
+        "subtitle": "Search announcements, games, sections and files.",
+        "header": {
+            "queryLabel": "Query:"
+        },
+        "hero": {
+            "resultsFor": "Results for",
+            "startSearching": "Start searching",
+            "showingMatched": "Showing matched content across your client area.",
+            "useNavbarHint": "Use the navbar search bar and press Enter."
+        },
+        "stats": {
+            "announcements": "Announcements",
+            "games": "Games",
+            "total": "Total"
+        },
+        "states": {
+            "searching": "Searching...",
+            "failed": "Search failed"
+        },
+        "emptyStates": {
+            "noQuery": {
+                "card1": {
+                    "title": "Search anything",
+                    "desc": "Try game names, announcement titles, section names, or file names."
+                },
+                "card2": {
+                    "title": "Pro tip",
+                    "desc": "Use short keywords like “baccarat”, “pack”, “thumbnail”, “promo”, etc."
+                }
+            },
+            "noResults": {
+                "title": "No results",
+                "desc": "No results found for \"{{q}}\". Try a shorter keyword."
+            }
+        },
+        "panels": {
+            "announcements": {
+                "title": "Announcements",
+                "empty": "No matching announcements."
+            },
+            "games": {
+                "title": "Games",
+                "hint": "Expand a game to view matched sections and files.",
+                "emptyTitle": "No matching games",
+                "emptyDesc": "Try a different keyword."
+            }
+        },
+        "gameCard": {
+            "matchingFound": "Matching sections/files found",
+            "noMatching": "No matching sections/files in this game",
+            "noSectionsFound": "No sections found.",
+            "noMatchingFiles": "No matching files."
+        },
+        "actions": {
+            "open": "Open",
+            "viewAll": "View all",
+            "expand": "Expand",
+            "collapse": "Collapse"
+        },
+        "common": {
+            "dash": "-",
+            "untitled": "Untitled",
+            "section": "Section",
+            "file": "File",
+            "noDescription": "No description.",
+            "filesCount_one": "{{count}} file",
+            "filesCount_other": "{{count}} files"
+        }
+    }
+}

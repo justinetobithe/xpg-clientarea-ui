@@ -6,6 +6,7 @@ import { db } from "../firebase";
 import { useAnnouncementStore } from "../store/announcementStore";
 import { toDate } from "../utils/utils";
 import PageShell from "../components/common/PageShell";
+import { useTranslation } from "react-i18next";
 
 const RecommendedSkeleton = () => (
     <div className="space-y-3">
@@ -22,6 +23,7 @@ const RecommendedSkeleton = () => (
 );
 
 export default function AnnouncementDetails() {
+    const { t } = useTranslation();
     const { id } = useParams();
     const navigate = useNavigate();
     const list = useAnnouncementStore((s) => s.items);
@@ -52,15 +54,11 @@ export default function AnnouncementDetails() {
         if (!Array.isArray(list) || !item) return [];
 
         const others = list.filter((a) => a.id !== id);
-        const currTags = new Set((item?.tags || []).map((t) => String(t).toLowerCase()));
+        const currTags = new Set((item?.tags || []).map((tt) => String(tt).toLowerCase()));
 
-        const primary = others.filter((a) =>
-            (a.tags || []).some((t) => currTags.has(String(t).toLowerCase()))
-        );
+        const primary = others.filter((a) => (a.tags || []).some((tt) => currTags.has(String(tt).toLowerCase())));
 
-        const merged = [...primary, ...others].filter(
-            (v, i, arr) => arr.findIndex((x) => x.id === v.id) === i
-        );
+        const merged = [...primary, ...others].filter((v, i, arr) => arr.findIndex((x) => x.id === v.id) === i);
 
         return merged.slice(0, 6);
     }, [list, id, item]);
@@ -73,14 +71,14 @@ export default function AnnouncementDetails() {
             className="hidden md:inline-flex items-center gap-2 rounded-xl border border-border bg-black/20 px-4 py-2 text-white/80 hover:text-white hover:bg-black/30 transition"
         >
             <ArrowLeft className="h-4 w-4" />
-            Back
+            {t("announcements.details.back")}
         </button>
     );
 
     return (
         <PageShell
-            crumb="Home / Announcements / Details"
-            title={loadingItem ? "Loading..." : item?.title || "Announcement"}
+            crumb={t("announcements.details.crumb")}
+            title={loadingItem ? t("announcements.details.loadingTitle") : item?.title || t("announcements.details.fallbackTitle")}
             subtitle={loadingItem ? "" : displayDate}
             right={headerRight}
         >
@@ -90,7 +88,7 @@ export default function AnnouncementDetails() {
                     className="inline-flex items-center text-sm font-semibold text-primary hover:opacity-80 transition"
                 >
                     <ArrowLeft className="w-3 h-3 mr-1" />
-                    Back to Announcements
+                    {t("announcements.details.backToAnnouncements")}
                 </button>
             </div>
 
@@ -115,7 +113,7 @@ export default function AnnouncementDetails() {
                                     <div className="w-full bg-black/30">
                                         <img
                                             src={item.imageURL}
-                                            alt={item.title || "Announcement"}
+                                            alt={item.title || t("announcements.details.fallbackTitle")}
                                             className="w-full h-auto block object-cover"
                                         />
                                     </div>
@@ -123,7 +121,7 @@ export default function AnnouncementDetails() {
 
                                 <div className="p-6">
                                     <h1 className="text-white text-2xl font-extrabold mb-1">
-                                        {item.title || "Announcement"}
+                                        {item.title || t("announcements.details.fallbackTitle")}
                                     </h1>
 
                                     <p className="text-white/70 text-xs mb-4">{displayDate}</p>
@@ -134,7 +132,7 @@ export default function AnnouncementDetails() {
                                             dangerouslySetInnerHTML={{ __html: item.content }}
                                         />
                                     ) : (
-                                        <p className="text-white/80">No content provided.</p>
+                                        <p className="text-white/80">{t("announcements.details.noContent")}</p>
                                     )}
 
                                     {item.packURL ? (
@@ -145,7 +143,7 @@ export default function AnnouncementDetails() {
                                             className="mt-6 inline-flex items-center px-4 py-2 border border-white/20 text-sm font-bold rounded-xl text-primary hover:bg-white/10 transition"
                                         >
                                             <ExternalLink className="w-5 h-5 mr-2" />
-                                            View Marketing Pack
+                                            {t("announcements.details.viewMarketingPack")}
                                         </a>
                                     ) : null}
                                 </div>
@@ -153,17 +151,15 @@ export default function AnnouncementDetails() {
                         ) : (
                             <div className="p-6 text-center">
                                 <h1 className="text-white text-2xl font-extrabold mb-2">
-                                    Announcement Not Found
+                                    {t("announcements.details.notFound.title")}
                                 </h1>
-                                <p className="text-white/70">
-                                    The requested announcement could not be loaded.
-                                </p>
+                                <p className="text-white/70">{t("announcements.details.notFound.subtitle")}</p>
                                 <div className="mt-5">
                                     <Link
                                         to="/announcements"
                                         className="inline-flex items-center justify-center rounded-xl bg-primary text-black font-bold px-5 py-2.5 hover:opacity-90 transition"
                                     >
-                                        Back to Announcements
+                                        {t("announcements.details.backToAnnouncements")}
                                     </Link>
                                 </div>
                             </div>
@@ -173,7 +169,7 @@ export default function AnnouncementDetails() {
 
                 <div className="md:col-span-4">
                     <div className="bg-card rounded-2xl border border-border shadow-lg p-4">
-                        <h2 className="text-white font-extrabold mb-2">Recommended</h2>
+                        <h2 className="text-white font-extrabold mb-2">{t("announcements.details.recommended.title")}</h2>
                         <div className="border-t border-white/10 mb-4" />
 
                         {!Array.isArray(list) ? (
@@ -189,7 +185,7 @@ export default function AnnouncementDetails() {
                                         <div className="col-span-1 h-14 w-full bg-black/30 overflow-hidden rounded-lg border border-white/10">
                                             {a.imageURL || a.cover || a.thumbnail ? (
                                                 <img
-                                                    alt={a.title || "Announcement"}
+                                                    alt={a.title || t("announcements.details.fallbackTitle")}
                                                     src={a.imageURL || a.cover || a.thumbnail}
                                                     className="w-full h-full object-cover block"
                                                 />
@@ -199,7 +195,7 @@ export default function AnnouncementDetails() {
                                         </div>
                                         <div className="col-span-2">
                                             <p className="text-white font-semibold line-clamp-2 hover:text-primary transition">
-                                                {a.title || "Announcement"}
+                                                {a.title || t("announcements.details.fallbackTitle")}
                                             </p>
                                             <p className="text-white/60 text-xs mt-0.5">
                                                 {toDate(a.date || a.createdAt).toLocaleDateString()}
@@ -209,7 +205,7 @@ export default function AnnouncementDetails() {
                                 ))}
                             </div>
                         ) : (
-                            <p className="text-white/70">No recommendations yet.</p>
+                            <p className="text-white/70">{t("announcements.details.recommended.empty")}</p>
                         )}
                     </div>
                 </div>

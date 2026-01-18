@@ -1,0 +1,814 @@
+{
+    "auth": {
+        "login": {
+            "title": "Müşteri girişi",
+            "pendingTitle": "Onay bekliyor",
+            "pendingHint": "Onaylandıktan sonra giriş yapabilirsiniz, erişiminiz otomatik olarak tanımlanacaktır.",
+            "useAnotherAccount": "Başka bir hesap kullan",
+            "placeholders": {
+                "email": "E-posta girin",
+                "password": "Şifre girin"
+            },
+            "remember": "Beni bu cihazda hatırla",
+            "button": {
+                "login": "Giriş Yap",
+                "loggingIn": "Giriş yapılıyor..."
+            },
+            "links": {
+                "forgot": "Şifrenizi mi unuttunuz?",
+                "createAccount": "Hesap oluşturun",
+                "register": "Yeni bir hesap için kaydolun"
+            },
+            "toast": {
+                "welcomeTitle": "Hoş geldiniz!",
+                "welcomeDesc": "Erişim sağlandı. Yönlendiriliyor...",
+                "pendingTitle": "Onay bekliyor",
+                "failedTitle": "Giriş başarısız"
+            },
+            "errors": {
+                "invalidEmail": "Lütfen geçerli bir e-posta girin",
+                "passwordMin": "Şifre en az 6 karakter olmalıdır",
+                "invalidCredentials": "Geçersiz e-posta veya şifre.",
+                "tooManyRequests": "Çok fazla deneme. Lütfen daha sonra tekrar deneyin.",
+                "failedGeneric": "Giriş başarısız. Lütfen tekrar deneyin.",
+                "notApproved": "Hesabınız onay bekliyor. Lütfen yönetici onayını bekleyin."
+            }
+        },
+        "register": {
+            "pending": {
+                "title": "Talep gönderildi",
+                "subtitle": "Hesabınız yönetici onayı bekliyor.",
+                "cardTitle": "Gönderilen e-posta",
+                "hint": "Onaylandıktan sonra giriş yapabilirsiniz; sistem erişimi otomatik olarak sağlayacaktır.",
+                "goLogin": "Girişe git",
+                "submitAnother": "Başka bir talep gönder",
+                "alreadyHave": "Zaten bir hesabınız var mı?",
+                "signIn": "Giriş yap"
+            },
+            "title": "Kaydolmadan önce lütfen okuyun",
+            "intro": {
+                "p1": "Müşteri Paneli; oyunlarımız ve markalarımız için pazarlama materyalleri, demolar ve diğer yararlı verileri içerir.",
+                "p2": "Sisteme erişmek için müşteri olmanız gerekir. Sadece kurumsal e-posta adreslerine izin verilir.",
+                "p3": "Başvurunuz, erişim verilmeden önce incelenecektir.",
+                "p4": "Lütfen materyalleri izin almadan harici olarak paylaşmayın."
+            },
+            "placeholders": {
+                "fullName": "Ad Soyad",
+                "company": "Şirket",
+                "department": "Departman",
+                "email": "E-posta",
+                "password": "Şifre",
+                "confirmPassword": "Şifreyi Onayla"
+            },
+            "checkbox": {
+                "newsletter": "Bültene abone olmak ister misiniz?",
+                "noticePrefix": "Metnin tamamını okudum ve anladım:",
+                "privacyPrefix": "Şunu kabul ediyorum:"
+            },
+            "policy": {
+                "cookie": "Çerez Politikası",
+                "privacy": "Gizlilik Politikası"
+            },
+            "recaptcha": {
+                "loading": "Doğrulama yükleniyor..."
+            },
+            "button": {
+                "requestAccess": "Erişim talep et",
+                "registering": "Kaydediliyor..."
+            },
+            "footer": {
+                "alreadyHave": "Zaten bir hesabınız var mı?",
+                "signIn": "Giriş yap"
+            },
+            "toast": {
+                "submittedTitle": "Kayıt gönderildi",
+                "submittedDesc": "Hesabınız yönetici onayı bekliyor.",
+                "failedTitle": "Kayıt başarısız"
+            },
+            "errors": {
+                "fullNameRequired": "Ad Soyad gereklidir",
+                "companyRequired": "Şirket gereklidir",
+                "departmentRequired": "Departman gereklidir",
+                "emailValid": "Geçerli bir e-posta gereklidir",
+                "passwordMin": "Şifre en az 6 karakter olmalıdır",
+                "confirmPassword": "Şifrenizi onaylayın",
+                "recaptchaComplete": "Lütfen reCAPTCHA'yı tamamlayın",
+                "passwordMismatch": "Şifreler eşleşmiyor",
+                "policiesRequired": "Lütfen gerekli politikaları kabul edin",
+                "emailInUse": "Bu e-posta zaten kullanımda. Lütfen başka bir e-posta kullanın veya giriş yapın.",
+                "invalidEmail": "Geçersiz e-posta adresi.",
+                "weakPassword": "Şifre çok zayıf.",
+                "failedGeneric": "Kayıt yapılamadı. Lütfen tekrar deneyin.",
+                "recaptchaMissing": "reCAPTCHA yapılandırılmamış. Lütfen yöneticiyle iletişime geçin.",
+                "recaptchaInvalid": "reCAPTCHA başarısız. Lütfen tekrar deneyin.",
+                "verifyUrlMissing": "RECAPTCHA_VERIFY_URL_MISSING"
+            }
+        },
+        "reset": {
+            "title": "Yeni şifre belirle",
+            "loading": "Yükleniyor...",
+            "statuses": {
+                "invalid": "Geçersiz bağlantı",
+                "notFound": "Bağlantı bulunamadı",
+                "expired": "Bağlantının süresi dolmuş",
+                "used": "Bağlantı zaten kullanılmış",
+                "error": "Bir şeyler ters gitti",
+                "valid": "Bağlantı geçerli"
+            },
+            "labels": {
+                "validity": "Geçerlilik: {{date}}",
+                "email": "E-posta: {{email}}",
+                "validUntil": "Şu tarihe kadar geçerli: {{date}}",
+                "status": "Durum: {{status}}"
+            },
+            "placeholders": {
+                "newPassword": "Yeni şifre (en az 8 karakter)",
+                "confirmPassword": "Yeni şifreyi onayla"
+            },
+            "button": {
+                "requestNew": "Yeni sıfırlama bağlantısı iste",
+                "backToLogin": "Girişe dön",
+                "update": "Şifreyi güncelle",
+                "updating": "Güncelleniyor..."
+            },
+            "toast": {
+                "invalidPasswordTitle": "Geçersiz şifre",
+                "invalidPasswordDesc": "Şifre en az 8 karakter olmalıdır.",
+                "mismatchTitle": "Uyuşmazlık",
+                "mismatchDesc": "Şifreler eşleşmiyor.",
+                "updatedTitle": "Şifre güncellendi",
+                "updatedDesc": "Artık yeni şifrenizle giriş yapabilirsiniz.",
+                "failedTitle": "Sıfırlama başarısız",
+                "failedDesc": "Sıfırlama başarısız. Bağlantı geçersiz veya süresi dolmuş olabilir."
+            }
+        },
+        "forgot": {
+            "title": "Şifreyi sıfırla",
+            "subtitle": "E-postanızı girin, size bir sıfırlama bağlantısı gönderelim.",
+            "labels": {
+                "email": "E-posta"
+            },
+            "placeholders": {
+                "email": "E-posta girin"
+            },
+            "button": {
+                "send": "Sıfırlama bağlantısı gönder",
+                "sending": "Gönderiliyor..."
+            },
+            "sent": {
+                "title": "Gelen kutunuzu kontrol edin",
+                "subtitle": "E-posta sistemde kayıtlıysa, kısa süre içinde bir sıfırlama bağlantısı alacaksınız.",
+                "backToLogin": "Girişe dön",
+                "createAccount": "Hesap oluştur"
+            },
+            "links": {
+                "backToLogin": "Girişe dön"
+            },
+            "toast": {
+                "sentTitle": "E-posta gönderildi",
+                "sentDesc": "E-posta sistemde kayıtlıysa, kısa süre içinde bir sıfırlama bağlantısı alacaksınız.",
+                "failedTitle": "Sıfırlama başarısız"
+            },
+            "errors": {
+                "invalidEmail": "Lütfen geçerli bir e-posta girin",
+                "failedGeneric": "Sıfırlama e-postası gönderilemedi. Lütfen tekrar deneyin."
+            },
+            "email": {
+                "fullName": "XPG Üyesi",
+                "subject": "XPG şifrenizi sıfırlayın",
+                "body": {
+                    "hello": "Merhaba,",
+                    "receivedRequest": "XPG şifrenizi sıfırlamak için bir talep aldık.",
+                    "validFor": "Bu bağlantı <strong>{{minutes}} dakika</strong> boyunca geçerlidir.",
+                    "cta": "Şifreyi Sıfırla",
+                    "fallback": "Düğme çalışmıyorsa bu bağlantıyı kopyalayın:",
+                    "ignore": "Eğer bu talebi siz yapmadıysanız, bu e-postayı görmezden gelebilirsiniz.",
+                    "signature": "XPG Ekibi"
+                }
+            }
+        }
+    },
+    "policies": {
+        "meta": {
+            "updatedDate": "Ekim 2025",
+            "product": "XPG Müşteri Paneli",
+            "lastUpdated": "Son güncelleme: {{date}}"
+        },
+        "cookie": {
+            "title": "Çerez Politikası",
+            "intro": "Müşteri Paneli'ni işletmek, tercihleri hatırlamak, performansı analiz etmek ve hesapları güvende tutmak için çerezler ve benzeri teknolojiler kullanıyoruz. Çerezleri tarayıcı ayarlarınızdan yönetebilirsiniz. Temel çerezleri devre dışı bırakmak işlevselliği etkileyebilir.",
+            "table": {
+                "type": "Tür",
+                "purpose": "Amaç",
+                "examples": "Örnekler"
+            },
+            "rows": {
+                "essential": {
+                    "type": "Temel",
+                    "purpose": "Kimlik doğrulama, oturum yönetimi, güvenlik",
+                    "examples": "auth_session, csrf_token"
+                },
+                "preferences": {
+                    "type": "Tercihler",
+                    "purpose": "Dil, kullanıcı arayüzü ayarları",
+                    "examples": "lang, theme_mode"
+                },
+                "analytics": {
+                    "type": "Analiz",
+                    "purpose": "Performansı ve içeriği iyileştirmek için kullanım metrikleri",
+                    "examples": "analytics_id, perf_sample"
+                }
+            },
+            "managing": {
+                "title": "Çerezleri Yönetme",
+                "body": "Çoğu tarayıcı çerezleri engellemenize veya silmenize izin verir. Takibi sınırlamak için yerleşik gizlilik modlarını veya özel eklentileri de kullanabilirsiniz."
+            }
+        },
+        "privacy": {
+            "title": "Gizlilik Politikası",
+            "intro": "Bu politika, XPG Müşteri Paneli ile bağlantılı olarak bilgileri nasıl topladığımızı, kullandığımızı ve koruduğumuzu açıklar. Müşteri Paneli, yetkili iş ortakları için tasarlanmıştır ve pazarlama materyalleri, demolar ve ilgili içerikleri barındırır.",
+            "sections": {
+                "collect": {
+                    "title": "Topladığımız Bilgiler",
+                    "body": "İsim, şirket, departman ve iş e-postası gibi hesap verileri. Görüntülenen sayfalar, indirmeler, cihaz ve yaklaşık bölge gibi kullanım verileri. Güvenlik ve dolandırıcılığı önleme amaçlı operasyonel günlükler."
+                },
+                "use": {
+                    "title": "Bilgileri Nasıl Kullanıyoruz",
+                    "body": "Güvenli erişim sağlamak, içeriği kişiselleştirmek, bildirimler göndermek, performansı iyileştirmek ve yasal yükümlülüklere uymak için. Ürün benimsenmesini ve içerik kalitesini anlamak için kullanım verilerini anonim olarak toplayabiliriz."
+                },
+                "sharing": {
+                    "title": "Paylaşım",
+                    "body": "Kişisel verileri satmıyoruz. Gizlilik ve uygun koruma önlemleri gerektiren sözleşmeler kapsamında altyapı sağlayıcıları, analiz veya suistimalle mücadele hizmetleriyle sınırlı paylaşım yapılabilir."
+                },
+                "security": {
+                    "title": "Güvenlik",
+                    "body": "Erişim kimlik doğrulamasına tabidir ve izlenir. Veriler TLS üzerinden iletilir ve rol tabanlı kontrollerle saklanır. Olaylar incelenir ve dahili prosedürlere göre müdahale edilir."
+                },
+                "retention": {
+                    "title": "Saklama",
+                    "body": "Hesap ve denetim kayıtlarını, hizmet sağlamak ve yasal/sözleşmeli gereklilikleri karşılamak için gerekli olduğu sürece saklıyoruz. Geçerli yükümlülüklere tabi olmak kaydıyla silme talebinde bulunabilirsiniz."
+                },
+                "choices": {
+                    "title": "Seçenekleriniz",
+                    "body": "Profil ayrıntılarını güncelleyebilir, pazarlama e-postalarından çıkabilir ve XPG temsilcinizle iletişime geçerek verilerinize erişim veya silme talebinde bulunabilirsiniz."
+                },
+                "contact": {
+                    "title": "İletişim",
+                    "body": "Gizlilikle ilgili sorularınız için privacy@xpg.com adresiyle iletişime geçin."
+                }
+            }
+        }
+    },
+    "navbar": {
+        "links": {
+            "home": "Anasayfa",
+            "announcements": "Duyurular",
+            "apiDocs": "API Belgeleri",
+            "settings": "Ayarlar"
+        },
+        "collections": "Koleksiyonlar",
+        "searchPlaceholder": "Ara...",
+        "logout": "Çıkış Yap",
+        "open": "Aç",
+        "loading": "Yükleniyor...",
+        "accountFallback": "Hesap",
+        "clientArea": "Müşteri Paneli",
+        "language": {
+            "title": "Dil",
+            "header": "Dil",
+            "subtitle": "Tercih ettiğiniz dili seçin",
+            "active": "AKTİF"
+        },
+        "mobile": {
+            "liveGames": "Canlı Oyunlar",
+            "noLiveGames": "Canlı oyun bulunamadı.",
+            "other": "Diğer"
+        }
+    },
+    "home": {
+        "welcomeBadge": "HOŞ GELDİNİZ",
+        "title": "MÜŞTERİ PANELİ"
+    },
+    "footer": {
+        "disclaimer": "XPG Live logosu ve grafik materyalleri XPG Live'ın münhasır fikri mülkiyetidir; XPG Live'ın önceden yazılı izni olmaksızın kopyalanamaz, çoğaltılamaz, dağıtılamaz veya sergilenemez. XPG Live, birden fazla yetki alanındaki oyun düzenlemelerine tam uyum içinde faaliyet göstermektedir. Gizliliğinizi korumaya kararlıyız.",
+        "copyright": "Telif Hakkı © 2008 - 2025 XPG. Tüm Hakları Saklıdır.",
+        "certTitle": "iTech Sertifikasını Görüntüle",
+        "certAlt": "iTech Lab"
+    },
+    "downloads": {
+        "title": "Son İndirmeler",
+        "subtitle": "En son indirdiğiniz materyallere hızlı erişim",
+        "table": {
+            "filename": "Dosya Adı",
+            "downloaded": "İndirilme Tarihi"
+        },
+        "empty": "Henüz indirme yok.",
+        "recent": "Son",
+        "showing": "{{count}} {{plus}} öğe gösteriliyor",
+        "dash": "-",
+        "download": "İndir",
+        "downloading": "İndiriliyor...",
+        "missingStoragePath": "storagePath eksik ve fileURL'den çıkarılamıyor.",
+        "notAuthenticated": "Kimlik doğrulanmadı. Lütfen tekrar giriş yapın.",
+        "missingDownloadUrl": "VITE_DOWNLOAD_FILE_URL eksik",
+        "downloadFailed": "İndirme başarısız",
+        "open": "Aç",
+        "untitled": "Adsız"
+    },
+    "announcements": {
+        "title": "Sizin İçin Duyurular",
+        "subtitle": "Müşteri panelinizdeki en son güncellemeler ve bildirimler",
+        "seeMore": "Daha Fazla Gör",
+        "empty": "Henüz duyuru yok.",
+        "swipe": "Kaydır",
+        "swipeHint": "Daha fazla duyuru görmek için sola/sağa kaydırın",
+        "openDetails": "Detayları aç",
+        "untitled": "Adsız",
+        "modal": {
+            "fallbackTitle": "Duyuru",
+            "noContent": "İçerik sağlanmadı.",
+            "viewMarketingPack": "Pazarlama Paketini Görüntüle"
+        },
+        "details": {
+            "crumb": "Anasayfa / Duyurular / Detaylar",
+            "loadingTitle": "Yükleniyor...",
+            "fallbackTitle": "Duyuru",
+            "back": "Geri",
+            "backToAnnouncements": "Duyurulara Dön",
+            "noContent": "İçerik sağlanmadı.",
+            "viewMarketingPack": "Pazarlama Paketini Görüntüle",
+            "notFound": {
+                "title": "Duyuru Bulunamadı",
+                "subtitle": "İstenen duyuru yüklenemedi."
+            },
+            "recommended": {
+                "title": "Önerilenler",
+                "empty": "Henüz öneri yok."
+            }
+        },
+        "page": {
+            "crumb": "Anasayfa / Duyurular",
+            "title": "Duyurular",
+            "subtitle": "Önemli güncellemeler, yayınlar ve müşteri iletişimleri",
+            "searchPlaceholder": "Duyurularda ara...",
+            "fallbackTitle": "Duyuru",
+            "older": "Daha Eski",
+            "openToReadMore": "Daha fazlasını okumak için açın.",
+            "open": "Aç",
+            "noContent": "İçerik sağlanmadı.",
+            "viewMarketingPack": "Pazarlama Paketini Görüntüle",
+            "empty": {
+                "title": "Duyuru bulunamadı",
+                "subtitle": "Arama anahtar kelimelerinizi değiştirmeyi deneyin."
+            }
+        }
+    },
+    "games": {
+        "sort": {
+            "defaultOrder": "Varsayılan Sıralama",
+            "nameAsc": "İsim (A-Z)",
+            "nameDesc": "İsim (Z-A)"
+        },
+        "types": {
+            "title": "Oyun Türleri",
+            "prev": "Geri",
+            "next": "İleri",
+            "loading": "Yükleniyor...",
+            "empty": "Oyun türü bulunamadı.",
+            "swipeHint": "Görüntülemek için sola/sağa kaydırın"
+        },
+        "list": {
+            "allGames": "Tüm Oyunlar",
+            "typeGames": "{{type}} Oyunları",
+            "clearType": "Türü Temizle",
+            "searchPlaceholder": "Oyunlarda ara...",
+            "failedToLoad": "Oyunlar yüklenemedi",
+            "noGamesFound": "Oyun bulunamadı."
+        },
+        "pagination": {
+            "prev": "Geri",
+            "next": "İleri",
+            "page": "Sayfa",
+            "mobileHint": "Mobilde daha fazla sayfa gösteriliyor"
+        },
+        "image": {
+            "noImage": "Resim Yok"
+        },
+        "untitled": "Adsız"
+    },
+    "gameDetails": {
+        "tabs": {
+            "assets": "Materyaller",
+            "related": "İlgili"
+        },
+        "search": {
+            "placeholder": "Ara"
+        },
+        "filters": {
+            "show": "Filtreleri Göster",
+            "hide": "Filtreleri Gizle"
+        },
+        "sort": {
+            "recent": "Son Güncellenen",
+            "alpha": "Alfabetik"
+        },
+        "zip": {
+            "button": "ZIP ({{count}})",
+            "assetsFallback": "materyal"
+        },
+        "selection": {
+            "clear": "Temizle",
+            "selected": "{{count}} dosya seçildi",
+            "selected_plural": "{{count}} dosya seçildi"
+        },
+        "table": {
+            "preview": "Önizleme",
+            "fileName": "Dosya Adı",
+            "details": "Detaylar",
+            "actions": "İşlemler"
+        },
+        "empty": {
+            "noFiles": "Dosya bulunamadı."
+        },
+        "mobile": {
+            "actionsBelow": "İşlemler aşağıdadır"
+        },
+        "file": {
+            "fileLabel": "DOSYA",
+            "dash": "—",
+            "added": "{{date}} tarihinde eklendi"
+        },
+        "actions": {
+            "download": "İndir",
+            "preview": "Önizleme"
+        },
+        "pagination": {
+            "prev": "Geri",
+            "next": "İleri",
+            "pageOf": "Sayfa {{page}} / {{total}}"
+        },
+        "related": {
+            "viewAssets": "Materyalleri gör",
+            "empty": {
+                "title": "İlgili oyun bulunamadı",
+                "subtitle": "Şu anda başka {{name}} oyunu bulamadık.",
+                "this": "bu",
+                "browseAll": "Tüm Oyunlara Göz At"
+            }
+        },
+        "collections": {
+            "addToCollection": "Koleksiyona Ekle",
+            "addTo": "Şuraya ekle:",
+            "empty": "Henüz koleksiyon yok.",
+            "untitled": "Adsız",
+            "alreadyIn": "Zaten bu koleksiyonda",
+            "tapToAdd": "Eklemek için dokun",
+            "added": "Eklendi",
+            "already": "Zaten var",
+            "createNew": "Yeni Koleksiyon Oluştur",
+            "createCollection": "Koleksiyon Oluştur",
+            "namePlaceholder": "Koleksiyon adı",
+            "processing": "İşleniyor",
+            "create": "Oluştur",
+            "cancel": "İptal",
+            "newCollectionFallback": "Yeni Koleksiyon",
+            "sheet": {
+                "title": "Koleksiyona Ekle",
+                "subtitle": "Aşağıdan bir koleksiyon seçin veya yeni bir tane oluşturun."
+            },
+            "stages": {
+                "creating": "Koleksiyon oluşturuluyor",
+                "addingFile": "Dosya koleksiyona ekleniyor",
+                "done": "Tamamlandı"
+            }
+        },
+        "download": {
+            "defaultName": "indir"
+        },
+        "alerts": {
+            "missingStoragePath": "storagePath eksik. Yükleme sırasında snapshot.ref.fullPath değerini kaydedin.",
+            "downloadFailed": "İndirme başarısız",
+            "zipFailed": "ZIP indirme başarısız",
+            "createCollectionFailed": "Koleksiyon oluşturulamadı"
+        }
+    },
+    "filtersPanel": {
+        "fileTypes": "Dosya Türleri",
+        "fileTags": "Dosya Etiketleri",
+        "followUs": "Bizi Takip Edin",
+        "contactUs": "Bize Ulaşın",
+        "selectedBadge": "{{count}} seçildi",
+        "social": {
+            "facebook": "Facebook",
+            "twitter": "X / Twitter",
+            "instagram": "Instagram",
+            "handleTitle": "@XPG Live",
+            "handleSub": "@xpg.live"
+        },
+        "contact": {
+            "phone": "+421 911 628 998",
+            "email": "info@xprogaming.com",
+            "location": "Bratislava, Slovakya"
+        }
+    },
+    "previewModal": {
+        "download": "İndir",
+        "noInlinePreview": "Bu dosya türü için satır içi önizleme yok.",
+        "pdfTitle": "PDF",
+        "addedAt": "{{date}} tarihinde eklendi",
+        "position": "{{index}} / {{total}}",
+        "close": "Kapat",
+        "prev": "Geri",
+        "next": "İleri"
+    },
+    "row": {
+        "prev": "Geri",
+        "next": "İleri",
+        "announcementCoverAlt": "Duyuru kapağı",
+        "noImage": "Resim Yok",
+        "new": "Yeni",
+        "readAnnouncement": "Duyuruyu Oku",
+        "viewMarketingPack": "Pazarlama Paketini Gör",
+        "empty": "Henüz burada bir şey yok."
+    },
+    "settings": {
+        "crumb": "Anasayfa / Hesap Ayarları",
+        "title": "Hesap Ayarları",
+        "subtitle": "Hesap ve profil verilerinizi güncelleyin",
+        "sections": {
+            "general": "Genel Ayarlar",
+            "password": "Şifre Değiştir",
+            "delete": "Hesabı Sil"
+        },
+        "changePassword": {
+            "title": "Şifre Değiştir",
+            "subtitle": "Güvenlik için önce mevcut şifrenizi doğrulayacağız.",
+            "fields": {
+                "current": "Mevcut Şifre",
+                "new": "Yeni Şifre",
+                "confirm": "Yeni Şifreyi Onayla"
+            },
+            "button": {
+                "save": "Değişiklikleri Kaydet",
+                "saving": "Kaydediliyor..."
+            },
+            "messages": {
+                "required": "Tüm alanlar zorunludur.",
+                "mismatch": "Yeni şifreler eşleşmiyor.",
+                "success": "Şifre başarıyla değiştirildi!",
+                "failed": "Şifre değiştirilemedi"
+            }
+        },
+        "deleteAccount": {
+            "title": "Hesabı Sil",
+            "subtitle": "Bu işlem erişiminizi kalıcı olarak kaldıracaktır.",
+            "warningPrefix": "Bu işlem",
+            "irreversible": "geri alınamaz",
+            "fields": {
+                "password": "Şifre ile Onayla",
+                "deleteStorage": "Depolama dosyalarımı da sil (isteğe bağlı)"
+            },
+            "button": {
+                "delete": "Hesabı Sil",
+                "deleting": "Siliniyor..."
+            },
+            "confirm": "Hesabınız kalıcı olarak silinsin mi? Bu işlem geri alınamaz.",
+            "messages": {
+                "passwordRequired": "Şifre zorunludur.",
+                "failed": "Hesap silinemedi"
+            }
+        },
+        "general": {
+            "title": "Genel Ayarlar",
+            "subtitle": "Profil detaylarınızı ve tercihlerinizi güncelleyin.",
+            "fields": {
+                "name": "İsim",
+                "email": "E-posta",
+                "company": "Şirket",
+                "department": "Departman",
+                "timezone": "Saat Dilimi",
+                "newsletter": "Bültene abone olunsun mu?"
+            },
+            "button": {
+                "save": "Değişiklikleri Kaydet",
+                "saving": "Kaydediliyor..."
+            },
+            "messages": {
+                "success": "Detaylar başarıyla güncellendi!",
+                "failed": "Detaylar güncellenemedi"
+            },
+            "departments": {
+                "Operations": "Operasyon",
+                "Game Development": "Oyun Geliştirme",
+                "Compliance & Legal": "Uyum ve Hukuk",
+                "Finance & Accounting": "Finans ve Muhasebe",
+                "Marketing & Promotions": "Pazarlama ve Promosyon",
+                "Player Support": "Oyuncu Desteği",
+                "IT & Infrastructure": "BT ve Altyapı",
+                "Product Management": "Ürün Yönetimi",
+                "Sales & Business Development": "Satış ve İş Geliştirme",
+                "HR & Talent Acquisition": "İK ve Yetenek Kazanımı",
+                "Executive Management": "Üst Yönetim",
+                "Other": "Diğer"
+            }
+        },
+        "yes": "Evet",
+        "no": "Hayır"
+    },
+    "collectionsDrawer": {
+        "title": "Koleksiyonlar",
+        "subtitle": "Seçtiğiniz materyalleri düzenleyin ve indirin",
+        "empty": "Henüz koleksiyon yok. Dosyaları gruplandırmak için ilk koleksiyonunuzu oluşturun.",
+        "common": {
+            "somethingWentWrong": "Bir şeyler ters gitti."
+        },
+        "defaults": {
+            "newCollection": "Yeni Koleksiyon",
+            "collectionTitle": "Koleksiyon",
+            "collection": "koleksiyon",
+            "download": "indir",
+            "untitledCollection": "Adsız Koleksiyon"
+        },
+        "status": {
+            "completed": "Tamamlandı",
+            "inProgress": "Devam ediyor"
+        },
+        "stats": {
+            "totalCollections": "Toplam koleksiyon",
+            "files_one": "{{count}} dosya",
+            "files_other": "{{count}} dosya"
+        },
+        "actions": {
+            "close": "Kapat",
+            "newCollection": "Yeni Koleksiyon",
+            "rename": "Yeniden Adlandır",
+            "save": "Kaydet",
+            "cancel": "İptal",
+            "delete": "Sil",
+            "prepareDownload": "İndirmeyi Hazırla",
+            "showFileDetails": "Dosya detaylarını göster",
+            "hideFileDetails": "Dosya detaylarını gizle",
+            "toggleCompleted": "Durumu değiştir",
+            "removeFile": "Dosyayı kaldır"
+        },
+        "files": {
+            "title_one": "Dosya ({{count}})",
+            "title_other": "Dosya ({{count}})",
+            "totalSize": "Toplam boyut: {{size}}",
+            "empty": "Bu koleksiyonda henüz dosya yok.",
+            "loading": "Dosyalar yükleniyor...",
+            "untitledFile": "Adsız dosya",
+            "filePreviewAlt": "Dosya önizlemesi"
+        },
+        "confirm": {
+            "title": "Bu koleksiyon silinsin mi?",
+            "subtitle": "Bu işlem geri alınamaz. Dosyaların kendisi silinmeyecektir."
+        },
+        "errors": {
+            "missingDownloadUrl": "VITE_DOWNLOAD_FILE_URL eksik",
+            "notAuthenticated": "Kimlik doğrulanmadı. Lütfen tekrar giriş yapın.",
+            "downloadFailedWithStatus": "İndirme başarısız ({{status}})",
+            "prepareDownloadFailed": "İndirme hazırlığı başarısız"
+        },
+        "toast": {
+            "create": {
+                "title": "Koleksiyon oluşturuluyor",
+                "desc": "Lütfen bekleyin..."
+            },
+            "created": {
+                "title": "Koleksiyon oluşturuldu",
+                "desc": "Şimdi yeniden adlandırabilirsiniz."
+            },
+            "createFailed": {
+                "title": "Oluşturulamadı"
+            },
+            "rename": {
+                "title": "Koleksiyon yeniden adlandırılıyor",
+                "desc": "Değişiklikler kaydediliyor..."
+            },
+            "renamed": {
+                "title": "Yeniden adlandırıldı",
+                "desc": "Koleksiyon adı güncellendi."
+            },
+            "renameFailed": {
+                "title": "Yeniden adlandırma başarısız"
+            },
+            "updateStatus": {
+                "title": "Durum güncelleniyor",
+                "desc": "Lütfen bekleyin..."
+            },
+            "updated": {
+                "title": "Güncellendi",
+                "desc": "Koleksiyon durumu kaydedildi."
+            },
+            "updateFailed": {
+                "title": "Güncelleme başarısız"
+            },
+            "delete": {
+                "title": "Koleksiyon siliniyor",
+                "desc": "Kaldırılıyor..."
+            },
+            "deleted": {
+                "title": "Silindi",
+                "desc": "Koleksiyon kaldırıldı."
+            },
+            "deleteFailed": {
+                "title": "Silme başarısız"
+            },
+            "prepare": {
+                "title": "İndirme hazırlanıyor",
+                "desc": "\"{{name}}\" için ZIP oluşturuluyor..."
+            },
+            "downloadReady": {
+                "title": "İndirme hazır",
+                "desc": "ZIP oluşturuldu."
+            },
+            "prepareFailed": {
+                "title": "İndirme hazırlığı başarısız"
+            },
+            "removeFile": {
+                "title": "Dosya kaldırılıyor",
+                "desc": "Koleksiyon güncelleniyor..."
+            },
+            "removed": {
+                "title": "Kaldırıldı",
+                "desc": "Dosya koleksiyondan kaldırıldı."
+            },
+            "removeFailed": {
+                "title": "Kaldırma başarısız"
+            }
+        }
+    },
+    "search": {
+        "crumb": "Anasayfa / Arama",
+        "title": "Arama",
+        "subtitle": "Duyuruları, oyunları, bölümleri ve dosyaları arayın.",
+        "header": {
+            "queryLabel": "Sorgu:"
+        },
+        "hero": {
+            "resultsFor": "Sonuçlar:",
+            "startSearching": "Aramaya başlayın",
+            "showingMatched": "Müşteri panelinizdeki eşleşen içerikler gösteriliyor.",
+            "useNavbarHint": "Gezinti çubuğundaki arama çubuğunu kullanın ve Enter'a basın."
+        },
+        "stats": {
+            "announcements": "Duyurular",
+            "games": "Oyunlar",
+            "total": "Toplam"
+        },
+        "states": {
+            "searching": "Aranıyor...",
+            "failed": "Arama başarısız"
+        },
+        "emptyStates": {
+            "noQuery": {
+                "card1": {
+                    "title": "Her şeyi arayın",
+                    "desc": "Oyun isimlerini, duyuru başlıklarını, bölüm adlarını veya dosya adlarını deneyin."
+                },
+                "card2": {
+                    "title": "İpucu",
+                    "desc": "“Baccarat”, “paket”, “thumbnail”, “promo” gibi kısa anahtar kelimeler kullanın."
+                }
+            },
+            "noResults": {
+                "title": "Sonuç yok",
+                "desc": "\"{{q}}\" için sonuç bulunamadı. Daha kısa bir anahtar kelime deneyin."
+            }
+        },
+        "panels": {
+            "announcements": {
+                "title": "Duyurular",
+                "empty": "Eşleşen duyuru yok."
+            },
+            "games": {
+                "title": "Oyunlar",
+                "hint": "Eşleşen bölümleri ve dosyaları görmek için bir oyunu genişletin.",
+                "emptyTitle": "Eşleşen oyun yok",
+                "emptyDesc": "Farklı bir anahtar kelime deneyin."
+            }
+        },
+        "gameCard": {
+            "matchingFound": "Eşleşen bölümler/dosyalar bulundu",
+            "noMatching": "Bu oyunda eşleşen bölüm/dosya yok",
+            "noSectionsFound": "Bölüm bulunamadı.",
+            "noMatchingFiles": "Eşleşen dosya yok."
+        },
+        "actions": {
+            "open": "Aç",
+            "viewAll": "Tümünü gör",
+            "expand": "Genişlet",
+            "collapse": "Daralt"
+        },
+        "common": {
+            "dash": "-",
+            "untitled": "Adsız",
+            "section": "Bölüm",
+            "file": "Dosya",
+            "noDescription": "Açıklama yok.",
+            "filesCount_one": "{{count}} dosya",
+            "filesCount_other": "{{count}} dosya"
+        }
+    }
+}

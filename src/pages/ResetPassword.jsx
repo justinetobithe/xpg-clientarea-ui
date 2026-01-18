@@ -4,8 +4,10 @@ import { db } from "../firebase";
 import { doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import axios from "axios";
 import { useToast } from "../contexts/ToastContext";
+import { useTranslation } from "react-i18next";
 
 export default function ResetPassword() {
+    const { t } = useTranslation();
     const [params] = useSearchParams();
     const nav = useNavigate();
     const { showToast } = useToast();
@@ -49,9 +51,7 @@ export default function ResetPassword() {
                 const expiresAt = data?.expiresAt?.toDate ? data.expiresAt.toDate().getTime() : 0;
                 const usedAt = data?.usedAt ? true : false;
 
-                if (expiresAt) {
-                    setExpiresText(new Date(expiresAt).toLocaleString());
-                }
+                if (expiresAt) setExpiresText(new Date(expiresAt).toLocaleString());
 
                 if (usedAt || data?.status === "used") {
                     setStatus("used");
@@ -83,11 +83,20 @@ export default function ResetPassword() {
         if (submitting) return;
 
         if (!password || password.length < 8) {
-            showToast({ variant: "error", title: "Invalid password", description: "Password must be at least 8 characters." });
+            showToast({
+                variant: "error",
+                title: t("auth.reset.toast.invalidPasswordTitle"),
+                description: t("auth.reset.toast.invalidPasswordDesc")
+            });
             return;
         }
+
         if (password !== confirm) {
-            showToast({ variant: "error", title: "Mismatch", description: "Passwords do not match." });
+            showToast({
+                variant: "error",
+                title: t("auth.reset.toast.mismatchTitle"),
+                description: t("auth.reset.toast.mismatchDesc")
+            });
             return;
         }
 
@@ -95,23 +104,40 @@ export default function ResetPassword() {
         try {
             await axios.post(`${import.meta.env.VITE_XPG_API_URL}/resetPasswordWithToken`, {
                 token,
-                newPassword: password,
+                newPassword: password
             });
 
             await updateDoc(doc(db, "password_reset_tokens", token), {
                 status: "used",
-                usedAt: serverTimestamp(),
+                usedAt: serverTimestamp()
             });
 
-            showToast({ variant: "success", title: "Password updated", description: "You can now login with your new password." });
+            showToast({
+                variant: "success",
+                title: t("auth.reset.toast.updatedTitle"),
+                description: t("auth.reset.toast.updatedDesc")
+            });
             nav("/login");
         } catch (e) {
-            const msg = e?.response?.data?.error || "Reset failed. Link may be expired or invalid.";
-            showToast({ variant: "error", title: "Reset failed", description: msg });
+            const msg = e?.response?.data?.error || t("auth.reset.toast.failedDesc");
+            showToast({ variant: "error", title: t("auth.reset.toast.failedTitle"), description: msg });
         } finally {
             setSubmitting(false);
         }
     };
+
+    const statusTitle =
+        status === "invalid"
+            ? t("auth.reset.statuses.invalid")
+            : status === "not_found"
+                ? t("auth.reset.statuses.notFound")
+                : status === "expired"
+                    ? t("auth.reset.statuses.expired")
+                    : status === "used"
+                        ? t("auth.reset.statuses.used")
+                        : status === "error"
+                            ? t("auth.reset.statuses.error")
+                            : "";
 
     return (
         <div className="min-h-screen flex items-center justify-center relative overflow-hidden text-foreground">
@@ -123,22 +149,16 @@ export default function ResetPassword() {
                     <img src="/image/logo-white.png" alt="Logo" className="h-[90px]" />
                 </div>
 
-                <h1 className="text-center text-xl font-semibold text-white mb-2">Set new password</h1>
+                <h1 className="text-center text-xl font-semibold text-white mb-2">{t("auth.reset.title")}</h1>
 
                 {loading ? (
-                    <div className="text-center text-white/70">Loading…</div>
+                    <div className="text-center text-white/70">{t("auth.reset.loading")}</div>
                 ) : status !== "ok" ? (
                     <div className="rounded-lg border border-white/10 bg-black/30 p-4">
-                        <div className="text-white/90 font-semibold">
-                            {status === "invalid" && "Invalid link"}
-                            {status === "not_found" && "Link not found"}
-                            {status === "expired" && "Link expired"}
-                            {status === "used" && "Link already used"}
-                            {status === "error" && "Something went wrong"}
-                        </div>
+                        <div className="text-white/90 font-semibold">{statusTitle}</div>
 
                         <div className="text-white/70 text-sm mt-2">
-                            {expiresText ? `Validity: ${expiresText}` : ""}
+                            {expiresText ? t("auth.reset.labels.validity", { date: expiresText }) : ""}
                         </div>
 
                         <div className="mt-5 flex flex-col gap-3">
@@ -146,29 +166,29 @@ export default function ResetPassword() {
                                 to="/forgot-password"
                                 className="w-full text-center rounded-md bg-primary px-6 py-3 text-base font-semibold text-primary-foreground hover:opacity-90"
                             >
-                                Request new reset link
+                                {t("auth.reset.button.requestNew")}
                             </Link>
 
                             <Link
                                 to="/login"
                                 className="w-full text-center rounded-md border border-white/15 bg-transparent px-6 py-3 text-base font-semibold text-white/90 hover:bg-white/5"
                             >
-                                Back to login
+                                {t("auth.reset.button.backToLogin")}
                             </Link>
                         </div>
                     </div>
                 ) : (
                     <div className="space-y-5">
                         <div className="rounded-lg border border-white/10 bg-black/30 p-4">
-                            <div className="text-white/90 font-semibold">Link is valid</div>
+                            <div className="text-white/90 font-semibold">{t("auth.reset.statuses.valid")}</div>
                             <div className="text-white/70 text-sm mt-1">
-                                Email: {docData?.email || "—"}
+                                {t("auth.reset.labels.email", { email: docData?.email || "—" })}
                             </div>
                             <div className="text-white/70 text-sm mt-1">
-                                Valid until: {expiresText || "—"}
+                                {t("auth.reset.labels.validUntil", { date: expiresText || "—" })}
                             </div>
                             <div className="text-white/70 text-sm mt-1">
-                                Status: {docData?.status || "pending"}
+                                {t("auth.reset.labels.status", { status: docData?.status || "pending" })}
                             </div>
                         </div>
 
@@ -177,14 +197,14 @@ export default function ResetPassword() {
                                 type="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                placeholder="New password (min 8 chars)"
+                                placeholder={t("auth.reset.placeholders.newPassword")}
                                 className="w-full rounded-md border border-input bg-background/10 px-4 py-3 text-base text-white placeholder:text-white/50 outline-none focus:ring-2 focus:ring-ring"
                             />
                             <input
                                 type="password"
                                 value={confirm}
                                 onChange={(e) => setConfirm(e.target.value)}
-                                placeholder="Confirm new password"
+                                placeholder={t("auth.reset.placeholders.confirmPassword")}
                                 className="w-full rounded-md border border-input bg-background/10 px-4 py-3 text-base text-white placeholder:text-white/50 outline-none focus:ring-2 focus:ring-ring"
                             />
                         </div>
@@ -194,12 +214,12 @@ export default function ResetPassword() {
                             onClick={submit}
                             className="w-full rounded-md bg-primary px-6 py-3 text-base font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
                         >
-                            {submitting ? "Updating..." : "Update password"}
+                            {submitting ? t("auth.reset.button.updating") : t("auth.reset.button.update")}
                         </button>
 
                         <div className="text-center text-sm">
                             <Link to="/login" className="text-primary hover:underline">
-                                Back to login
+                                {t("auth.reset.button.backToLogin")}
                             </Link>
                         </div>
                     </div>

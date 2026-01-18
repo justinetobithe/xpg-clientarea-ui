@@ -9,6 +9,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "./index.css";
 import App from "./App.jsx";
 
+import "./i18n";
+
 document.documentElement.classList.add("dark");
 
 const queryClient = new QueryClient({

@@ -1,0 +1,814 @@
+{
+    "auth": {
+        "login": {
+            "title": "تسجيل دخول العميل",
+            "pendingTitle": "بانتظار الموافقة",
+            "pendingHint": "بمجرد الموافقة، يمكنك تسجيل الدخول وسيتم منح الوصول تلقائيًا.",
+            "useAnotherAccount": "استخدم حسابًا آخر",
+            "placeholders": {
+                "email": "أدخل البريد الإلكتروني",
+                "password": "أدخل كلمة المرور"
+            },
+            "remember": "تذكرني على هذا الجهاز",
+            "button": {
+                "login": "تسجيل الدخول",
+                "loggingIn": "جارٍ تسجيل الدخول..."
+            },
+            "links": {
+                "forgot": "هل نسيت كلمة المرور؟",
+                "createAccount": "إنشاء حساب؟",
+                "register": "سجّل حسابًا جديدًا"
+            },
+            "toast": {
+                "welcomeTitle": "مرحبًا!",
+                "welcomeDesc": "تم منح الوصول. جارٍ إعادة التوجيه…",
+                "pendingTitle": "بانتظار الموافقة",
+                "failedTitle": "فشل تسجيل الدخول"
+            },
+            "errors": {
+                "invalidEmail": "يرجى إدخال بريد إلكتروني صالح",
+                "passwordMin": "يجب أن تتكون كلمة المرور من 6 أحرف على الأقل",
+                "invalidCredentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
+                "tooManyRequests": "محاولات كثيرة جدًا. يرجى المحاولة لاحقًا.",
+                "failedGeneric": "فشل تسجيل الدخول. يرجى المحاولة مرة أخرى.",
+                "notApproved": "حسابك بانتظار الموافقة. يرجى انتظار موافقة المسؤول."
+            }
+        },
+        "register": {
+            "pending": {
+                "title": "تم إرسال الطلب",
+                "subtitle": "حسابك بانتظار موافقة المسؤول.",
+                "cardTitle": "البريد الإلكتروني المُرسل",
+                "hint": "بمجرد الموافقة، يمكنك تسجيل الدخول وسيمنحك النظام الوصول تلقائيًا.",
+                "goLogin": "الذهاب إلى تسجيل الدخول",
+                "submitAnother": "إرسال طلب آخر",
+                "alreadyHave": "هل لديك حساب بالفعل؟",
+                "signIn": "تسجيل الدخول"
+            },
+            "title": "يرجى القراءة قبل التسجيل",
+            "intro": {
+                "p1": "تحتوي منطقة العملاء على مواد تسويقية، عروض تجريبية وبيانات مفيدة أخرى لألعابنا وعلاماتنا التجارية.",
+                "p2": "يجب أن تكون عميلًا للوصول إلى النظام. يُسمح فقط ببريد الشركة الإلكتروني.",
+                "p3": "سيتم مراجعة طلبك قبل منح الوصول.",
+                "p4": "يرجى عدم مشاركة المواد خارجيًا دون إذن."
+            },
+            "placeholders": {
+                "fullName": "الاسم الكامل",
+                "company": "الشركة",
+                "department": "القسم",
+                "email": "البريد الإلكتروني",
+                "password": "كلمة المرور",
+                "confirmPassword": "تأكيد كلمة المرور"
+            },
+            "checkbox": {
+                "newsletter": "الاشتراك في النشرة الإخبارية؟",
+                "noticePrefix": "لقد قرأت وفهمت بالكامل",
+                "privacyPrefix": "أوافق على"
+            },
+            "policy": {
+                "cookie": "سياسة ملفات تعريف الارتباط",
+                "privacy": "سياسة الخصوصية"
+            },
+            "recaptcha": {
+                "loading": "جارٍ تحميل التحقق…"
+            },
+            "button": {
+                "requestAccess": "طلب الوصول",
+                "registering": "جارٍ التسجيل..."
+            },
+            "footer": {
+                "alreadyHave": "هل لديك حساب بالفعل؟",
+                "signIn": "تسجيل الدخول"
+            },
+            "toast": {
+                "submittedTitle": "تم إرسال التسجيل",
+                "submittedDesc": "حسابك بانتظار موافقة المسؤول.",
+                "failedTitle": "فشل التسجيل"
+            },
+            "errors": {
+                "fullNameRequired": "الاسم الكامل مطلوب",
+                "companyRequired": "الشركة مطلوبة",
+                "departmentRequired": "القسم مطلوب",
+                "emailValid": "مطلوب بريد إلكتروني صالح",
+                "passwordMin": "يجب أن تتكون كلمة المرور من 6 أحرف على الأقل",
+                "confirmPassword": "قم بتأكيد كلمة المرور",
+                "recaptchaComplete": "يرجى إكمال reCAPTCHA",
+                "passwordMismatch": "كلمتا المرور غير متطابقتين",
+                "policiesRequired": "يرجى قبول السياسات المطلوبة",
+                "emailInUse": "هذا البريد الإلكتروني مستخدم بالفعل. يرجى استخدام بريد آخر أو تسجيل الدخول.",
+                "invalidEmail": "عنوان البريد الإلكتروني غير صالح.",
+                "weakPassword": "كلمة المرور ضعيفة جدًا.",
+                "failedGeneric": "تعذر التسجيل. يرجى المحاولة مرة أخرى.",
+                "recaptchaMissing": "لم يتم إعداد reCAPTCHA. يرجى التواصل مع المسؤول.",
+                "recaptchaInvalid": "فشل reCAPTCHA. يرجى المحاولة مرة أخرى.",
+                "verifyUrlMissing": "RECAPTCHA_VERIFY_URL_MISSING"
+            }
+        },
+        "reset": {
+            "title": "تعيين كلمة مرور جديدة",
+            "loading": "جارٍ التحميل…",
+            "statuses": {
+                "invalid": "رابط غير صالح",
+                "notFound": "لم يتم العثور على الرابط",
+                "expired": "انتهت صلاحية الرابط",
+                "used": "تم استخدام الرابط بالفعل",
+                "error": "حدث خطأ ما",
+                "valid": "الرابط صالح"
+            },
+            "labels": {
+                "validity": "الصلاحية: {{date}}",
+                "email": "البريد الإلكتروني: {{email}}",
+                "validUntil": "صالح حتى: {{date}}",
+                "status": "الحالة: {{status}}"
+            },
+            "placeholders": {
+                "newPassword": "كلمة مرور جديدة (8 أحرف كحد أدنى)",
+                "confirmPassword": "تأكيد كلمة المرور الجديدة"
+            },
+            "button": {
+                "requestNew": "طلب رابط إعادة تعيين جديد",
+                "backToLogin": "العودة إلى تسجيل الدخول",
+                "update": "تحديث كلمة المرور",
+                "updating": "جارٍ التحديث..."
+            },
+            "toast": {
+                "invalidPasswordTitle": "كلمة مرور غير صالحة",
+                "invalidPasswordDesc": "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل.",
+                "mismatchTitle": "عدم تطابق",
+                "mismatchDesc": "كلمتا المرور غير متطابقتين.",
+                "updatedTitle": "تم تحديث كلمة المرور",
+                "updatedDesc": "يمكنك الآن تسجيل الدخول باستخدام كلمة المرور الجديدة.",
+                "failedTitle": "فشل إعادة التعيين",
+                "failedDesc": "فشل إعادة التعيين. قد يكون الرابط منتهي الصلاحية أو غير صالح."
+            }
+        },
+        "forgot": {
+            "title": "إعادة تعيين كلمة المرور",
+            "subtitle": "أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة التعيين.",
+            "labels": {
+                "email": "البريد الإلكتروني"
+            },
+            "placeholders": {
+                "email": "أدخل البريد الإلكتروني"
+            },
+            "button": {
+                "send": "إرسال رابط إعادة التعيين",
+                "sending": "جارٍ الإرسال..."
+            },
+            "sent": {
+                "title": "تحقق من صندوق الوارد",
+                "subtitle": "إذا كان البريد موجودًا، ستتلقى رابط إعادة التعيين قريبًا.",
+                "backToLogin": "العودة إلى تسجيل الدخول",
+                "createAccount": "إنشاء حساب"
+            },
+            "links": {
+                "backToLogin": "العودة إلى تسجيل الدخول"
+            },
+            "toast": {
+                "sentTitle": "تم إرسال البريد الإلكتروني",
+                "sentDesc": "إذا كان البريد موجودًا، ستتلقى رابط إعادة التعيين قريبًا.",
+                "failedTitle": "فشل إعادة التعيين"
+            },
+            "errors": {
+                "invalidEmail": "يرجى إدخال بريد إلكتروني صالح",
+                "failedGeneric": "تعذر إرسال بريد إعادة التعيين. يرجى المحاولة مرة أخرى."
+            },
+            "email": {
+                "fullName": "عضو XPG",
+                "subject": "إعادة تعيين كلمة مرور XPG",
+                "body": {
+                    "hello": "مرحبًا،",
+                    "receivedRequest": "تلقّينا طلبًا لإعادة تعيين كلمة مرور XPG الخاصة بك.",
+                    "validFor": "هذا الرابط صالح لمدة <strong>{{minutes}} دقيقة</strong>.",
+                    "cta": "إعادة تعيين كلمة المرور",
+                    "fallback": "إذا لم يعمل الزر، انسخ هذا الرابط:",
+                    "ignore": "إذا لم تطلب ذلك، يمكنك تجاهل هذا البريد الإلكتروني.",
+                    "signature": "فريق XPG"
+                }
+            }
+        }
+    },
+    "policies": {
+        "meta": {
+            "updatedDate": "أكتوبر 2025",
+            "product": "منطقة عملاء XPG",
+            "lastUpdated": "آخر تحديث: {{date}}"
+        },
+        "cookie": {
+            "title": "سياسة ملفات تعريف الارتباط",
+            "intro": "نستخدم ملفات تعريف الارتباط وتقنيات مشابهة لتشغيل منطقة العملاء، وتذكر التفضيلات، وتحليل الأداء، والحفاظ على أمان الحسابات. يمكنك إدارة ملفات تعريف الارتباط من إعدادات المتصفح. قد يؤثر تعطيل ملفات تعريف الارتباط الأساسية على الوظائف.",
+            "table": {
+                "type": "النوع",
+                "purpose": "الغرض",
+                "examples": "أمثلة"
+            },
+            "rows": {
+                "essential": {
+                    "type": "أساسية",
+                    "purpose": "المصادقة، إدارة الجلسات، الأمان",
+                    "examples": "auth_session, csrf_token"
+                },
+                "preferences": {
+                    "type": "تفضيلات",
+                    "purpose": "اللغة، إعدادات الواجهة",
+                    "examples": "lang, theme_mode"
+                },
+                "analytics": {
+                    "type": "تحليلات",
+                    "purpose": "مقاييس الاستخدام لتحسين الأداء والمحتوى",
+                    "examples": "analytics_id, perf_sample"
+                }
+            },
+            "managing": {
+                "title": "إدارة ملفات تعريف الارتباط",
+                "body": "تتيح معظم المتصفحات حظر أو حذف ملفات تعريف الارتباط. يمكنك أيضًا استخدام أوضاع الخصوصية المدمجة أو إضافات مخصصة للحد من التتبع."
+            }
+        },
+        "privacy": {
+            "title": "سياسة الخصوصية",
+            "intro": "توضح هذه السياسة كيفية جمع المعلومات واستخدامها وحمايتها فيما يتعلق بمنطقة عملاء XPG. منطقة العملاء مخصصة للشركاء التجاريين المصرح لهم وتحتوي على مواد تسويقية وعروض تجريبية ومواد ذات صلة.",
+            "sections": {
+                "collect": {
+                    "title": "المعلومات التي نجمعها",
+                    "body": "بيانات الحساب مثل الاسم والشركة والقسم والبريد الإلكتروني الخاص بالعمل. بيانات الاستخدام مثل الصفحات التي تمت مشاهدتها والتنزيلات والجهاز والمنطقة التقريبية. سجلات تشغيلية لأغراض الأمان ومنع الاحتيال."
+                },
+                "use": {
+                    "title": "كيف نستخدم المعلومات",
+                    "body": "لتوفير وصول آمن، وتخصيص المحتوى، وإرسال الإشعارات، وتحسين الأداء، والامتثال للالتزامات القانونية. قد نقوم بتجميع بيانات الاستخدام لفهم تبني المنتج وجودة المحتوى."
+                },
+                "sharing": {
+                    "title": "المشاركة",
+                    "body": "لا نبيع البيانات الشخصية. قد تحدث مشاركة محدودة مع مزودي البنية التحتية أو التحليلات أو خدمات مكافحة الإساءة بموجب عقود تتطلب السرية وضمانات مناسبة."
+                },
+                "security": {
+                    "title": "الأمان",
+                    "body": "يتم التحقق من الوصول ومراقبته. تُنقل البيانات عبر TLS وتُخزن بضوابط قائمة على الأدوار. تتم مراجعة الحوادث والتخفيف منها وفقًا للإجراءات الداخلية."
+                },
+                "retention": {
+                    "title": "الاحتفاظ",
+                    "body": "نحتفظ بسجلات الحساب والتدقيق للمدة اللازمة لتقديم الخدمة وتلبية المتطلبات القانونية والتعاقدية. يمكنك طلب الحذف وفقًا للالتزامات المعمول بها."
+                },
+                "choices": {
+                    "title": "خياراتك",
+                    "body": "يمكنك تحديث تفاصيل الملف الشخصي، وإلغاء الاشتراك في رسائل التسويق، وطلب الوصول أو حذف بياناتك عبر التواصل مع ممثل XPG الخاص بك."
+                },
+                "contact": {
+                    "title": "التواصل",
+                    "body": "لاستفسارات الخصوصية، تواصل مع privacy@xpg.com."
+                }
+            }
+        }
+    },
+    "navbar": {
+        "links": {
+            "home": "الرئيسية",
+            "announcements": "الإعلانات",
+            "apiDocs": "مستندات API",
+            "settings": "الإعدادات"
+        },
+        "collections": "المجموعات",
+        "searchPlaceholder": "بحث...",
+        "logout": "تسجيل الخروج",
+        "open": "فتح",
+        "loading": "جارٍ التحميل...",
+        "accountFallback": "الحساب",
+        "clientArea": "منطقة العملاء",
+        "language": {
+            "title": "اللغة",
+            "header": "اللغة",
+            "subtitle": "اختر لغتك المفضلة",
+            "active": "نشط"
+        },
+        "mobile": {
+            "liveGames": "ألعاب مباشرة",
+            "noLiveGames": "لم يتم العثور على ألعاب مباشرة.",
+            "other": "أخرى"
+        }
+    },
+    "home": {
+        "welcomeBadge": "مرحبًا بك في",
+        "title": "منطقة العملاء"
+    },
+    "footer": {
+        "disclaimer": "شعار XPG Live والمواد الرسومية هي ملكية فكرية حصرية لـ XPG Live ولا يجوز نسخها أو إعادة إنتاجها أو توزيعها أو عرضها دون موافقة خطية مسبقة من XPG Live. تعمل XPG Live بالتوافق الكامل مع لوائح الألعاب عبر عدة ولايات قضائية. نحن ملتزمون بحماية خصوصيتك.",
+        "copyright": "حقوق النشر © 2008 - 2025 XPG. جميع الحقوق محفوظة.",
+        "certTitle": "عرض شهادة iTech",
+        "certAlt": "مختبر iTech"
+    },
+    "downloads": {
+        "title": "أحدث التنزيلات",
+        "subtitle": "وصول سريع إلى أحدث المواد التي قمت بتنزيلها",
+        "table": {
+            "filename": "اسم الملف",
+            "downloaded": "تم التنزيل"
+        },
+        "empty": "لا توجد تنزيلات بعد.",
+        "recent": "الأحدث",
+        "showing": "عرض {{count}} {{plus}} عناصر",
+        "dash": "-",
+        "download": "تنزيل",
+        "downloading": "جارٍ التنزيل…",
+        "missingStoragePath": "storagePath مفقود ولا يمكن استخراجه من fileURL.",
+        "notAuthenticated": "غير مصادق عليه. يرجى تسجيل الدخول مرة أخرى.",
+        "missingDownloadUrl": "VITE_DOWNLOAD_FILE_URL مفقود",
+        "downloadFailed": "فشل التنزيل",
+        "open": "فتح",
+        "untitled": "بدون عنوان"
+    },
+    "announcements": {
+        "title": "إعلانات لك",
+        "subtitle": "آخر التحديثات والإشعارات في منطقة العملاء",
+        "seeMore": "عرض المزيد",
+        "empty": "لا توجد إعلانات بعد.",
+        "swipe": "اسحب",
+        "swipeHint": "اسحب يسارًا/يمينًا لرؤية المزيد من الإعلانات",
+        "openDetails": "فتح التفاصيل",
+        "untitled": "بدون عنوان",
+        "modal": {
+            "fallbackTitle": "إعلان",
+            "noContent": "لم يتم توفير محتوى.",
+            "viewMarketingPack": "عرض الحزمة التسويقية"
+        },
+        "details": {
+            "crumb": "الرئيسية / الإعلانات / التفاصيل",
+            "loadingTitle": "جارٍ التحميل...",
+            "fallbackTitle": "إعلان",
+            "back": "رجوع",
+            "backToAnnouncements": "العودة إلى الإعلانات",
+            "noContent": "لم يتم توفير محتوى.",
+            "viewMarketingPack": "عرض الحزمة التسويقية",
+            "notFound": {
+                "title": "لم يتم العثور على الإعلان",
+                "subtitle": "تعذر تحميل الإعلان المطلوب."
+            },
+            "recommended": {
+                "title": "موصى به",
+                "empty": "لا توجد توصيات بعد."
+            }
+        },
+        "page": {
+            "crumb": "الرئيسية / الإعلانات",
+            "title": "الإعلانات",
+            "subtitle": "تحديثات مهمة وإصدارات وتواصل مع العملاء",
+            "searchPlaceholder": "ابحث في الإعلانات...",
+            "fallbackTitle": "إعلان",
+            "older": "الأقدم",
+            "openToReadMore": "افتح لقراءة المزيد.",
+            "open": "فتح",
+            "noContent": "لم يتم توفير محتوى.",
+            "viewMarketingPack": "عرض الحزمة التسويقية",
+            "empty": {
+                "title": "لم يتم العثور على إعلانات",
+                "subtitle": "جرّب تعديل كلمات البحث."
+            }
+        }
+    },
+    "games": {
+        "sort": {
+            "defaultOrder": "الترتيب الافتراضي",
+            "nameAsc": "الاسم (أ-ي)",
+            "nameDesc": "الاسم (ي-أ)"
+        },
+        "types": {
+            "title": "أنواع الألعاب",
+            "prev": "السابق",
+            "next": "التالي",
+            "loading": "جارٍ التحميل...",
+            "empty": "لم يتم العثور على أنواع ألعاب.",
+            "swipeHint": "اسحب يسارًا/يمينًا للعرض"
+        },
+        "list": {
+            "allGames": "كل الألعاب",
+            "typeGames": "ألعاب {{type}}",
+            "clearType": "مسح النوع",
+            "searchPlaceholder": "ابحث عن ألعاب...",
+            "failedToLoad": "فشل تحميل الألعاب",
+            "noGamesFound": "لم يتم العثور على ألعاب."
+        },
+        "pagination": {
+            "prev": "السابق",
+            "next": "التالي",
+            "page": "صفحة",
+            "mobileHint": "عرض صفحات أكثر على الهاتف"
+        },
+        "image": {
+            "noImage": "لا توجد صورة"
+        },
+        "untitled": "بدون عنوان"
+    },
+    "gameDetails": {
+        "tabs": {
+            "assets": "المواد",
+            "related": "ذات صلة"
+        },
+        "search": {
+            "placeholder": "بحث"
+        },
+        "filters": {
+            "show": "إظهار عوامل التصفية",
+            "hide": "إخفاء عوامل التصفية"
+        },
+        "sort": {
+            "recent": "الأحدث تحديثًا",
+            "alpha": "أبجديًا"
+        },
+        "zip": {
+            "button": "ZIP ({{count}})",
+            "assetsFallback": "مواد"
+        },
+        "selection": {
+            "clear": "مسح",
+            "selected": "تم تحديد {{count}} ملف",
+            "selected_plural": "تم تحديد {{count}} ملفات"
+        },
+        "table": {
+            "preview": "معاينة",
+            "fileName": "اسم الملف",
+            "details": "التفاصيل",
+            "actions": "الإجراءات"
+        },
+        "empty": {
+            "noFiles": "لم يتم العثور على ملفات."
+        },
+        "mobile": {
+            "actionsBelow": "الإجراءات بالأسفل"
+        },
+        "file": {
+            "fileLabel": "ملف",
+            "dash": "—",
+            "added": "أُضيف {{date}}"
+        },
+        "actions": {
+            "download": "تنزيل",
+            "preview": "معاينة"
+        },
+        "pagination": {
+            "prev": "السابق",
+            "next": "التالي",
+            "pageOf": "الصفحة {{page}} من {{total}}"
+        },
+        "related": {
+            "viewAssets": "عرض المواد",
+            "empty": {
+                "title": "لم يتم العثور على ألعاب ذات صلة",
+                "subtitle": "لم نتمكن من العثور على ألعاب أخرى لـ {{name}} الآن.",
+                "this": "هذه",
+                "browseAll": "تصفح كل الألعاب"
+            }
+        },
+        "collections": {
+            "addToCollection": "إضافة إلى مجموعة",
+            "addTo": "إضافة إلى:",
+            "empty": "لا توجد مجموعات بعد.",
+            "untitled": "بدون عنوان",
+            "alreadyIn": "موجود بالفعل في هذه المجموعة",
+            "tapToAdd": "اضغط للإضافة",
+            "added": "تمت الإضافة",
+            "already": "موجود بالفعل",
+            "createNew": "إنشاء مجموعة جديدة",
+            "createCollection": "إنشاء مجموعة",
+            "namePlaceholder": "اسم المجموعة",
+            "processing": "جارٍ المعالجة",
+            "create": "إنشاء",
+            "cancel": "إلغاء",
+            "newCollectionFallback": "مجموعة جديدة",
+            "sheet": {
+                "title": "إضافة إلى مجموعة",
+                "subtitle": "اختر مجموعة أدناه، أو أنشئ مجموعة جديدة."
+            },
+            "stages": {
+                "creating": "جارٍ إنشاء المجموعة",
+                "addingFile": "جارٍ إضافة الملف إلى المجموعة",
+                "done": "تم"
+            }
+        },
+        "download": {
+            "defaultName": "تنزيل"
+        },
+        "alerts": {
+            "missingStoragePath": "storagePath مفقود. احفظ snapshot.ref.fullPath أثناء الرفع.",
+            "downloadFailed": "فشل التنزيل",
+            "zipFailed": "فشل تنزيل ZIP",
+            "createCollectionFailed": "فشل إنشاء المجموعة"
+        }
+    },
+    "filtersPanel": {
+        "fileTypes": "أنواع الملفات",
+        "fileTags": "وسوم الملفات",
+        "followUs": "تابعنا",
+        "contactUs": "تواصل معنا",
+        "selectedBadge": "تم تحديد {{count}}",
+        "social": {
+            "facebook": "فيسبوك",
+            "twitter": "X / تويتر",
+            "instagram": "إنستغرام",
+            "handleTitle": "@XPG Live",
+            "handleSub": "@xpg.live"
+        },
+        "contact": {
+            "phone": "+421 911 628 998",
+            "email": "info@xprogaming.com",
+            "location": "براتيسلافا، سلوفاكيا"
+        }
+    },
+    "previewModal": {
+        "download": "تنزيل",
+        "noInlinePreview": "لا توجد معاينة ضمن الصفحة لهذا النوع من الملفات.",
+        "pdfTitle": "PDF",
+        "addedAt": "أُضيف {{date}}",
+        "position": "{{index}} من {{total}}",
+        "close": "إغلاق",
+        "prev": "السابق",
+        "next": "التالي"
+    },
+    "row": {
+        "prev": "السابق",
+        "next": "التالي",
+        "announcementCoverAlt": "غلاف الإعلان",
+        "noImage": "لا توجد صورة",
+        "new": "جديد",
+        "readAnnouncement": "قراءة الإعلان",
+        "viewMarketingPack": "عرض الحزمة التسويقية",
+        "empty": "لا شيء هنا بعد."
+    },
+    "settings": {
+        "crumb": "الرئيسية / إعدادات الحساب",
+        "title": "إعدادات الحساب",
+        "subtitle": "تحديث حسابك وبيانات ملفك الشخصي",
+        "sections": {
+            "general": "الإعدادات العامة",
+            "password": "تغيير كلمة المرور",
+            "delete": "حذف الحساب"
+        },
+        "changePassword": {
+            "title": "تغيير كلمة المرور",
+            "subtitle": "لأسباب أمنية، سنتحقق من كلمة المرور الحالية أولًا.",
+            "fields": {
+                "current": "كلمة المرور الحالية",
+                "new": "كلمة المرور الجديدة",
+                "confirm": "تأكيد كلمة المرور الجديدة"
+            },
+            "button": {
+                "save": "حفظ التغييرات",
+                "saving": "جارٍ الحفظ..."
+            },
+            "messages": {
+                "required": "جميع الحقول مطلوبة.",
+                "mismatch": "كلمتا المرور الجديدتان غير متطابقتين.",
+                "success": "تم تغيير كلمة المرور بنجاح!",
+                "failed": "فشل تغيير كلمة المرور"
+            }
+        },
+        "deleteAccount": {
+            "title": "حذف الحساب",
+            "subtitle": "سيؤدي هذا إلى إزالة وصولك بشكل دائم.",
+            "warningPrefix": "هذا الإجراء",
+            "irreversible": "لا رجعة فيه",
+            "fields": {
+                "password": "التأكيد بكلمة المرور",
+                "deleteStorage": "حذف ملفات التخزين الخاصة بي أيضًا (اختياري)"
+            },
+            "button": {
+                "delete": "حذف الحساب",
+                "deleting": "جارٍ الحذف..."
+            },
+            "confirm": "هل تريد حذف حسابك نهائيًا؟ لا يمكن التراجع عن ذلك.",
+            "messages": {
+                "passwordRequired": "كلمة المرور مطلوبة.",
+                "failed": "فشل حذف الحساب"
+            }
+        },
+        "general": {
+            "title": "الإعدادات العامة",
+            "subtitle": "تحديث تفاصيل ملفك الشخصي وتفضيلاتك.",
+            "fields": {
+                "name": "الاسم",
+                "email": "البريد الإلكتروني",
+                "company": "الشركة",
+                "department": "القسم",
+                "timezone": "المنطقة الزمنية",
+                "newsletter": "مشترك في النشرة الإخبارية؟"
+            },
+            "button": {
+                "save": "حفظ التغييرات",
+                "saving": "جارٍ الحفظ..."
+            },
+            "messages": {
+                "success": "تم تحديث التفاصيل بنجاح!",
+                "failed": "فشل تحديث التفاصيل"
+            },
+            "departments": {
+                "Operations": "العمليات",
+                "Game Development": "تطوير الألعاب",
+                "Compliance & Legal": "الامتثال والشؤون القانونية",
+                "Finance & Accounting": "المالية والمحاسبة",
+                "Marketing & Promotions": "التسويق والعروض الترويجية",
+                "Player Support": "دعم اللاعبين",
+                "IT & Infrastructure": "تقنية المعلومات والبنية التحتية",
+                "Product Management": "إدارة المنتج",
+                "Sales & Business Development": "المبيعات وتطوير الأعمال",
+                "HR & Talent Acquisition": "الموارد البشرية واستقطاب المواهب",
+                "Executive Management": "الإدارة التنفيذية",
+                "Other": "أخرى"
+            }
+        },
+        "yes": "نعم",
+        "no": "لا"
+    },
+    "collectionsDrawer": {
+        "title": "المجموعات",
+        "subtitle": "نظّم ونزّل المواد التي اخترتها",
+        "empty": "لا توجد مجموعات بعد. أنشئ مجموعتك الأولى لبدء تجميع الملفات.",
+        "common": {
+            "somethingWentWrong": "حدث خطأ ما."
+        },
+        "defaults": {
+            "newCollection": "مجموعة جديدة",
+            "collectionTitle": "مجموعة",
+            "collection": "مجموعة",
+            "download": "تنزيل",
+            "untitledCollection": "مجموعة بدون عنوان"
+        },
+        "status": {
+            "completed": "مكتمل",
+            "inProgress": "قيد التنفيذ"
+        },
+        "stats": {
+            "totalCollections": "إجمالي المجموعات",
+            "files_one": "{{count}} ملف",
+            "files_other": "{{count}} ملفات"
+        },
+        "actions": {
+            "close": "إغلاق",
+            "newCollection": "مجموعة جديدة",
+            "rename": "إعادة تسمية",
+            "save": "حفظ",
+            "cancel": "إلغاء",
+            "delete": "حذف",
+            "prepareDownload": "تحضير التنزيل",
+            "showFileDetails": "إظهار تفاصيل الملف",
+            "hideFileDetails": "إخفاء تفاصيل الملف",
+            "toggleCompleted": "تبديل حالة الاكتمال",
+            "removeFile": "إزالة الملف"
+        },
+        "files": {
+            "title_one": "الملفات ({{count}})",
+            "title_other": "الملفات ({{count}})",
+            "totalSize": "الحجم الإجمالي: {{size}}",
+            "empty": "لا توجد ملفات في هذه المجموعة بعد.",
+            "loading": "جارٍ تحميل الملفات…",
+            "untitledFile": "ملف بدون عنوان",
+            "filePreviewAlt": "معاينة الملف"
+        },
+        "confirm": {
+            "title": "حذف هذه المجموعة؟",
+            "subtitle": "لا يمكن التراجع عن ذلك. لن يتم حذف الملفات نفسها."
+        },
+        "errors": {
+            "missingDownloadUrl": "VITE_DOWNLOAD_FILE_URL مفقود",
+            "notAuthenticated": "غير مصادق عليه. يرجى تسجيل الدخول مرة أخرى.",
+            "downloadFailedWithStatus": "فشل التنزيل ({{status}})",
+            "prepareDownloadFailed": "فشل تحضير التنزيل"
+        },
+        "toast": {
+            "create": {
+                "title": "جارٍ إنشاء المجموعة",
+                "desc": "يرجى الانتظار…"
+            },
+            "created": {
+                "title": "تم إنشاء المجموعة",
+                "desc": "يمكنك إعادة تسميتها الآن."
+            },
+            "createFailed": {
+                "title": "فشل الإنشاء"
+            },
+            "rename": {
+                "title": "جارٍ إعادة تسمية المجموعة",
+                "desc": "جارٍ حفظ التغييرات…"
+            },
+            "renamed": {
+                "title": "تمت إعادة التسمية",
+                "desc": "تم تحديث اسم المجموعة."
+            },
+            "renameFailed": {
+                "title": "فشلت إعادة التسمية"
+            },
+            "updateStatus": {
+                "title": "جارٍ تحديث الحالة",
+                "desc": "يرجى الانتظار…"
+            },
+            "updated": {
+                "title": "تم التحديث",
+                "desc": "تم حفظ حالة المجموعة."
+            },
+            "updateFailed": {
+                "title": "فشل التحديث"
+            },
+            "delete": {
+                "title": "جارٍ حذف المجموعة",
+                "desc": "جارٍ الإزالة…"
+            },
+            "deleted": {
+                "title": "تم الحذف",
+                "desc": "تمت إزالة المجموعة."
+            },
+            "deleteFailed": {
+                "title": "فشل الحذف"
+            },
+            "prepare": {
+                "title": "جارٍ تحضير التنزيل",
+                "desc": "جارٍ إنشاء ZIP لـ \"{{name}}\"…"
+            },
+            "downloadReady": {
+                "title": "التنزيل جاهز",
+                "desc": "تم إنشاء ملف ZIP."
+            },
+            "prepareFailed": {
+                "title": "فشل تحضير التنزيل"
+            },
+            "removeFile": {
+                "title": "جارٍ إزالة الملف",
+                "desc": "جارٍ تحديث المجموعة…"
+            },
+            "removed": {
+                "title": "تمت الإزالة",
+                "desc": "تمت إزالة الملف من المجموعة."
+            },
+            "removeFailed": {
+                "title": "فشلت الإزالة"
+            }
+        }
+    },
+    "search": {
+        "crumb": "الرئيسية / البحث",
+        "title": "بحث",
+        "subtitle": "ابحث في الإعلانات والألعاب والأقسام والملفات.",
+        "header": {
+            "queryLabel": "الاستعلام:"
+        },
+        "hero": {
+            "resultsFor": "نتائج لـ",
+            "startSearching": "ابدأ البحث",
+            "showingMatched": "عرض المحتوى المطابق عبر منطقة العملاء الخاصة بك.",
+            "useNavbarHint": "استخدم شريط البحث في شريط التنقل واضغط Enter."
+        },
+        "stats": {
+            "announcements": "الإعلانات",
+            "games": "الألعاب",
+            "total": "الإجمالي"
+        },
+        "states": {
+            "searching": "جارٍ البحث...",
+            "failed": "فشل البحث"
+        },
+        "emptyStates": {
+            "noQuery": {
+                "card1": {
+                    "title": "ابحث عن أي شيء",
+                    "desc": "جرّب أسماء الألعاب أو عناوين الإعلانات أو أسماء الأقسام أو أسماء الملفات."
+                },
+                "card2": {
+                    "title": "نصيحة احترافية",
+                    "desc": "استخدم كلمات قصيرة مثل “baccarat”، “pack”، “thumbnail”، “promo”، إلخ."
+                }
+            },
+            "noResults": {
+                "title": "لا توجد نتائج",
+                "desc": "لم يتم العثور على نتائج لـ \"{{q}}\". جرّب كلمة أقصر."
+            }
+        },
+        "panels": {
+            "announcements": {
+                "title": "الإعلانات",
+                "empty": "لا توجد إعلانات مطابقة."
+            },
+            "games": {
+                "title": "الألعاب",
+                "hint": "وسّع اللعبة لعرض الأقسام والملفات المطابقة.",
+                "emptyTitle": "لا توجد ألعاب مطابقة",
+                "emptyDesc": "جرّب كلمة مختلفة."
+            }
+        },
+        "gameCard": {
+            "matchingFound": "تم العثور على أقسام/ملفات مطابقة",
+            "noMatching": "لا توجد أقسام/ملفات مطابقة في هذه اللعبة",
+            "noSectionsFound": "لم يتم العثور على أقسام.",
+            "noMatchingFiles": "لا توجد ملفات مطابقة."
+        },
+        "actions": {
+            "open": "فتح",
+            "viewAll": "عرض الكل",
+            "expand": "توسيع",
+            "collapse": "طي"
+        },
+        "common": {
+            "dash": "-",
+            "untitled": "بدون عنوان",
+            "section": "قسم",
+            "file": "ملف",
+            "noDescription": "لا يوجد وصف.",
+            "filesCount_one": "{{count}} ملف",
+            "filesCount_other": "{{count}} ملفات"
+        }
+    }
+}

@@ -10,25 +10,21 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "../contexts/ToastContext";
 import { useAuthStore } from "../store/authStore";
+import { useTranslation } from "react-i18next";
 
 const PENDING_KEY = "xpg_registration_pending_email";
 
-const schema = z.object({
-    email: z.string().email("Please enter a valid email"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
-    remember: z.boolean().optional(),
-});
-
-function toUserMessage(err) {
+function toUserMessage(err, t) {
     const code = err?.code ? String(err.code) : "";
-    if (code === "auth/invalid-credential") return "Invalid email or password.";
-    if (code === "auth/user-not-found") return "Invalid email or password.";
-    if (code === "auth/wrong-password") return "Invalid email or password.";
-    if (code === "auth/too-many-requests") return "Too many attempts. Please try again later.";
-    return "Login failed. Please try again.";
+    if (code === "auth/invalid-credential") return t("auth.login.errors.invalidCredentials");
+    if (code === "auth/user-not-found") return t("auth.login.errors.invalidCredentials");
+    if (code === "auth/wrong-password") return t("auth.login.errors.invalidCredentials");
+    if (code === "auth/too-many-requests") return t("auth.login.errors.tooManyRequests");
+    return t("auth.login.errors.failedGeneric");
 }
 
 export default function Login() {
+    const { t } = useTranslation();
     const { showToast } = useToast();
     const [err, setErr] = useState("");
 
@@ -44,16 +40,26 @@ export default function Login() {
 
     const hasPending = useMemo(() => !!pendingEmail, [pendingEmail]);
 
+    const schema = useMemo(
+        () =>
+            z.object({
+                email: z.string().email(t("auth.login.errors.invalidEmail")),
+                password: z.string().min(6, t("auth.login.errors.passwordMin")),
+                remember: z.boolean().optional()
+            }),
+        [t]
+    );
+
     const {
         register,
         handleSubmit,
         setValue,
         watch,
         formState: { errors },
-        setValue: setFormValue,
+        setValue: setFormValue
     } = useForm({
         resolver: zodResolver(schema),
-        defaultValues: { email: "", password: "", remember: false },
+        defaultValues: { email: "", password: "", remember: false }
     });
 
     const remember = watch("remember");
@@ -94,24 +100,22 @@ export default function Login() {
 
             showToast({
                 variant: "success",
-                title: "Welcome!",
-                description: "Access granted. Redirecting…",
+                title: t("auth.login.toast.welcomeTitle"),
+                description: t("auth.login.toast.welcomeDesc")
             });
         },
         onError: (error) => {
             const msg =
-                error?.message === "NOT_APPROVED"
-                    ? "Your account is pending approval. Please wait for admin approval."
-                    : toUserMessage(error);
+                error?.message === "NOT_APPROVED" ? t("auth.login.errors.notApproved") : toUserMessage(error, t);
 
             setErr(msg);
 
             showToast({
                 variant: error?.message === "NOT_APPROVED" ? "warning" : "error",
-                title: error?.message === "NOT_APPROVED" ? "Pending approval" : "Login failed",
-                description: msg,
+                title: error?.message === "NOT_APPROVED" ? t("auth.login.toast.pendingTitle") : t("auth.login.toast.failedTitle"),
+                description: msg
             });
-        },
+        }
     });
 
     const onSubmit = (data) => {
@@ -128,8 +132,7 @@ export default function Login() {
     };
 
     const showPendingCard =
-        hasPending &&
-        (!typedEmail || String(typedEmail).trim().toLowerCase() === String(pendingEmail).toLowerCase());
+        hasPending && (!typedEmail || String(typedEmail).trim().toLowerCase() === String(pendingEmail).toLowerCase());
 
     return (
         <div className="min-h-screen flex items-center justify-center relative overflow-hidden text-foreground">
@@ -141,17 +144,15 @@ export default function Login() {
                     <img src="/image/logo-white.png" alt="Logo" className="h-[90px]" />
                 </div>
 
-                <h1 className="text-center text-xl font-semibold text-white mb-7">Client login</h1>
+                <h1 className="text-center text-xl font-semibold text-white mb-7">{t("auth.login.title")}</h1>
 
                 {showPendingCard && (
                     <div className="mb-6 rounded-lg border border-white/10 bg-black/30 p-4">
-                        <div className="text-white/80 text-sm">Pending approval</div>
+                        <div className="text-white/80 text-sm">{t("auth.login.pendingTitle")}</div>
                         <div className="text-white font-semibold break-all">{pendingEmail}</div>
-                        <div className="text-white/60 text-xs mt-2">
-                            Once approved, you can log in and access will be granted automatically.
-                        </div>
+                        <div className="text-white/60 text-xs mt-2">{t("auth.login.pendingHint")}</div>
                         <button type="button" onClick={clearPending} className="mt-3 text-sm text-primary hover:underline">
-                            Use another account
+                            {t("auth.login.useAnotherAccount")}
                         </button>
                     </div>
                 )}
@@ -162,7 +163,7 @@ export default function Login() {
                             <Label className="sr-only">Email</Label>
                             <Input
                                 type="email"
-                                placeholder="Enter email"
+                                placeholder={t("auth.login.placeholders.email")}
                                 {...register("email")}
                                 className="w-full rounded-md border border-input bg-background/10 px-4 py-3 text-base text-white placeholder:text-white/50 outline-none focus:ring-2 focus:ring-ring"
                             />
@@ -173,7 +174,7 @@ export default function Login() {
                             <Label className="sr-only">Password</Label>
                             <Input
                                 type="password"
-                                placeholder="Enter password"
+                                placeholder={t("auth.login.placeholders.password")}
                                 {...register("password")}
                                 className="w-full rounded-md border border-input bg-background/10 px-4 py-3 text-base text-white placeholder:text-white/50 outline-none focus:ring-2 focus:ring-ring"
                             />
@@ -186,11 +187,9 @@ export default function Login() {
                                 onChange={(v) => setValue("remember", v)}
                                 className={`${remember ? "bg-primary" : "bg-muted"} relative inline-flex h-6 w-11 items-center rounded-full transition`}
                             >
-                                <span
-                                    className={`${remember ? "translate-x-6" : "translate-x-1"} inline-block h-4 w-4 transform rounded-full bg-white transition`}
-                                />
+                                <span className={`${remember ? "translate-x-6" : "translate-x-1"} inline-block h-4 w-4 transform rounded-full bg-white transition`} />
                             </Switch>
-                            <span className="text-sm text-white/90">Remember me on this device</span>
+                            <span className="text-sm text-white/90">{t("auth.login.remember")}</span>
                         </div>
 
                         {err && <div className="text-sm text-red-400 pt-1">{err}</div>}
@@ -199,21 +198,21 @@ export default function Login() {
                             disabled={loginMutation.isPending}
                             className="w-fit mx-auto block mt-2 rounded-md bg-primary px-9 py-3 text-base font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
                         >
-                            {loginMutation.isPending ? "Logging in..." : "Login"}
+                            {loginMutation.isPending ? t("auth.login.button.loggingIn") : t("auth.login.button.login")}
                         </button>
                     </Fieldset>
                 </form>
 
                 <div className="text-center text-sm mt-6">
                     <Link to="/forgot-password" className="text-primary hover:underline">
-                        Forgot password?
+                        {t("auth.login.links.forgot")}
                     </Link>
                 </div>
 
-                <div className="text-center text-sm mt-8 text-white/80">Create an account?</div>
+                <div className="text-center text-sm mt-8 text-white/80">{t("auth.login.links.createAccount")}</div>
                 <div className="text-center mt-2">
                     <Link to="/register" className="text-sm text-primary hover:underline">
-                        Register for a new account
+                        {t("auth.login.links.register")}
                     </Link>
                 </div>
             </div>

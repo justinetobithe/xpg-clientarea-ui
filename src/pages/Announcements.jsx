@@ -2,6 +2,7 @@ import { Fragment, useMemo, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { Calendar, ExternalLink, Search, Sparkles, X } from "lucide-react";
 import { useAnnouncementStore } from "../store/announcementStore";
+import { useTranslation } from "react-i18next";
 
 const formatLongDate = (val) => {
     if (!val) return "";
@@ -36,7 +37,9 @@ const SkeletonCard = () => (
 );
 
 function AnnouncementCard({ item, onOpen, faded }) {
-    const title = item?.title || "Announcement";
+    const { t } = useTranslation();
+
+    const title = item?.title || t("announcements.page.fallbackTitle");
     const dateLabel = formatLongDate(item?.date || item?.createdAt);
     const snippet = getPlainText(item?.content || "").slice(0, 140);
 
@@ -48,12 +51,7 @@ function AnnouncementCard({ item, onOpen, faded }) {
         >
             <div className="relative">
                 {item?.imageURL ? (
-                    <img
-                        src={item.imageURL}
-                        alt={title}
-                        className="h-44 w-full object-cover"
-                        loading="lazy"
-                    />
+                    <img src={item.imageURL} alt={title} className="h-44 w-full object-cover" loading="lazy" />
                 ) : (
                     <div className="h-44 bg-gradient-to-br from-white/10 via-white/5 to-transparent" />
                 )}
@@ -69,7 +67,7 @@ function AnnouncementCard({ item, onOpen, faded }) {
 
                         {faded && (
                             <span className="rounded-full px-2 py-1 bg-white/10 border border-white/10 text-white/60">
-                                Older
+                                {t("announcements.page.older")}
                             </span>
                         )}
                     </div>
@@ -82,11 +80,11 @@ function AnnouncementCard({ item, onOpen, faded }) {
 
             <div className="p-4">
                 <div className="text-white/70 text-sm line-clamp-2">
-                    {snippet || "Open to read more."}
+                    {snippet || t("announcements.page.openToReadMore")}
                 </div>
 
                 <div className="mt-4 flex justify-end">
-                    <span className="text-primary text-sm font-semibold">Open</span>
+                    <span className="text-primary text-sm font-semibold">{t("announcements.page.open")}</span>
                 </div>
             </div>
         </button>
@@ -94,6 +92,7 @@ function AnnouncementCard({ item, onOpen, faded }) {
 }
 
 export default function Announcements() {
+    const { t } = useTranslation();
     const { items, loading } = useAnnouncementStore();
     const [detail, setDetail] = useState(null);
     const [query, setQuery] = useState("");
@@ -112,9 +111,9 @@ export default function Announcements() {
         if (!q) return sorted;
 
         return sorted.filter((a) => {
-            const t = (a?.title || "").toLowerCase();
+            const tt = (a?.title || "").toLowerCase();
             const c = getPlainText(a?.content || "").toLowerCase();
-            return t.includes(q) || c.includes(q);
+            return tt.includes(q) || c.includes(q);
         });
     }, [sorted, query]);
 
@@ -128,13 +127,9 @@ export default function Announcements() {
                         </div>
 
                         <div>
-                            <p className="text-sm text-white/50 mb-1">Home / Announcements</p>
-                            <h1 className="text-3xl font-bold text-white mb-2">
-                                Announcements
-                            </h1>
-                            <p className="text-sm text-white/70">
-                                Important updates, releases and client communications
-                            </p>
+                            <p className="text-sm text-white/50 mb-1">{t("announcements.page.crumb")}</p>
+                            <h1 className="text-3xl font-bold text-white mb-2">{t("announcements.page.title")}</h1>
+                            <p className="text-sm text-white/70">{t("announcements.page.subtitle")}</p>
                         </div>
                     </div>
 
@@ -143,7 +138,7 @@ export default function Announcements() {
                         <input
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
-                            placeholder="Search announcements..."
+                            placeholder={t("announcements.page.searchPlaceholder")}
                             className="w-full rounded-xl bg-black/20 border border-border pl-9 pr-3 py-2.5 text-sm text-white placeholder:text-white/40 outline-none focus:ring-1 focus:ring-primary"
                         />
                     </div>
@@ -159,22 +154,13 @@ export default function Announcements() {
                     </div>
                 ) : filtered.length === 0 ? (
                     <div className="rounded-2xl border border-border bg-card p-6">
-                        <div className="text-white font-semibold text-lg mb-1">
-                            No announcements found
-                        </div>
-                        <div className="text-white/60 text-sm">
-                            Try adjusting your search keywords.
-                        </div>
+                        <div className="text-white font-semibold text-lg mb-1">{t("announcements.page.empty.title")}</div>
+                        <div className="text-white/60 text-sm">{t("announcements.page.empty.subtitle")}</div>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {filtered.map((a, idx) => (
-                            <AnnouncementCard
-                                key={a.id}
-                                item={a}
-                                onOpen={setDetail}
-                                faded={idx >= 6}
-                            />
+                            <AnnouncementCard key={a.id} item={a} onOpen={setDetail} faded={idx >= 6} />
                         ))}
                     </div>
                 )}
@@ -210,7 +196,7 @@ export default function Announcements() {
                                         {detail?.imageURL ? (
                                             <img
                                                 src={detail.imageURL}
-                                                alt={detail.title}
+                                                alt={detail?.title || t("announcements.page.fallbackTitle")}
                                                 className="h-56 w-full object-cover"
                                             />
                                         ) : (
@@ -226,7 +212,7 @@ export default function Announcements() {
 
                                         <div className="absolute bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-black/80 to-transparent">
                                             <h2 className="text-2xl font-extrabold text-white">
-                                                {detail?.title}
+                                                {detail?.title || t("announcements.page.fallbackTitle")}
                                             </h2>
                                             <p className="text-white/70 text-xs mt-1">
                                                 {formatLongDate(detail?.date || detail?.createdAt)}
@@ -241,9 +227,7 @@ export default function Announcements() {
                                                 dangerouslySetInnerHTML={{ __html: detail.content }}
                                             />
                                         ) : (
-                                            <div className="text-white/70 text-sm">
-                                                No content provided.
-                                            </div>
+                                            <div className="text-white/70 text-sm">{t("announcements.page.noContent")}</div>
                                         )}
 
                                         {detail?.packURL && (
@@ -253,7 +237,7 @@ export default function Announcements() {
                                                 rel="noreferrer"
                                                 className="inline-flex items-center gap-2 mt-6 rounded-xl border border-white/15 bg-white/[0.04] px-4 py-2.5 text-sm font-semibold text-white hover:bg-white/[0.08]"
                                             >
-                                                View Marketing Pack
+                                                {t("announcements.page.viewMarketingPack")}
                                                 <ExternalLink className="h-4 w-4" />
                                             </a>
                                         )}
