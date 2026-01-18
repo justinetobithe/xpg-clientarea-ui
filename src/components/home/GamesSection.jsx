@@ -27,17 +27,17 @@ function IconButton({ label, onClick, disabled, children }) {
     );
 }
 
-function getGameName(g, t) {
-    return g?.name || g?.title || g?.game_name || t("games.untitled");
-}
-
 function normalize(s) {
     return String(s || "").toLowerCase().trim();
 }
 
-function detectTypeFromGame(game, t) {
-    const n = normalize(getGameName(game, t)).replace(/\s+/g, " ");
+function getGameName(game, i18n, t) {
+    const name = game?.[i18n.language]?.name || game?.name || game?.title || game?.game_name;
+    return name || t("games.untitled");
+}
 
+function detectTypeFromGame(game, i18n, t) {
+    const n = normalize(getGameName(game, i18n, t)).replace(/\s+/g, " ");
     if (n.includes("baccarat")) return "Baccarat";
     if (n.includes("teen patti") || n.includes("teenpatti")) return "Teen Patti";
     if (n.includes("roulette")) return "Roulette";
@@ -45,7 +45,6 @@ function detectTypeFromGame(game, t) {
     if (n.includes("dragon tiger") || n.includes("dragontiger")) return "Dragon Tiger";
     if (n.includes("sic bo") || n.includes("sicbo")) return "Sic Bo";
     if (n.includes("poker")) return "Poker";
-
     return "Other";
 }
 
@@ -86,7 +85,7 @@ function MobilePagination({ page, totalPages, onPrev, onNext, onJump }) {
     const canNext = page < totalPages;
 
     return (
-        <div className="md:hidden mt-5 flex flex-col items-center gap-2">
+        <div className="md:hidden mt-5 flex flex-col items-center gap-3">
             <div className="flex items-center justify-center gap-2 w-full">
                 <button
                     type="button"
@@ -104,7 +103,7 @@ function MobilePagination({ page, totalPages, onPrev, onNext, onJump }) {
                 </button>
 
                 <div className="text-xs text-white/70 px-2">
-                    {t("games.pagination.page")} <span className="text-white font-semibold">{page}</span> / {totalPages}
+                    {t("games.pagination.page")} <span className="text-primary font-semibold">{page}</span> / {totalPages}
                 </div>
 
                 <button
@@ -135,9 +134,10 @@ function MobilePagination({ page, totalPages, onPrev, onNext, onJump }) {
                                 type="button"
                                 onClick={() => onJump(p)}
                                 className={[
-                                    "h-9 min-w-9 px-3 rounded-lg border text-sm font-semibold",
-                                    "border-white/15 bg-white/[0.03] hover:bg-white/[0.06]",
-                                    p === page ? "text-black bg-primary border-primary" : "text-white"
+                                    "h-9 min-w-9 px-3 rounded-lg border text-sm font-semibold transition",
+                                    p === page
+                                        ? "bg-primary text-black border-primary"
+                                        : "border-white/15 bg-white/[0.03] text-white hover:bg-white/[0.06]"
                                 ].join(" ")}
                             >
                                 {p}
@@ -146,8 +146,6 @@ function MobilePagination({ page, totalPages, onPrev, onNext, onJump }) {
                     );
                 })}
             </div>
-
-            <div className="text-[11px] text-white/50">{t("games.pagination.mobileHint")}</div>
         </div>
     );
 }
@@ -168,7 +166,7 @@ function GameImage({ src, alt }) {
 }
 
 export default function GamesSection() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const navigate = useNavigate();
     const { data: allGames = [], isLoading, error } = useGamesQuery();
 
@@ -232,7 +230,7 @@ export default function GamesSection() {
         const map = new Map();
 
         for (const g of list) {
-            const type = detectTypeFromGame(g, t);
+            const type = detectTypeFromGame(g, i18n, t);
             if (!map.has(type)) {
                 map.set(type, { type, id: type, name: type, imageURL: g?.imageURL || null, count: 1 });
             } else {
@@ -253,7 +251,7 @@ export default function GamesSection() {
         });
 
         return arr;
-    }, [allGames, t]);
+    }, [allGames, i18n, t]);
 
     const updateTypesArrows = useCallback(() => {
         const el = typesTrackRef.current;
@@ -292,24 +290,24 @@ export default function GamesSection() {
         let filtered = Array.isArray(allGames) ? [...allGames] : [];
 
         if (activeType !== "All") {
-            filtered = filtered.filter((g) => detectTypeFromGame(g, t) === activeType);
+            filtered = filtered.filter((g) => detectTypeFromGame(g, i18n, t) === activeType);
         }
 
         if (searchTerm.length >= 2) {
             const lower = searchTerm.toLowerCase();
-            filtered = filtered.filter((g) => getGameName(g, t).toLowerCase().includes(lower));
+            filtered = filtered.filter((g) => normalize(getGameName(g, i18n, t)).includes(lower));
         }
 
         if (sortBy.value === "name-asc") {
-            filtered.sort((a, b) => getGameName(a, t).localeCompare(getGameName(b, t)));
+            filtered.sort((a, b) => getGameName(a, i18n, t).localeCompare(getGameName(b, i18n, t)));
         } else if (sortBy.value === "name-desc") {
-            filtered.sort((a, b) => getGameName(b, t).localeCompare(getGameName(a, t)));
+            filtered.sort((a, b) => getGameName(b, i18n, t).localeCompare(getGameName(a, i18n, t)));
         } else {
             filtered.sort((a, b) => (a.order ?? 999999) - (b.order ?? 999999));
         }
 
         return filtered;
-    }, [allGames, activeType, searchTerm, sortBy.value, t]);
+    }, [allGames, activeType, searchTerm, sortBy.value, i18n, t]);
 
     const showSkeleton = isLoading || isSearching;
 
@@ -338,7 +336,6 @@ export default function GamesSection() {
                 </div>
 
                 {showSkeleton && <div className="text-sm text-white/60">{t("games.types.loading")}</div>}
-
                 {!showSkeleton && typeCards.length === 0 && <div className="text-sm text-white/60">{t("games.types.empty")}</div>}
 
                 {!showSkeleton && typeCards.length > 0 && (
@@ -371,8 +368,6 @@ export default function GamesSection() {
                                 </div>
                             ))}
                         </div>
-
-                        <div className="mt-3 text-[11px] text-white/50">{t("games.types.swipeHint")}</div>
                     </div>
                 )}
             </div>
@@ -441,10 +436,7 @@ export default function GamesSection() {
                 </div>
 
                 {showSkeleton && <GamesGridSkeleton count={8} />}
-
-                {!showSkeleton && error && (
-                    <div className="text-red-400 text-sm">{error?.message || t("games.list.failedToLoad")}</div>
-                )}
+                {!showSkeleton && error && <div className="text-red-400 text-sm">{error?.message || t("games.list.failedToLoad")}</div>}
 
                 {!showSkeleton && !error && allGames.length > 0 && games.length === 0 && (
                     <div className="text-white/70 text-sm">{t("games.list.noGamesFound")}</div>
@@ -452,16 +444,18 @@ export default function GamesSection() {
 
                 {!showSkeleton && !error && games.length > 0 && (
                     <div className="hidden md:grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-                        {games.map((g) => (
+                        {games.map((game) => (
                             <Link
-                                key={g.id}
-                                to={`/game/${g.id}`}
+                                key={game.id}
+                                to={`/game/${game.id}`}
                                 className="group rounded-xl overflow-hidden cursor-pointer shadow-lg hover:shadow-primary/50 transition-all duration-300 transform hover:scale-[1.03] bg-background/50 border border-border/50 block"
                             >
                                 <div className="aspect-video relative overflow-hidden bg-white/[0.03]">
-                                    <GameImage src={g.imageURL} alt={getGameName(g, t)} />
+                                    <GameImage src={game.imageURL} alt={getGameName(game, i18n, t)} />
                                 </div>
-                                <div className="p-3 text-center text-white text-sm font-medium truncate">{getGameName(g, t)}</div>
+                                <div className="p-3 text-center text-white text-sm font-medium truncate">
+                                    {game?.[i18n.language]?.name || game?.name || t("games.untitled")}
+                                </div>
                             </Link>
                         ))}
                     </div>
@@ -470,16 +464,18 @@ export default function GamesSection() {
                 {!showSkeleton && !error && games.length > 0 && (
                     <>
                         <div className="md:hidden grid grid-cols-2 gap-4">
-                            {mobileSlice.map((g) => (
+                            {mobileSlice.map((game) => (
                                 <Link
-                                    key={g.id}
-                                    to={`/game/${g.id}`}
+                                    key={game.id}
+                                    to={`/game/${game.id}`}
                                     className="group rounded-xl overflow-hidden cursor-pointer shadow-lg hover:shadow-primary/50 transition-all duration-300 transform hover:scale-[1.03] bg-background/50 border border-border/50 block"
                                 >
                                     <div className="aspect-video relative overflow-hidden bg-white/[0.03]">
-                                        <GameImage src={g.imageURL} alt={getGameName(g, t)} />
+                                        <GameImage src={game.imageURL} alt={getGameName(game, i18n, t)} />
                                     </div>
-                                    <div className="p-3 text-center text-white text-sm font-medium truncate">{getGameName(g, t)}</div>
+                                    <div className="p-3 text-center text-white text-sm font-medium truncate">
+                                        {game?.[i18n.language]?.name || game?.name || t("games.untitled")}
+                                    </div>
                                 </Link>
                             ))}
                         </div>
@@ -494,9 +490,7 @@ export default function GamesSection() {
                     </>
                 )}
 
-                {!showSkeleton && !error && allGames.length === 0 && (
-                    <div className="text-white/70 text-sm">{t("games.list.noGamesFound")}</div>
-                )}
+                {!showSkeleton && !error && allGames.length === 0 && <div className="text-white/70 text-sm">{t("games.list.noGamesFound")}</div>}
             </div>
         </section>
     );

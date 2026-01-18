@@ -1,19 +1,7 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Dialog, Transition, Menu as HMenu } from "@headlessui/react";
-import {
-    Menu,
-    Search,
-    User,
-    X,
-    LogOut,
-    Settings,
-    LayoutGrid,
-    Loader2,
-    ChevronRight,
-    Languages,
-    Check,
-} from "lucide-react";
+import { Menu, Search, User, X, LogOut, Settings, LayoutGrid, Loader2, ChevronRight, Languages, Check } from "lucide-react";
 import { useAuthStore } from "../store/authStore";
 import { useCollectionsStore } from "../store/collectionsStore";
 import { useLiveGamesStore } from "../store/liveGamesStore";
@@ -83,9 +71,7 @@ function DesktopLanguageMenu({ t, selectedLang, onChangeLanguage }) {
             >
                 <HMenu.Items className="absolute right-0 mt-3 w-72 overflow-hidden rounded-2xl bg-card shadow-2xl ring-1 ring-white/10 focus:outline-none">
                     <div className="px-4 py-3 border-b border-white/10">
-                        <div className="text-xs uppercase tracking-[0.18em] text-white/50 font-bold">
-                            {t("navbar.language.header")}
-                        </div>
+                        <div className="text-xs uppercase tracking-[0.18em] text-white/50 font-bold">{t("navbar.language.header")}</div>
                         <div className="text-[13px] text-white/70 mt-1">{t("navbar.language.subtitle")}</div>
                     </div>
 
@@ -158,17 +144,11 @@ function MobileLanguagePickerModal({ open, onClose, t, selectedLang, onSelect })
                         <Dialog.Panel className="w-full max-w-sm rounded-3xl bg-[#151620] border border-white/10 shadow-2xl overflow-hidden">
                             <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between gap-3">
                                 <div className="min-w-0">
-                                    <Dialog.Title className="text-white font-semibold text-lg">
-                                        {t("navbar.language.header")}
-                                    </Dialog.Title>
+                                    <Dialog.Title className="text-white font-semibold text-lg">{t("navbar.language.header")}</Dialog.Title>
                                     <div className="text-white/60 text-sm mt-0.5">{t("navbar.language.subtitle")}</div>
                                 </div>
 
-                                <button
-                                    type="button"
-                                    onClick={onClose}
-                                    className="rounded-full p-2 text-white/70 hover:bg-white/10"
-                                >
+                                <button type="button" onClick={onClose} className="rounded-full p-2 text-white/70 hover:bg-white/10">
                                     <X className="h-5 w-5" />
                                 </button>
                             </div>
@@ -247,15 +227,10 @@ export default function Navbar() {
     const stopLiveGamesListener = useLiveGamesStore((s) => s.stopLiveGamesListener);
 
     const xpgLiveBase = (import.meta.env.VITE_XPG_LIVE_URL || "https://xpg.live").replace(/\/+$/, "");
-
     const resolvedLang = (i18n.resolvedLanguage || i18n.language || DEFAULT_LANG_CODE || "en").split("-")[0];
 
     const selectedLang = useMemo(() => {
-        return (
-            LANGUAGES.find((l) => l.code === resolvedLang) ||
-            LANGUAGES.find((l) => l.code === DEFAULT_LANG_CODE) ||
-            LANGUAGES[0]
-        );
+        return LANGUAGES.find((l) => l.code === resolvedLang) || LANGUAGES.find((l) => l.code === DEFAULT_LANG_CODE) || LANGUAGES[0];
     }, [resolvedLang]);
 
     const changeLanguage = async (code) => {
@@ -328,40 +303,24 @@ export default function Navbar() {
         }, 450);
     };
 
-    const openLiveGame = useCallback(
-        (id) => {
-            if (!id) return;
-            window.open(`${xpgLiveBase}/live-games/${id}`, "_blank", "noopener,noreferrer");
-        },
-        [xpgLiveBase]
-    );
+    const openLiveGame = useCallback(() => {
+        window.open(xpgLiveBase, "_blank", "noopener,noreferrer");
+    }, [xpgLiveBase]);
 
     const mobilePrimaryLinks = useMemo(
         () => [
             { label: t("navbar.links.home"), to: "/" },
             { label: t("navbar.links.announcements"), to: "/announcements" },
-            { label: t("navbar.links.apiDocs"), to: "/game/Pw1UU7RW513n9SNsPXPQ" },
+            { label: t("navbar.links.apiDocs"), to: "/game/Pw1UU7RW513n9SNsPXPQ" }
         ],
         [t]
     );
 
-    const mobileOtherLinks = useMemo(
-        () => [
-            { label: t("navbar.links.announcements"), to: "/announcements" },
-            { label: t("navbar.links.apiDocs"), to: "/game/Pw1UU7RW513n9SNsPXPQ" },
-            { label: t("navbar.links.settings"), to: "/settings" },
-        ],
-        [t]
-    );
+    const mobileOtherLinks = useMemo(() => [{ label: t("navbar.links.settings"), to: "/settings" }], [t]);
 
     return (
         <>
-            <header
-                className={cx(
-                    "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
-                    isTop ? "bg-transparent" : "bg-black/80 backdrop-blur-md shadow-lg"
-                )}
-            >
+            <header className={cx("fixed top-0 left-0 right-0 z-50 transition-all duration-300", isTop ? "bg-transparent" : "bg-black/80 backdrop-blur-md shadow-lg")}>
                 <div className="px-4 md:px-10 h-16 md:h-20 flex items-center justify-between">
                     <div className="flex items-center gap-6">
                         <button onClick={() => setOpen(true)} className="md:hidden text-white" type="button">
@@ -373,22 +332,13 @@ export default function Navbar() {
                         </Link>
 
                         <nav className="hidden md:flex items-center gap-8">
-                            <Link
-                                to="/"
-                                className={cx(
-                                    "text-base font-semibold tracking-wide transition hover:opacity-80",
-                                    pathname === "/" ? "text-primary" : "text-white"
-                                )}
-                            >
+                            <Link to="/" className={cx("text-base font-semibold tracking-wide transition hover:opacity-80", pathname === "/" ? "text-primary" : "text-white")}>
                                 {t("navbar.links.home")}
                             </Link>
 
                             <Link
                                 to="/announcements"
-                                className={cx(
-                                    "text-base font-semibold tracking-wide transition hover:opacity-80",
-                                    pathname === "/announcements" ? "text-primary" : "text-white"
-                                )}
+                                className={cx("text-base font-semibold tracking-wide transition hover:opacity-80", pathname === "/announcements" ? "text-primary" : "text-white")}
                             >
                                 {t("navbar.links.announcements")}
                             </Link>
@@ -412,9 +362,7 @@ export default function Navbar() {
                             type="button"
                         >
                             <LayoutGrid size={18} />
-                            <span className="absolute -top-1 -right-1 bg-black text-white text-[10px] leading-none px-1.5 py-0.5 rounded-full">
-                                {collectionsCount}
-                            </span>
+                            <span className="absolute -top-1 -right-1 bg-black text-white text-[10px] leading-none px-1.5 py-0.5 rounded-full">{collectionsCount}</span>
                         </button>
 
                         <button
@@ -467,19 +415,11 @@ export default function Navbar() {
                                 leaveTo="opacity-0 translate-y-1"
                             >
                                 <HMenu.Items className="absolute right-0 mt-3 w-56 rounded-xl bg-card shadow-xl p-2 focus:outline-none">
-                                    <div className="px-3 py-2 text-sm text-white/70">
-                                        {user?.displayName || user?.email || t("navbar.accountFallback")}
-                                    </div>
+                                    <div className="px-3 py-2 text-sm text-white/70">{user?.displayName || user?.email || t("navbar.accountFallback")}</div>
 
                                     <HMenu.Item>
                                         {({ active }) => (
-                                            <Link
-                                                to="/settings"
-                                                className={cx(
-                                                    "flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-white",
-                                                    active ? "bg-white/5" : ""
-                                                )}
-                                            >
+                                            <Link to="/settings" className={cx("flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-white", active ? "bg-white/5" : "")}>
                                                 <Settings size={16} /> {t("navbar.links.settings")}
                                             </Link>
                                         )}
@@ -490,10 +430,7 @@ export default function Navbar() {
                                             <button
                                                 onClick={onLogout}
                                                 disabled={logoutLoading}
-                                                className={cx(
-                                                    "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-white disabled:opacity-60",
-                                                    active ? "bg-white/5" : ""
-                                                )}
+                                                className={cx("w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-white disabled:opacity-60", active ? "bg-white/5" : "")}
                                                 type="button"
                                             >
                                                 {logoutLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut size={16} />}
@@ -516,27 +453,11 @@ export default function Navbar() {
                     }}
                     className="relative z-50 md:hidden"
                 >
-                    <Transition.Child
-                        as={Fragment}
-                        enter="transition-opacity duration-200"
-                        enterFrom="opacity-0"
-                        enterTo="opacity-100"
-                        leave="transition-opacity duration-200"
-                        leaveFrom="opacity-100"
-                        leaveTo="opacity-0"
-                    >
+                    <Transition.Child as={Fragment} enter="transition-opacity duration-200" enterFrom="opacity-0" enterTo="opacity-100" leave="transition-opacity duration-200" leaveFrom="opacity-100" leaveTo="opacity-0">
                         <div className="fixed inset-0 bg-black/70" />
                     </Transition.Child>
 
-                    <Transition.Child
-                        as={Fragment}
-                        enter="transition duration-200 ease-out"
-                        enterFrom="-translate-x-full"
-                        enterTo="translate-x-0"
-                        leave="transition duration-200 ease-in"
-                        leaveFrom="translate-x-0"
-                        leaveTo="-translate-x-full"
-                    >
+                    <Transition.Child as={Fragment} enter="transition duration-200 ease-out" enterFrom="-translate-x-full" enterTo="translate-x-0" leave="transition duration-200 ease-in" leaveFrom="translate-x-0" leaveTo="-translate-x-full">
                         <Dialog.Panel className="fixed inset-y-0 left-0 w-full max-w-sm bg-[#1f2230] text-white shadow-2xl overflow-hidden">
                             <div className="px-6 py-5 flex items-center justify-between">
                                 <div className="flex items-center gap-3">
@@ -593,9 +514,7 @@ export default function Navbar() {
                                 <div className="space-y-2">
                                     <MobileSectionTitle>{t("navbar.mobile.liveGames")}</MobileSectionTitle>
 
-                                    {liveGamesLoading ? (
-                                        <div className="text-white/60 text-sm px-2 py-2">{t("navbar.loading")}</div>
-                                    ) : null}
+                                    {liveGamesLoading ? <div className="text-white/60 text-sm px-2 py-2">{t("navbar.loading")}</div> : null}
 
                                     {!liveGamesLoading && (!liveGames || liveGames.length === 0) ? (
                                         <div className="text-white/60 text-sm px-2 py-2">{t("navbar.mobile.noLiveGames")}</div>
@@ -607,15 +526,11 @@ export default function Navbar() {
                                                 <button
                                                     key={lg.id}
                                                     type="button"
-                                                    onClick={() => openLiveGame(lg.id)}
+                                                    onClick={() => openLiveGame()}
                                                     className="w-full text-left px-2 py-3 rounded-xl hover:bg-white/[0.06] active:bg-white/[0.08] transition flex items-center justify-between gap-3"
                                                 >
-                                                    <span className="text-white font-semibold text-[16px] truncate">
-                                                        {lg.name || t("games.untitled")}
-                                                    </span>
-                                                    <span className="text-[11px] text-white/55 px-2 py-1 rounded-full bg-black/30 shrink-0">
-                                                        {t("navbar.open")}
-                                                    </span>
+                                                    <span className="text-white font-semibold text-[16px] truncate">{lg.name || t("games.untitled")}</span>
+                                                    <span className="text-[11px] text-white/55 px-2 py-1 rounded-full bg-black/30 shrink-0">{t("navbar.open")}</span>
                                                 </button>
                                             ))}
                                         </div>

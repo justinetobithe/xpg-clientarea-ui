@@ -8,7 +8,7 @@ function AnnouncementSkeletonCard() {
     return (
         <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 md:p-6 animate-pulse">
             <div className="flex gap-4">
-                <div className="h-20 w-32 rounded-xl bg-white/10 shrink-0" />
+                <div className="h-20 w-20 rounded-xl bg-white/10 shrink-0 md:h-24 md:w-40" />
                 <div className="flex-1 min-w-0 space-y-2">
                     <div className="h-4 bg-white/10 rounded w-3/4" />
                     <div className="h-3 bg-white/10 rounded w-full" />
@@ -53,8 +53,8 @@ export default function AnnouncementsPanel({ items = [], loading = false, error 
                 onClick={() => setDetail(a)}
                 className="w-full text-left group rounded-2xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] transition overflow-hidden"
             >
-                <div className="flex gap-4 p-5 md:p-6">
-                    <div className="h-20 w-32 md:h-24 md:w-40 rounded-xl overflow-hidden bg-black/40 border border-white/10 shrink-0">
+                <div className="flex gap-4 p-4 md:p-6">
+                    <div className="h-24 w-24 md:h-24 md:w-40 rounded-xl overflow-hidden bg-black/40 border border-white/10 shrink-0">
                         {a.imageURL ? (
                             <img
                                 src={a.imageURL}
@@ -79,7 +79,7 @@ export default function AnnouncementsPanel({ items = [], loading = false, error 
 
                         {!!desc && <div className="text-xs md:text-sm text-white/70 line-clamp-2 mt-2">{desc}</div>}
 
-                        <div className="mt-4 flex items-center gap-2">
+                        <div className="mt-3 md:mt-4 flex items-center gap-2">
                             <span className="text-xs text-primary font-semibold group-hover:underline">
                                 {t("announcements.openDetails")}
                             </span>
@@ -92,7 +92,7 @@ export default function AnnouncementsPanel({ items = [], loading = false, error 
     };
 
     return (
-        <div className="bg-card border border-border rounded-2xl p-5 md:p-6 h-full min-h-[560px] flex flex-col">
+        <div className="bg-card border border-border rounded-2xl p-5 md:p-6 h-full md:min-h-[560px] flex flex-col">
             <div className="flex items-center justify-between mb-4 shrink-0">
                 <div>
                     <div className="text-lg font-semibold text-white flex items-center gap-2">
@@ -138,26 +138,13 @@ export default function AnnouncementsPanel({ items = [], loading = false, error 
                         </div>
 
                         <div className="md:hidden -mx-5">
-                            <div className="px-5">
-                                <div className="flex items-center justify-between mb-3">
-                                    <div className="text-xs font-semibold text-white/70">{t("announcements.swipe")}</div>
-                                    <div className="flex gap-1.5">
-                                        {list.slice(0, 6).map((a, i) => (
-                                            <span key={a.id || i} className="h-1.5 w-1.5 rounded-full bg-white/25" />
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="flex gap-4 px-5 pb-1 overflow-x-auto snap-x snap-mandatory [-webkit-overflow-scrolling:touch]">
+                            <div className="flex gap-4 px-5 pb-2 overflow-x-auto snap-x snap-mandatory [-webkit-overflow-scrolling:touch]">
                                 {list.map((a) => (
-                                    <div key={a.id} className="snap-start shrink-0 w-[92%] sm:w-[80%]">
+                                    <div key={a.id} className="snap-start shrink-0 w-[94%]">
                                         <Card a={a} />
                                     </div>
                                 ))}
                             </div>
-
-                            <div className="px-5 mt-3 text-[11px] text-white/50">{t("announcements.swipeHint")}</div>
                         </div>
                     </>
                 )}
