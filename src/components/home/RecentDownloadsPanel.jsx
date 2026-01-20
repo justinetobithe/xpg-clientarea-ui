@@ -1,10 +1,14 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FileText, FileImage, File, Loader2, DownloadCloud, Download } from "lucide-react";
 import { getAuth } from "firebase/auth";
 import { useDownloadsStore } from "../../store/downloadsStore";
 import { getExt, isImage, buildDownloadUrl, storagePathFromFirebaseUrl, downloadViaIframe } from "../../utils/fileUtils";
 import { sleep } from "../../utils/utils";
 import { useTranslation } from "react-i18next";
+
+function cx(...classes) {
+    return classes.filter(Boolean).join(" ");
+}
 
 function RecentDownloadSkeletonRow() {
     return (
@@ -48,25 +52,25 @@ function TooltipIconButton({ label, disabled, onClick, children }) {
                 e.stopPropagation();
             }}
             onClick={onClick}
-            className={[
+            className={cx(
                 "relative group inline-flex items-center justify-center",
                 "h-9 w-9 rounded-lg border border-white/10 bg-white/[0.04]",
                 "hover:bg-white/[0.08] active:bg-white/[0.10]",
                 "text-primary",
                 disabled ? "opacity-70 cursor-not-allowed" : ""
-            ].join(" ")}
+            )}
             aria-label={label}
             title={label}
         >
             {children}
             <span
-                className={[
+                className={cx(
                     "pointer-events-none absolute -top-9 right-0 z-10",
                     "whitespace-nowrap rounded-md bg-black/80 px-2 py-1 text-[11px] text-white",
                     "opacity-0 translate-y-1 transition",
                     "group-hover:opacity-100 group-hover:translate-y-0",
                     "hidden md:block"
-                ].join(" ")}
+                )}
                 role="tooltip"
             >
                 {label}
@@ -135,7 +139,7 @@ export default function RecentDownloadsPanel({ items = [], loading = false, erro
                 storagePath,
                 thumbURL: f.thumbURL || f.thumb || f.thumbnail || null,
                 sectionTitle: f.sectionTitle || f._sectionTitle || "",
-                fileKey: storagePath
+                fileKey: storagePath,
             });
 
             await sleep(300);
@@ -190,23 +194,18 @@ export default function RecentDownloadsPanel({ items = [], loading = false, erro
 
                 {!loading && error && <div className="text-sm text-red-400 py-6 text-center">{error}</div>}
 
-                {!loading && !error && items.length === 0 && (
-                    <div className="text-sm text-white/60 py-6 text-center">{t("downloads.empty")}</div>
-                )}
+                {!loading && !error && items.length === 0 && <div className="text-sm text-white/60 py-6 text-center">{t("downloads.empty")}</div>}
 
                 {showMobileScroller && (
                     <div className="md:hidden border-t border-white/10">
-                        <div className="px-4 pt-3 pb-2 flex items-center justify-between">
+                        <div className="px-4 pt-3 pb-2 flex items-center justify-between" style={{ paddingLeft: "env(safe-area-inset-left)", paddingRight: "env(safe-area-inset-right)" }}>
                             <div className="text-xs font-semibold text-white/70">{t("downloads.recent")}</div>
                             <div className="text-[11px] text-white/50">
-                                {t("downloads.showing", {
-                                    count: Math.min(mobileItems.length, mobileMaxItems),
-                                    plus: mobileItems.length >= mobileMaxItems ? "+" : ""
-                                })}
+                                {t("downloads.showing", { count: Math.min(mobileItems.length, mobileMaxItems), plus: mobileItems.length >= mobileMaxItems ? "+" : "" })}
                             </div>
                         </div>
 
-                        <div className="overflow-y-auto px-0" style={{ maxHeight: `${mobileScrollHeight}px` }}>
+                        <div className="overflow-y-auto px-0" style={{ maxHeight: `${mobileScrollHeight}px`, WebkitOverflowScrolling: "touch" }}>
                             {mobileItems.map((f, idx) => {
                                 const name = f.fileName || t("downloads.untitled");
                                 const ext = getExt(name);
@@ -229,7 +228,7 @@ export default function RecentDownloadsPanel({ items = [], loading = false, erro
                                 );
 
                                 return (
-                                    <div key={stableKey || `${name}-${idx}`} className="px-4 py-2">
+                                    <div key={stableKey || `${name}-${idx}`} className="px-4 py-2" style={{ paddingLeft: "env(safe-area-inset-left)", paddingRight: "env(safe-area-inset-right)" }}>
                                         <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
                                             <div className="flex items-start gap-3">
                                                 <div className="flex h-10 w-10 items-center justify-center">{icon}</div>
@@ -297,10 +296,7 @@ export default function RecentDownloadsPanel({ items = [], loading = false, erro
                         return (
                             <div
                                 key={stableKey || `${name}-${idx}`}
-                                className={[
-                                    "hidden md:grid grid-cols-[56px_minmax(0,1fr)_150px_90px] items-center gap-3 px-4 py-3",
-                                    rowBg
-                                ].join(" ")}
+                                className={cx("hidden md:grid grid-cols-[56px_minmax(0,1fr)_150px_90px] items-center gap-3 px-4 py-3", rowBg)}
                             >
                                 <div className="flex items-center justify-center">{icon}</div>
 

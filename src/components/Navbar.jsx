@@ -1,7 +1,19 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Dialog, Transition, Menu as HMenu } from "@headlessui/react";
-import { Menu, Search, User, X, LogOut, Settings, LayoutGrid, Loader2, ChevronRight, Languages, Check } from "lucide-react";
+import {
+    Menu,
+    Search,
+    User,
+    X,
+    LogOut,
+    Settings,
+    LayoutGrid,
+    Loader2,
+    ChevronRight,
+    Languages,
+    Check,
+} from "lucide-react";
 import { useAuthStore } from "../store/authStore";
 import { useCollectionsStore } from "../store/collectionsStore";
 import { useLiveGamesStore } from "../store/liveGamesStore";
@@ -131,7 +143,7 @@ function MobileLanguagePickerModal({ open, onClose, t, selectedLang, onSelect })
                     <div className="fixed inset-0 bg-black/70" />
                 </Transition.Child>
 
-                <div className="fixed inset-0 flex items-end justify-center p-3">
+                <div className="fixed inset-0 flex items-end justify-center p-3 pb-[calc(12px+env(safe-area-inset-bottom))]">
                     <Transition.Child
                         as={Fragment}
                         enter="transition duration-200 ease-out"
@@ -142,7 +154,7 @@ function MobileLanguagePickerModal({ open, onClose, t, selectedLang, onSelect })
                         leaveTo="translate-y-6 opacity-0"
                     >
                         <Dialog.Panel className="w-full max-w-sm rounded-3xl bg-[#151620] border border-white/10 shadow-2xl overflow-hidden">
-                            <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between gap-3">
+                            <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between gap-3 pt-[calc(16px+env(safe-area-inset-top))]">
                                 <div className="min-w-0">
                                     <Dialog.Title className="text-white font-semibold text-lg">{t("navbar.language.header")}</Dialog.Title>
                                     <div className="text-white/60 text-sm mt-0.5">{t("navbar.language.subtitle")}</div>
@@ -153,7 +165,7 @@ function MobileLanguagePickerModal({ open, onClose, t, selectedLang, onSelect })
                                 </button>
                             </div>
 
-                            <div className="p-2 max-h-[70vh] overflow-auto">
+                            <div className="p-2 max-h-[70dvh] max-h-[70svh] overflow-auto">
                                 {LANGUAGES.map((l) => {
                                     const active = l.code === selectedLang?.code;
                                     return (
@@ -230,7 +242,11 @@ export default function Navbar() {
     const resolvedLang = (i18n.resolvedLanguage || i18n.language || DEFAULT_LANG_CODE || "en").split("-")[0];
 
     const selectedLang = useMemo(() => {
-        return LANGUAGES.find((l) => l.code === resolvedLang) || LANGUAGES.find((l) => l.code === DEFAULT_LANG_CODE) || LANGUAGES[0];
+        return (
+            LANGUAGES.find((l) => l.code === resolvedLang) ||
+            LANGUAGES.find((l) => l.code === DEFAULT_LANG_CODE) ||
+            LANGUAGES[0]
+        );
     }, [resolvedLang]);
 
     const changeLanguage = async (code) => {
@@ -238,6 +254,36 @@ export default function Navbar() {
             await i18n.changeLanguage(code);
         } catch { }
     };
+
+    useEffect(() => {
+        const setVh = () => {
+            const h = window.innerHeight || 0;
+            if (h) document.documentElement.style.setProperty("--app-vh", `${h * 0.01}px`);
+        };
+
+        setVh();
+
+        let ro = null;
+        if (window.visualViewport) {
+            const vv = window.visualViewport;
+            const onVV = () => setVh();
+            vv.addEventListener("resize", onVV);
+            vv.addEventListener("scroll", onVV);
+            ro = () => {
+                vv.removeEventListener("resize", onVV);
+                vv.removeEventListener("scroll", onVV);
+            };
+        }
+
+        window.addEventListener("resize", setVh);
+        window.addEventListener("orientationchange", setVh);
+
+        return () => {
+            window.removeEventListener("resize", setVh);
+            window.removeEventListener("orientationchange", setVh);
+            if (ro) ro();
+        };
+    }, []);
 
     useEffect(() => {
         const onScroll = () => setScrollY(window.scrollY || 0);
@@ -270,6 +316,18 @@ export default function Navbar() {
             if (timerRef.current) clearTimeout(timerRef.current);
         };
     }, []);
+
+    useEffect(() => {
+        if (!open) return;
+        const prevOverflow = document.body.style.overflow;
+        const prevTouch = document.body.style.touchAction;
+        document.body.style.overflow = "hidden";
+        document.body.style.touchAction = "none";
+        return () => {
+            document.body.style.overflow = prevOverflow;
+            document.body.style.touchAction = prevTouch;
+        };
+    }, [open]);
 
     const collectionsCount = collections?.length || 0;
     const isTop = scrollY < 10;
@@ -311,16 +369,26 @@ export default function Navbar() {
         () => [
             { label: t("navbar.links.home"), to: "/" },
             { label: t("navbar.links.announcements"), to: "/announcements" },
-            { label: t("navbar.links.apiDocs"), to: "/game/Pw1UU7RW513n9SNsPXPQ" }
+            { label: t("navbar.links.apiDocs"), to: "/game/Pw1UU7RW513n9SNsPXPQ" },
         ],
         [t]
     );
 
     const mobileOtherLinks = useMemo(() => [{ label: t("navbar.links.settings"), to: "/settings" }], [t]);
 
+    const mobilePanelHeight = "calc(var(--app-vh, 1vh) * 100)";
+    const mobileHeaderHeight = 76;
+    const mobileScrollHeight = `calc(${mobilePanelHeight} - ${mobileHeaderHeight}px)`;
+
     return (
         <>
-            <header className={cx("fixed top-0 left-0 right-0 z-50 transition-all duration-300", isTop ? "bg-transparent" : "bg-black/80 backdrop-blur-md shadow-lg")}>
+            <header
+                className={cx(
+                    "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
+                    isTop ? "bg-transparent" : "bg-black/80 backdrop-blur-md shadow-lg"
+                )}
+                style={{ paddingTop: "env(safe-area-inset-top)" }}
+            >
                 <div className="px-4 md:px-10 h-16 md:h-20 flex items-center justify-between">
                     <div className="flex items-center gap-6">
                         <button onClick={() => setOpen(true)} className="md:hidden text-white" type="button">
@@ -332,13 +400,22 @@ export default function Navbar() {
                         </Link>
 
                         <nav className="hidden md:flex items-center gap-8">
-                            <Link to="/" className={cx("text-base font-semibold tracking-wide transition hover:opacity-80", pathname === "/" ? "text-primary" : "text-white")}>
+                            <Link
+                                to="/"
+                                className={cx(
+                                    "text-base font-semibold tracking-wide transition hover:opacity-80",
+                                    pathname === "/" ? "text-primary" : "text-white"
+                                )}
+                            >
                                 {t("navbar.links.home")}
                             </Link>
 
                             <Link
                                 to="/announcements"
-                                className={cx("text-base font-semibold tracking-wide transition hover:opacity-80", pathname === "/announcements" ? "text-primary" : "text-white")}
+                                className={cx(
+                                    "text-base font-semibold tracking-wide transition hover:opacity-80",
+                                    pathname === "/announcements" ? "text-primary" : "text-white"
+                                )}
                             >
                                 {t("navbar.links.announcements")}
                             </Link>
@@ -362,7 +439,9 @@ export default function Navbar() {
                             type="button"
                         >
                             <LayoutGrid size={18} />
-                            <span className="absolute -top-1 -right-1 bg-black text-white text-[10px] leading-none px-1.5 py-0.5 rounded-full">{collectionsCount}</span>
+                            <span className="absolute -top-1 -right-1 bg-black text-white text-[10px] leading-none px-1.5 py-0.5 rounded-full">
+                                {collectionsCount}
+                            </span>
                         </button>
 
                         <button
@@ -415,11 +494,19 @@ export default function Navbar() {
                                 leaveTo="opacity-0 translate-y-1"
                             >
                                 <HMenu.Items className="absolute right-0 mt-3 w-56 rounded-xl bg-card shadow-xl p-2 focus:outline-none">
-                                    <div className="px-3 py-2 text-sm text-white/70">{user?.displayName || user?.email || t("navbar.accountFallback")}</div>
+                                    <div className="px-3 py-2 text-sm text-white/70">
+                                        {user?.displayName || user?.email || t("navbar.accountFallback")}
+                                    </div>
 
                                     <HMenu.Item>
                                         {({ active }) => (
-                                            <Link to="/settings" className={cx("flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-white", active ? "bg-white/5" : "")}>
+                                            <Link
+                                                to="/settings"
+                                                className={cx(
+                                                    "flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-white",
+                                                    active ? "bg-white/5" : ""
+                                                )}
+                                            >
                                                 <Settings size={16} /> {t("navbar.links.settings")}
                                             </Link>
                                         )}
@@ -430,7 +517,10 @@ export default function Navbar() {
                                             <button
                                                 onClick={onLogout}
                                                 disabled={logoutLoading}
-                                                className={cx("w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-white disabled:opacity-60", active ? "bg-white/5" : "")}
+                                                className={cx(
+                                                    "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-white disabled:opacity-60",
+                                                    active ? "bg-white/5" : ""
+                                                )}
                                                 type="button"
                                             >
                                                 {logoutLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut size={16} />}
@@ -453,12 +543,35 @@ export default function Navbar() {
                     }}
                     className="relative z-50 md:hidden"
                 >
-                    <Transition.Child as={Fragment} enter="transition-opacity duration-200" enterFrom="opacity-0" enterTo="opacity-100" leave="transition-opacity duration-200" leaveFrom="opacity-100" leaveTo="opacity-0">
+                    <Transition.Child
+                        as={Fragment}
+                        enter="transition-opacity duration-200"
+                        enterFrom="opacity-0"
+                        enterTo="opacity-100"
+                        leave="transition-opacity duration-200"
+                        leaveFrom="opacity-100"
+                        leaveTo="opacity-0"
+                    >
                         <div className="fixed inset-0 bg-black/70" />
                     </Transition.Child>
 
-                    <Transition.Child as={Fragment} enter="transition duration-200 ease-out" enterFrom="-translate-x-full" enterTo="translate-x-0" leave="transition duration-200 ease-in" leaveFrom="translate-x-0" leaveTo="-translate-x-full">
-                        <Dialog.Panel className="fixed inset-y-0 left-0 w-full max-w-sm bg-[#1f2230] text-white shadow-2xl overflow-hidden">
+                    <Transition.Child
+                        as={Fragment}
+                        enter="transition duration-200 ease-out"
+                        enterFrom="-translate-x-full"
+                        enterTo="translate-x-0"
+                        leave="transition duration-200 ease-in"
+                        leaveFrom="translate-x-0"
+                        leaveTo="-translate-x-full"
+                    >
+                        <Dialog.Panel
+                            className="fixed inset-y-0 left-0 w-full max-w-sm bg-[#1f2230] text-white shadow-2xl overflow-hidden"
+                            style={{
+                                height: mobilePanelHeight,
+                                paddingTop: "env(safe-area-inset-top)",
+                                paddingBottom: "env(safe-area-inset-bottom)",
+                            }}
+                        >
                             <div className="px-6 py-5 flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                     <img src="/image/logo-white.png" className="h-8" alt="logo" />
@@ -470,7 +583,14 @@ export default function Navbar() {
                                 </button>
                             </div>
 
-                            <div className="px-6 pb-6 space-y-6 overflow-y-auto h-[calc(100vh-76px)]">
+                            <div
+                                className="px-6 pb-6 space-y-6 overflow-y-auto overscroll-contain"
+                                style={{
+                                    height: mobileScrollHeight,
+                                    paddingBottom: "calc(24px + env(safe-area-inset-bottom))",
+                                    WebkitOverflowScrolling: "touch",
+                                }}
+                            >
                                 <div className="space-y-2">
                                     <MobileSectionTitle>{t("navbar.language.header")}</MobileSectionTitle>
 
@@ -530,7 +650,9 @@ export default function Navbar() {
                                                     className="w-full text-left px-2 py-3 rounded-xl hover:bg-white/[0.06] active:bg-white/[0.08] transition flex items-center justify-between gap-3"
                                                 >
                                                     <span className="text-white font-semibold text-[16px] truncate">{lg.name || t("games.untitled")}</span>
-                                                    <span className="text-[11px] text-white/55 px-2 py-1 rounded-full bg-black/30 shrink-0">{t("navbar.open")}</span>
+                                                    <span className="text-[11px] text-white/55 px-2 py-1 rounded-full bg-black/30 shrink-0">
+                                                        {t("navbar.open")}
+                                                    </span>
                                                 </button>
                                             ))}
                                         </div>

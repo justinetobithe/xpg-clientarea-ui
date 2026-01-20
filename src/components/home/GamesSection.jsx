@@ -6,6 +6,47 @@ import { useGamesQuery } from "../../hooks/useGamesQuery";
 import { useTranslation } from "react-i18next";
 
 const TYPE_ORDER = ["Baccarat", "Teen Patti", "Roulette", "Blackjack", "Dragon Tiger", "Sic Bo", "Poker", "Other"];
+const MOBILE_PAGE_SIZE = 10;
+
+function cx(...classes) {
+    return classes.filter(Boolean).join(" ");
+}
+
+function useMobileViewportFix(enabled = true) {
+    useEffect(() => {
+        if (!enabled) return;
+
+        const setVars = () => {
+            const h = window.innerHeight || 0;
+            if (h) document.documentElement.style.setProperty("--app-vh", `${h * 0.01}px`);
+            if (window.visualViewport?.height) {
+                document.documentElement.style.setProperty("--vvh", `${window.visualViewport.height * 0.01}px`);
+            }
+        };
+
+        setVars();
+
+        const vv = window.visualViewport;
+        const onVV = () => setVars();
+
+        if (vv) {
+            vv.addEventListener("resize", onVV);
+            vv.addEventListener("scroll", onVV);
+        }
+
+        window.addEventListener("resize", setVars);
+        window.addEventListener("orientationchange", setVars);
+
+        return () => {
+            window.removeEventListener("resize", setVars);
+            window.removeEventListener("orientationchange", setVars);
+            if (vv) {
+                vv.removeEventListener("resize", onVV);
+                vv.removeEventListener("scroll", onVV);
+            }
+        };
+    }, [enabled]);
+}
 
 function IconButton({ label, onClick, disabled, children }) {
     return (
@@ -15,12 +56,12 @@ function IconButton({ label, onClick, disabled, children }) {
             title={label}
             disabled={disabled}
             onClick={onClick}
-            className={[
+            className={cx(
                 "inline-flex items-center justify-center h-9 w-9 rounded-lg",
                 "bg-white/[0.06] text-white/80",
                 "hover:bg-white/[0.10] hover:text-white transition",
                 disabled ? "opacity-40 cursor-not-allowed" : ""
-            ].join(" ")}
+            )}
         >
             {children}
         </button>
@@ -85,18 +126,25 @@ function MobilePagination({ page, totalPages, onPrev, onNext, onJump }) {
     const canNext = page < totalPages;
 
     return (
-        <div className="md:hidden mt-5 flex flex-col items-center gap-3">
+        <div
+            className="md:hidden mt-5 flex flex-col items-center gap-3"
+            style={{
+                paddingBottom: "calc(env(safe-area-inset-bottom) + 8px)",
+                paddingLeft: "env(safe-area-inset-left)",
+                paddingRight: "env(safe-area-inset-right)",
+            }}
+        >
             <div className="flex items-center justify-center gap-2 w-full">
                 <button
                     type="button"
                     onClick={onPrev}
                     disabled={!canPrev}
-                    className={[
+                    className={cx(
                         "inline-flex items-center gap-2 px-3 py-2 rounded-lg border",
                         "border-white/15 bg-white/[0.03] text-white text-sm font-semibold",
                         "hover:bg-white/[0.06]",
                         !canPrev ? "opacity-40 cursor-not-allowed" : ""
-                    ].join(" ")}
+                    )}
                 >
                     <ChevronLeft className="h-4 w-4" />
                     {t("games.pagination.prev")}
@@ -110,12 +158,12 @@ function MobilePagination({ page, totalPages, onPrev, onNext, onJump }) {
                     type="button"
                     onClick={onNext}
                     disabled={!canNext}
-                    className={[
+                    className={cx(
                         "inline-flex items-center gap-2 px-3 py-2 rounded-lg border",
                         "border-white/15 bg-white/[0.03] text-white text-sm font-semibold",
                         "hover:bg-white/[0.06]",
                         !canNext ? "opacity-40 cursor-not-allowed" : ""
-                    ].join(" ")}
+                    )}
                 >
                     {t("games.pagination.next")}
                     <ChevronRight className="h-4 w-4" />
@@ -133,12 +181,10 @@ function MobilePagination({ page, totalPages, onPrev, onNext, onJump }) {
                             <button
                                 type="button"
                                 onClick={() => onJump(p)}
-                                className={[
+                                className={cx(
                                     "h-9 min-w-9 px-3 rounded-lg border text-sm font-semibold transition",
-                                    p === page
-                                        ? "bg-primary text-black border-primary"
-                                        : "border-white/15 bg-white/[0.03] text-white hover:bg-white/[0.06]"
-                                ].join(" ")}
+                                    p === page ? "bg-primary text-black border-primary" : "border-white/15 bg-white/[0.03] text-white hover:bg-white/[0.06]"
+                                )}
                             >
                                 {p}
                             </button>
@@ -170,11 +216,13 @@ export default function GamesSection() {
     const navigate = useNavigate();
     const { data: allGames = [], isLoading, error } = useGamesQuery();
 
+    useMobileViewportFix(true);
+
     const sortOptions = useMemo(
         () => [
             { value: "order-asc", label: t("games.sort.defaultOrder") },
             { value: "name-asc", label: t("games.sort.nameAsc") },
-            { value: "name-desc", label: t("games.sort.nameDesc") }
+            { value: "name-desc", label: t("games.sort.nameDesc") },
         ],
         [t]
     );
@@ -193,10 +241,7 @@ export default function GamesSection() {
     const [canNextTypes, setCanNextTypes] = useState(false);
 
     useEffect(() => {
-        setSortBy((cur) => {
-            const next = sortOptions.find((o) => o.value === cur?.value) || sortOptions[0];
-            return next;
-        });
+        setSortBy((cur) => sortOptions.find((o) => o.value === cur?.value) || sortOptions[0]);
     }, [sortOptions]);
 
     const handleSearchChange = (e) => {
@@ -289,9 +334,7 @@ export default function GamesSection() {
     const games = useMemo(() => {
         let filtered = Array.isArray(allGames) ? [...allGames] : [];
 
-        if (activeType !== "All") {
-            filtered = filtered.filter((g) => detectTypeFromGame(g, i18n, t) === activeType);
-        }
+        if (activeType !== "All") filtered = filtered.filter((g) => detectTypeFromGame(g, i18n, t) === activeType);
 
         if (searchTerm.length >= 2) {
             const lower = searchTerm.toLowerCase();
@@ -311,7 +354,6 @@ export default function GamesSection() {
 
     const showSkeleton = isLoading || isSearching;
 
-    const MOBILE_PAGE_SIZE = 10;
     const mobileTotalPages = Math.max(1, Math.ceil(games.length / MOBILE_PAGE_SIZE));
     const mobileStart = (mobilePage - 1) * MOBILE_PAGE_SIZE;
     const mobileSlice = games.slice(mobileStart, mobileStart + MOBILE_PAGE_SIZE);
@@ -323,7 +365,7 @@ export default function GamesSection() {
     return (
         <section className="mt-8 space-y-8">
             <div>
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between mb-4 gap-3">
                     <div className="text-lg font-semibold text-white">{t("games.types.title")}</div>
                     <div className="flex items-center gap-2">
                         <IconButton label={t("games.types.prev")} onClick={() => scrollTypesBy(-1)} disabled={!canPrevTypes}>
@@ -342,23 +384,41 @@ export default function GamesSection() {
                     <div className="-mx-0">
                         <div
                             ref={typesTrackRef}
-                            className={[
+                            className={cx(
                                 "flex gap-4 pb-1 overflow-x-auto",
                                 "snap-x snap-mandatory",
-                                "[-webkit-overflow-scrolling:touch]",
                                 "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-                            ].join(" ")}
+                            )}
+                            style={{ WebkitOverflowScrolling: "touch", overscrollBehaviorX: "contain" }}
                         >
+                            <button
+                                type="button"
+                                onClick={() => setActiveType("All")}
+                                className={cx(
+                                    "snap-start shrink-0 w-[48%] sm:w-[32%] lg:w-[24%]",
+                                    "group rounded-xl overflow-hidden shadow-lg hover:shadow-primary/50 transition-all duration-300 transform hover:scale-[1.03]",
+                                    "bg-background/50 border border-border/50 block text-left",
+                                    activeType === "All" ? "ring-2 ring-primary" : ""
+                                )}
+                            >
+                                <div className="aspect-video relative overflow-hidden bg-white/[0.03]">
+                                    <div className="w-full h-full flex items-center justify-center bg-white/[0.06] text-white/70 text-xs">
+                                        {t("games.list.allGames")}
+                                    </div>
+                                </div>
+                                <div className="p-3 text-center text-white text-sm font-medium truncate">{t("games.list.allGames")}</div>
+                            </button>
+
                             {typeCards.map((tc) => (
                                 <div key={tc.id} className="snap-start shrink-0 w-[48%] sm:w-[32%] lg:w-[24%]">
                                     <button
                                         type="button"
                                         onClick={() => setActiveType(tc.type)}
-                                        className={[
+                                        className={cx(
                                             "group rounded-xl overflow-hidden shadow-lg hover:shadow-primary/50 transition-all duration-300 transform hover:scale-[1.03]",
                                             "bg-background/50 border border-border/50 block w-full text-left",
                                             activeType === tc.type ? "ring-2 ring-primary" : ""
-                                        ].join(" ")}
+                                        )}
                                     >
                                         <div className="aspect-video relative overflow-hidden bg-white/[0.03]">
                                             <GameImage src={tc.imageURL} alt={tc.type} />
@@ -392,25 +452,47 @@ export default function GamesSection() {
                         )}
                     </div>
 
-                    <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-                        <div className="relative flex items-center flex-1">
+                    <div
+                        className="flex flex-col sm:flex-row gap-3 w-full md:w-auto"
+                        style={{ paddingLeft: "env(safe-area-inset-left)", paddingRight: "env(safe-area-inset-right)" }}
+                    >
+                        <div className="relative flex items-center flex-1 min-w-0">
                             <input
                                 type="text"
                                 value={inputValue}
                                 onChange={handleSearchChange}
                                 placeholder={t("games.list.searchPlaceholder")}
-                                className="w-full bg-background/30 rounded-lg py-2 pl-10 pr-3 text-sm text-white border border-border focus:outline-none focus:ring-1 focus:ring-primary transition"
+                                className="w-full bg-background/30 rounded-lg py-2 pl-10 pr-10 text-sm text-white border border-border focus:outline-none focus:ring-1 focus:ring-primary transition"
+                                inputMode="search"
+                                enterKeyHint="search"
+                                autoCorrect="off"
+                                autoCapitalize="none"
                             />
                             <Search className="absolute left-3 h-4 w-4 text-white/70" />
+                            {inputValue ? (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setInputValue("");
+                                        setSearchTerm("");
+                                        setIsSearching(false);
+                                        setMobilePage(1);
+                                    }}
+                                    className="absolute right-2 h-8 w-8 inline-flex items-center justify-center rounded-md bg-white/5 hover:bg-white/10 text-white/80"
+                                    aria-label="Clear"
+                                >
+                                    <X className="h-4 w-4" />
+                                </button>
+                            ) : null}
                         </div>
 
                         <Listbox value={sortBy} onChange={setSortBy}>
                             {({ open }) => (
-                                <div className="relative w-48 z-10">
+                                <div className="relative w-full sm:w-48 z-10">
                                     <Listbox.Button className="relative w-full cursor-default rounded-lg bg-background/30 py-2 pl-3 pr-10 text-left shadow-md focus:outline-none border border-border text-white transition hover:bg-background/40">
                                         <span className="block truncate text-xs">{sortBy.label}</span>
                                         <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                                            <ChevronDown className={`h-5 w-5 text-gray-400 transition ${open ? "rotate-180" : ""}`} />
+                                            <ChevronDown className={cx("h-5 w-5 text-gray-400 transition", open ? "rotate-180" : "")} />
                                         </span>
                                     </Listbox.Button>
 
@@ -419,12 +501,12 @@ export default function GamesSection() {
                                             <Listbox.Option
                                                 key={option.value}
                                                 className={({ active }) =>
-                                                    `relative cursor-default select-none py-2 px-4 text-xs ${active ? "bg-primary/50 text-white" : "text-white"}`
+                                                    cx("relative cursor-default select-none py-2 px-4 text-xs", active ? "bg-primary/50 text-white" : "text-white")
                                                 }
                                                 value={option}
                                             >
                                                 {({ selected }) => (
-                                                    <span className={`block truncate ${selected ? "font-medium" : "font-normal"}`}>{option.label}</span>
+                                                    <span className={cx("block truncate", selected ? "font-medium" : "font-normal")}>{option.label}</span>
                                                 )}
                                             </Listbox.Option>
                                         ))}
@@ -438,9 +520,7 @@ export default function GamesSection() {
                 {showSkeleton && <GamesGridSkeleton count={8} />}
                 {!showSkeleton && error && <div className="text-red-400 text-sm">{error?.message || t("games.list.failedToLoad")}</div>}
 
-                {!showSkeleton && !error && allGames.length > 0 && games.length === 0 && (
-                    <div className="text-white/70 text-sm">{t("games.list.noGamesFound")}</div>
-                )}
+                {!showSkeleton && !error && allGames.length > 0 && games.length === 0 && <div className="text-white/70 text-sm">{t("games.list.noGamesFound")}</div>}
 
                 {!showSkeleton && !error && games.length > 0 && (
                     <div className="hidden md:grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
@@ -453,9 +533,7 @@ export default function GamesSection() {
                                 <div className="aspect-video relative overflow-hidden bg-white/[0.03]">
                                     <GameImage src={game.imageURL} alt={getGameName(game, i18n, t)} />
                                 </div>
-                                <div className="p-3 text-center text-white text-sm font-medium truncate">
-                                    {game?.[i18n.language]?.name || game?.name || t("games.untitled")}
-                                </div>
+                                <div className="p-3 text-center text-white text-sm font-medium truncate">{getGameName(game, i18n, t)}</div>
                             </Link>
                         ))}
                     </div>
@@ -468,14 +546,13 @@ export default function GamesSection() {
                                 <Link
                                     key={game.id}
                                     to={`/game/${game.id}`}
-                                    className="group rounded-xl overflow-hidden cursor-pointer shadow-lg hover:shadow-primary/50 transition-all duration-300 transform hover:scale-[1.03] bg-background/50 border border-border/50 block"
+                                    className="group rounded-xl overflow-hidden cursor-pointer shadow-lg bg-background/50 border border-border/50 block active:scale-[0.99] transition"
+                                    onClick={() => navigate(`/game/${game.id}`)}
                                 >
                                     <div className="aspect-video relative overflow-hidden bg-white/[0.03]">
                                         <GameImage src={game.imageURL} alt={getGameName(game, i18n, t)} />
                                     </div>
-                                    <div className="p-3 text-center text-white text-sm font-medium truncate">
-                                        {game?.[i18n.language]?.name || game?.name || t("games.untitled")}
-                                    </div>
+                                    <div className="p-3 text-center text-white text-sm font-medium truncate">{getGameName(game, i18n, t)}</div>
                                 </Link>
                             ))}
                         </div>

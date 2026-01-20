@@ -8,11 +8,7 @@ const formatLongDate = (val) => {
     if (!val) return "";
     const d = val?.toDate ? val.toDate() : new Date(val);
     if (isNaN(d.getTime())) return "";
-    return d.toLocaleDateString(undefined, {
-        year: "numeric",
-        month: "long",
-        day: "numeric"
-    });
+    return d.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
 };
 
 const getPlainText = (html) => {
@@ -45,9 +41,12 @@ function AnnouncementCard({ item, onOpen, faded }) {
 
     return (
         <button
+            type="button"
             onClick={() => onOpen(item)}
-            className={`group w-full text-left rounded-2xl overflow-hidden border border-white/10 bg-white/[0.035] hover:bg-white/[0.06] transition shadow-[0_20px_90px_rgba(0,0,0,0.4)] ${faded ? "opacity-70 hover:opacity-100" : ""
-                }`}
+            className={[
+                "group w-full text-left rounded-2xl overflow-hidden border border-white/10 bg-white/[0.035] hover:bg-white/[0.06] transition shadow-[0_20px_90px_rgba(0,0,0,0.4)]",
+                faded ? "opacity-70 hover:opacity-100" : "",
+            ].join(" ")}
         >
             <div className="relative">
                 {item?.imageURL ? (
@@ -59,30 +58,27 @@ function AnnouncementCard({ item, onOpen, faded }) {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
                 <div className="absolute bottom-0 left-0 right-0 p-4">
-                    <div className="flex items-center gap-2 text-[11px] text-white/75">
+                    <div className="flex items-center gap-2 text-[11px] text-white/75 flex-wrap">
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-black/40 border border-white/10 px-2 py-1">
                             <Calendar className="h-3.5 w-3.5" />
                             {dateLabel}
                         </span>
 
-                        {faded && (
+                        {faded ? (
                             <span className="rounded-full px-2 py-1 bg-white/10 border border-white/10 text-white/60">
                                 {t("announcements.page.older")}
                             </span>
-                        )}
+                        ) : null}
                     </div>
 
-                    <div className="mt-2 text-white font-extrabold text-lg line-clamp-2 group-hover:text-primary transition">
+                    <div className="mt-2 text-white font-extrabold text-lg leading-snug line-clamp-2 group-hover:text-primary transition break-words">
                         {title}
                     </div>
                 </div>
             </div>
 
             <div className="p-4">
-                <div className="text-white/70 text-sm line-clamp-2">
-                    {snippet || t("announcements.page.openToReadMore")}
-                </div>
-
+                <div className="text-white/70 text-sm line-clamp-2 break-words">{snippet || t("announcements.page.openToReadMore")}</div>
                 <div className="mt-4 flex justify-end">
                     <span className="text-primary text-sm font-semibold">{t("announcements.page.open")}</span>
                 </div>
@@ -109,7 +105,6 @@ export default function Announcements() {
     const filtered = useMemo(() => {
         const q = query.trim().toLowerCase();
         if (!q) return sorted;
-
         return sorted.filter((a) => {
             const tt = (a?.title || "").toLowerCase();
             const c = getPlainText(a?.content || "").toLowerCase();
@@ -118,18 +113,18 @@ export default function Announcements() {
     }, [sorted, query]);
 
     return (
-        <div className="w-full pt-20 md:pt-24">
+        <div className="w-full pt-20 md:pt-24 pb-[env(safe-area-inset-bottom)]">
             <header className="bg-darken-evo border-b border-border py-10">
                 <div className="max-w-7xl mx-auto px-4 md:px-8">
-                    <div className="flex items-start gap-4">
-                        <div className="h-11 w-11 rounded-2xl bg-primary/15 border border-primary/25 flex items-center justify-center">
+                    <div className="flex items-start gap-4 min-w-0">
+                        <div className="h-11 w-11 rounded-2xl bg-primary/15 border border-primary/25 flex items-center justify-center shrink-0">
                             <Sparkles className="h-5 w-5 text-primary" />
                         </div>
 
-                        <div>
+                        <div className="min-w-0">
                             <p className="text-sm text-white/50 mb-1">{t("announcements.page.crumb")}</p>
-                            <h1 className="text-3xl font-bold text-white mb-2">{t("announcements.page.title")}</h1>
-                            <p className="text-sm text-white/70">{t("announcements.page.subtitle")}</p>
+                            <h1 className="text-3xl font-bold text-white mb-2 break-words">{t("announcements.page.title")}</h1>
+                            <p className="text-sm text-white/70 break-words">{t("announcements.page.subtitle")}</p>
                         </div>
                     </div>
 
@@ -139,7 +134,7 @@ export default function Announcements() {
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
                             placeholder={t("announcements.page.searchPlaceholder")}
-                            className="w-full rounded-xl bg-black/20 border border-border pl-9 pr-3 py-2.5 text-sm text-white placeholder:text-white/40 outline-none focus:ring-1 focus:ring-primary"
+                            className="w-full rounded-xl bg-black/20 border border-border pl-9 pr-3 py-2.5 text-[16px] md:text-sm text-white placeholder:text-white/40 outline-none focus:ring-1 focus:ring-primary"
                         />
                     </div>
                 </div>
@@ -180,8 +175,8 @@ export default function Announcements() {
                         <div className="fixed inset-0 bg-black/75" />
                     </Transition.Child>
 
-                    <div className="fixed inset-0 overflow-y-auto">
-                        <div className="min-h-full flex items-center justify-center p-4">
+                    <div className="fixed inset-0 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
+                        <div className="min-h-full flex items-center justify-center p-4 pt-[max(16px,env(safe-area-inset-top))] pb-[max(16px,env(safe-area-inset-bottom))]">
                             <Transition.Child
                                 as={Fragment}
                                 enter="transition duration-200 ease-out"
@@ -191,56 +186,57 @@ export default function Announcements() {
                                 leaveFrom="opacity-100 scale-100"
                                 leaveTo="opacity-0 scale-95"
                             >
-                                <Dialog.Panel className="w-full max-w-3xl rounded-2xl border border-white/10 bg-[#0f1118] shadow-2xl overflow-hidden">
-                                    <div className="relative">
+                                <Dialog.Panel className="w-full max-w-3xl rounded-2xl border border-white/10 bg-[#0f1118] shadow-2xl overflow-hidden max-h-[88vh] flex flex-col">
+                                    <div className="relative shrink-0">
                                         {detail?.imageURL ? (
                                             <img
                                                 src={detail.imageURL}
                                                 alt={detail?.title || t("announcements.page.fallbackTitle")}
                                                 className="h-56 w-full object-cover"
+                                                loading="lazy"
                                             />
                                         ) : (
                                             <div className="h-40 bg-gradient-to-br from-white/10 to-transparent" />
                                         )}
 
                                         <button
+                                            type="button"
                                             onClick={() => setDetail(null)}
                                             className="absolute top-3 right-3 p-2 rounded-full bg-black/40 border border-white/10 text-white hover:bg-black/60"
+                                            aria-label="Close"
                                         >
                                             <X className="h-5 w-5" />
                                         </button>
 
                                         <div className="absolute bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-black/80 to-transparent">
-                                            <h2 className="text-2xl font-extrabold text-white">
+                                            <h2 className="text-2xl font-extrabold text-white break-words">
                                                 {detail?.title || t("announcements.page.fallbackTitle")}
                                             </h2>
-                                            <p className="text-white/70 text-xs mt-1">
-                                                {formatLongDate(detail?.date || detail?.createdAt)}
-                                            </p>
+                                            <p className="text-white/70 text-xs mt-1">{formatLongDate(detail?.date || detail?.createdAt)}</p>
                                         </div>
                                     </div>
 
-                                    <div className="p-6">
+                                    <div className="p-6 overflow-y-auto [-webkit-overflow-scrolling:touch]">
                                         {detail?.content ? (
                                             <div
-                                                className="prose prose-invert max-w-none text-sm leading-relaxed"
+                                                className="prose prose-invert max-w-none text-sm leading-relaxed break-words"
                                                 dangerouslySetInnerHTML={{ __html: detail.content }}
                                             />
                                         ) : (
                                             <div className="text-white/70 text-sm">{t("announcements.page.noContent")}</div>
                                         )}
 
-                                        {detail?.packURL && (
+                                        {detail?.packURL ? (
                                             <a
                                                 href={detail.packURL}
                                                 target="_blank"
                                                 rel="noreferrer"
-                                                className="inline-flex items-center gap-2 mt-6 rounded-xl border border-white/15 bg-white/[0.04] px-4 py-2.5 text-sm font-semibold text-white hover:bg-white/[0.08]"
+                                                className="inline-flex items-center gap-2 mt-6 rounded-xl border border-white/15 bg-white/[0.04] px-4 py-2.5 text-sm font-semibold text-white hover:bg-white/[0.08] w-full sm:w-auto justify-center"
                                             >
                                                 {t("announcements.page.viewMarketingPack")}
                                                 <ExternalLink className="h-4 w-4" />
                                             </a>
-                                        )}
+                                        ) : null}
                                     </div>
                                 </Dialog.Panel>
                             </Transition.Child>

@@ -15,7 +15,7 @@ import {
     FolderPlus,
     Check,
     Loader2,
-    X
+    X,
 } from "lucide-react";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
@@ -34,11 +34,15 @@ import {
     isPDF,
     flattenSectionsToFiles,
     collectExtensions,
-    collectSectionNames
+    collectSectionNames,
 } from "../utils/fileUtils";
 import { useTranslation } from "react-i18next";
 
 const TABLE_COLS = "44px 160px minmax(260px, 1fr) 160px minmax(240px, 280px)";
+
+function cx(...classes) {
+    return classes.filter(Boolean).join(" ");
+}
 
 function ProgressBar({ value }) {
     const v = Math.max(0, Math.min(100, Number(value) || 0));
@@ -127,6 +131,58 @@ const fetchBlobFromCloudDownload = async (storagePath, filename) => {
     return await res.blob();
 };
 
+function useMobileViewportFix(enabled) {
+    useEffect(() => {
+        if (!enabled) return;
+
+        const setVh = () => {
+            const h = window.innerHeight || 0;
+            if (h) document.documentElement.style.setProperty("--app-vh", `${h * 0.01}px`);
+            if (window.visualViewport?.height) {
+                document.documentElement.style.setProperty("--vvh", `${window.visualViewport.height * 0.01}px`);
+            }
+        };
+
+        setVh();
+
+        const vv = window.visualViewport;
+        const onVV = () => setVh();
+        if (vv) {
+            vv.addEventListener("resize", onVV);
+            vv.addEventListener("scroll", onVV);
+        }
+
+        window.addEventListener("resize", setVh);
+        window.addEventListener("orientationchange", setVh);
+
+        return () => {
+            window.removeEventListener("resize", setVh);
+            window.removeEventListener("orientationchange", setVh);
+            if (vv) {
+                vv.removeEventListener("resize", onVV);
+                vv.removeEventListener("scroll", onVV);
+            }
+        };
+    }, [enabled]);
+}
+
+function useBodyScrollLock(locked) {
+    useEffect(() => {
+        if (!locked) return;
+
+        const prevOverflow = document.body.style.overflow;
+        const prevTouch = document.body.style.touchAction;
+
+        document.body.style.overflow = "hidden";
+        document.body.style.touchAction = "none";
+
+        return () => {
+            document.body.style.overflow = prevOverflow;
+            document.body.style.touchAction = prevTouch;
+        };
+    }, [locked]);
+}
+
 function MobileCollectionSheet({
     open,
     onClose,
@@ -144,12 +200,15 @@ function MobileCollectionSheet({
     createProg,
     createAndAddCollection,
     addingMap,
-    addedFlash
+    addedFlash,
 }) {
     const { t } = useTranslation();
 
     const url = file?._url || file?.url || file?.fileURL || "";
     const isCreatingThis = creatingForFile?.id === file?.id;
+
+    useBodyScrollLock(open);
+    useMobileViewportFix(open);
 
     useEffect(() => {
         if (!open) return;
@@ -157,6 +216,9 @@ function MobileCollectionSheet({
             if (c?.id) ensureItemsLoaded(c.id);
         });
     }, [open, collections, ensureItemsLoaded]);
+
+    const panelHeight = "calc(var(--vvh, var(--app-vh, 1vh)) * 100)";
+    const contentMax = "min(85dvh, min(85svh, calc(var(--vvh, var(--app-vh, 1vh)) * 85)))";
 
     return (
         <Transition appear show={open} as={Fragment}>
@@ -173,7 +235,7 @@ function MobileCollectionSheet({
                     <div className="fixed inset-0 bg-black/60" />
                 </Transition.Child>
 
-                <div className="fixed inset-0 flex items-end justify-center">
+                <div className="fixed inset-0 flex items-end justify-center" style={{ height: panelHeight }}>
                     <Transition.Child
                         as={Fragment}
                         enter="ease-out duration-200"
@@ -184,16 +246,19 @@ function MobileCollectionSheet({
                         leaveTo="opacity-0 translate-y-6"
                     >
                         <Dialog.Panel
-                            className={[
+                            className={cx(
                                 "w-full max-w-md rounded-t-2xl border border-white/10 bg-[#0f121a]",
-                                "shadow-2xl overflow-hidden",
-                                "max-h-[85vh] flex flex-col"
-                            ].join(" ")}
+                                "shadow-2xl overflow-hidden flex flex-col"
+                            )}
                             style={{
-                                paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)"
+                                maxHeight: contentMax,
+                                paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)",
                             }}
                         >
-                            <div className="px-4 pt-4 pb-3 border-b border-white/10">
+                            <div
+                                className="px-4 pt-4 pb-3 border-b border-white/10"
+                                style={{ paddingTop: "calc(16px + env(safe-area-inset-top))" }}
+                            >
                                 <div className="flex items-center justify-between gap-3">
                                     <Dialog.Title className="text-base font-extrabold text-white">
                                         {t("gameDetails.collections.sheet.title")}
@@ -210,7 +275,10 @@ function MobileCollectionSheet({
                                 <div className="mt-1 text-xs text-white/60">{t("gameDetails.collections.sheet.subtitle")}</div>
                             </div>
 
-                            <div className="flex-1 min-h-0 px-4 py-3 overflow-y-auto overscroll-contain">
+                            <div
+                                className="flex-1 min-h-0 px-4 py-3 overflow-y-auto overscroll-contain"
+                                style={{ WebkitOverflowScrolling: "touch" }}
+                            >
                                 {collections.length === 0 ? (
                                     <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm text-white/70">
                                         {t("gameDetails.collections.empty")}
@@ -229,12 +297,12 @@ function MobileCollectionSheet({
                                                     type="button"
                                                     onClick={() => addToExistingCollection(c.id, file)}
                                                     disabled={busy}
-                                                    className={[
+                                                    className={cx(
                                                         "w-full rounded-xl border px-4 py-3 text-left transition",
                                                         "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]",
                                                         "flex items-center justify-between gap-3",
                                                         busy ? "opacity-60" : ""
-                                                    ].join(" ")}
+                                                    )}
                                                 >
                                                     <div className="min-w-0">
                                                         <div className="text-sm font-semibold text-white truncate">
@@ -288,6 +356,13 @@ function MobileCollectionSheet({
                                             placeholder={t("gameDetails.collections.namePlaceholder")}
                                             className="w-full px-4 py-3 text-sm rounded-xl bg-white text-black outline-none"
                                             disabled={creatingCollection}
+                                            inputMode="text"
+                                            autoCorrect="off"
+                                            autoCapitalize="sentences"
+                                            enterKeyHint="done"
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter") createAndAddCollection(file);
+                                            }}
                                         />
 
                                         {creatingCollection ? (
@@ -349,7 +424,7 @@ function AddToCollectionInline({
     createProg,
     createAndAddCollection,
     addingMap,
-    addedFlash
+    addedFlash,
 }) {
     const { t } = useTranslation();
 
@@ -383,7 +458,7 @@ function AddToCollectionInline({
                         <Popover.Panel className="absolute right-0 mt-2 w-[260px] rounded-xl border border-border bg-card shadow-xl p-2 z-20">
                             <div className="px-2 py-1 text-xs font-bold text-white/70">{t("gameDetails.collections.addTo")}</div>
 
-                            <div className="max-h-48 overflow-y-auto scrollbar-hide">
+                            <div className="max-h-48 overflow-y-auto">
                                 {collections.length === 0 && (
                                     <div className="px-3 py-2 text-xs text-white/60">{t("gameDetails.collections.empty")}</div>
                                 )}
@@ -400,21 +475,17 @@ function AddToCollectionInline({
                                             key={c.id}
                                             onClick={() => addToExistingCollection(c.id, file)}
                                             disabled={busy}
-                                            className={[
+                                            className={cx(
                                                 "w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm hover:bg-white/5",
                                                 inCol ? "text-emerald-200" : "text-white",
                                                 busy ? "opacity-60" : ""
-                                            ].join(" ")}
+                                            )}
                                         >
                                             <span className="truncate">{c.name || t("gameDetails.collections.untitled")}</span>
 
                                             <span className="flex items-center gap-2">
                                                 {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                                                {inCol ? (
-                                                    <Check size={16} className="text-emerald-400" />
-                                                ) : (
-                                                    <PlusSquare size={16} className="opacity-60" />
-                                                )}
+                                                {inCol ? <Check size={16} className="text-emerald-400" /> : <PlusSquare size={16} className="opacity-60" />}
                                                 {flash === "added" ? (
                                                     <span className="text-[10px] text-emerald-300">{t("gameDetails.collections.added")}</span>
                                                 ) : null}
@@ -449,13 +520,20 @@ function AddToCollectionInline({
                                         placeholder={t("gameDetails.collections.namePlaceholder")}
                                         className="w-full px-3 py-2 text-sm rounded-md bg-white text-black outline-none"
                                         disabled={creatingCollection}
+                                        inputMode="text"
+                                        autoCorrect="off"
+                                        autoCapitalize="sentences"
+                                        enterKeyHint="done"
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter") createAndAddCollection(file);
+                                        }}
                                     />
 
                                     {creatingCollection && (
                                         <div className="space-y-1">
                                             <ProgressBar value={createProg.pct} />
                                             <div className="text-[11px] text-white/60 flex items-center justify-between">
-                                                <span>{createStage || t("gameDetails.collections.processing")}</span>
+                                                <span className="truncate">{createStage || t("gameDetails.collections.processing")}</span>
                                                 <span>{Math.min(99, Math.round(createProg.pct))}%</span>
                                             </div>
                                         </div>
@@ -518,7 +596,7 @@ export default function GameDetails() {
         fetchGame,
         fetchSections,
         startRelatedListener,
-        stopRelatedListener
+        stopRelatedListener,
     } = useGameDetailsStore();
 
     const [inputValue, setInputValue] = useState("");
@@ -543,6 +621,8 @@ export default function GameDetails() {
     const [addedFlash, setAddedFlash] = useState({});
     const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
     const [sheetFile, setSheetFile] = useState(null);
+
+    useMobileViewportFix(true);
 
     useEffect(() => window.scrollTo(0, 0), []);
 
@@ -652,7 +732,7 @@ export default function GameDetails() {
         gameId,
         sectionId: f._sectionId || null,
         sectionTitle: f._sectionTitle || null,
-        storagePath: f.storagePath || f._storagePath || null
+        storagePath: f.storagePath || f._storagePath || null,
     });
 
     const membershipMap = useMemo(() => {
@@ -782,7 +862,7 @@ export default function GameDetails() {
                     ext: file?._ext || getExt(name),
                     size: file?._size || null,
                     thumbURL: file?._thumb || null,
-                    storagePath: file?.storagePath || file?._storagePath || null
+                    storagePath: file?.storagePath || file?._storagePath || null,
                 });
             }
 
@@ -844,15 +924,44 @@ export default function GameDetails() {
         }
     };
 
+    const mobileToolbarRef = useRef(null);
+    const [mobileToolbarH, setMobileToolbarH] = useState(0);
+
+    useEffect(() => {
+        const el = mobileToolbarRef.current;
+        if (!el) return;
+
+        const ro = new ResizeObserver(() => {
+            setMobileToolbarH(el.getBoundingClientRect().height || 0);
+        });
+        ro.observe(el);
+        setMobileToolbarH(el.getBoundingClientRect().height || 0);
+
+        return () => ro.disconnect();
+    }, []);
+
+    useEffect(() => {
+        if (!mobileSheetOpen && !previewOpen) return;
+        const onFocusIn = () => {
+            setTimeout(() => {
+                window.scrollTo({ top: window.scrollY, behavior: "instant" });
+            }, 0);
+        };
+        document.addEventListener("focusin", onFocusIn);
+        return () => document.removeEventListener("focusin", onFocusIn);
+    }, [mobileSheetOpen, previewOpen]);
+
+    const pageBottomPad = `calc(${mobileToolbarH}px + env(safe-area-inset-bottom) + 16px)`;
+
     if (error) {
         return <div className="max-w-6xl mx-auto pt-24 pb-10 px-4 text-center text-red-400 text-lg">{error}</div>;
     }
 
     return (
-        <div className="min-h-screen bg-[#0b0d13] text-white overflow-x-hidden">
+        <div className="min-h-[calc(var(--vvh, var(--app-vh, 1vh))*100)] bg-[#0b0d13] text-white overflow-x-hidden">
             <HeroBanner image={hero} overlayClassName="bg-gradient-to-b from-black/5 via-black/35 to-black/70" />
 
-            <div className="w-full px-4 md:px-6 lg:max-w-7xl lg:mx-auto py-6">
+            <div className="w-full px-4 md:px-6 lg:max-w-7xl lg:mx-auto py-6" style={{ paddingBottom: pageBottomPad }}>
                 <div className="mb-4">
                     {loadingGame || !game ? (
                         <div className="space-y-2">
@@ -868,15 +977,15 @@ export default function GameDetails() {
                 </div>
 
                 <Tab.Group>
-                    <Tab.List className="flex gap-2 mb-4">
+                    <Tab.List className="flex gap-2 mb-4 overflow-x-auto no-scrollbar">
                         {[t("gameDetails.tabs.assets"), t("gameDetails.tabs.related")].map((tt) => (
                             <Tab key={tt} as={Fragment}>
                                 {({ selected }) => (
                                     <button
-                                        className={[
-                                            "px-4 py-2 rounded-md text-sm font-semibold border transition",
+                                        className={cx(
+                                            "px-4 py-2 rounded-md text-sm font-semibold border transition whitespace-nowrap",
                                             selected ? "bg-primary text-black border-primary" : "bg-transparent text-white/80 border-white/20 hover:bg-white/5"
-                                        ].join(" ")}
+                                        )}
                                     >
                                         {tt}
                                     </button>
@@ -909,6 +1018,10 @@ export default function GameDetails() {
                                                     onChange={(e) => setInputValue(e.target.value)}
                                                     placeholder={t("gameDetails.search.placeholder")}
                                                     className="w-full pl-9 pr-3 py-2 text-sm rounded-md bg-white text-black outline-none"
+                                                    inputMode="search"
+                                                    enterKeyHint="search"
+                                                    autoCorrect="off"
+                                                    autoCapitalize="none"
                                                 />
                                             </div>
 
@@ -916,7 +1029,7 @@ export default function GameDetails() {
                                                 {showLeftFilters ? t("gameDetails.filters.hide") : t("gameDetails.filters.show")}
                                             </button>
 
-                                            <div className="md:ml-auto flex items-center gap-2">
+                                            <div className="md:ml-auto flex items-center gap-2 flex-wrap">
                                                 <select
                                                     value={sortBy}
                                                     onChange={(e) => setSortBy(e.target.value)}
@@ -948,9 +1061,7 @@ export default function GameDetails() {
                                         </div>
 
                                         {!!selectedFiles.length && (
-                                            <div className="text-xs text-white/70">
-                                                {t("gameDetails.selection.selected", { count: selectedFiles.length })}
-                                            </div>
+                                            <div className="text-xs text-white/70">{t("gameDetails.selection.selected", { count: selectedFiles.length })}</div>
                                         )}
                                     </div>
 
@@ -1018,15 +1129,11 @@ export default function GameDetails() {
                                                             <button
                                                                 onClick={() => openPreviewAt(globalIndex)}
                                                                 className="relative h-[64px] w-[140px] mx-auto flex items-center justify-center group"
+                                                                type="button"
                                                             >
                                                                 {showImg ? (
                                                                     <div className="w-[140px] h-[64px] flex items-center justify-center">
-                                                                        <img
-                                                                            src={f._thumb || f._url}
-                                                                            alt=""
-                                                                            className="max-w-full max-h-full object-contain"
-                                                                            loading="lazy"
-                                                                        />
+                                                                        <img src={f._thumb || f._url} alt="" className="max-w-full max-h-full object-contain" loading="lazy" />
                                                                     </div>
                                                                 ) : showPdf ? (
                                                                     <FileText className="text-red-400" size={22} />
@@ -1054,9 +1161,7 @@ export default function GameDetails() {
                                                                         <File size={16} className="text-white/70 mt-0.5 flex-shrink-0" />
                                                                     )}
 
-                                                                    <span className="min-w-0 break-words whitespace-normal leading-snug line-clamp-3">
-                                                                        {f._name}
-                                                                    </span>
+                                                                    <span className="min-w-0 break-words whitespace-normal leading-snug line-clamp-3">{f._name}</span>
                                                                 </div>
 
                                                                 <div className="text-xs text-white/60 mt-1 break-words whitespace-normal">
@@ -1077,6 +1182,7 @@ export default function GameDetails() {
                                                                         <button
                                                                             onClick={() => handleDownload(f)}
                                                                             className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-primary text-black text-xs font-extrabold hover:opacity-90"
+                                                                            type="button"
                                                                         >
                                                                             <Download size={14} />
                                                                             {t("gameDetails.actions.download")}
@@ -1085,6 +1191,7 @@ export default function GameDetails() {
                                                                         <button
                                                                             onClick={() => openPreviewAt(globalIndex)}
                                                                             className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-white/30 text-white text-xs font-semibold hover:bg-white/5"
+                                                                            type="button"
                                                                         >
                                                                             <Eye size={14} />
                                                                             {t("gameDetails.actions.preview")}
@@ -1129,16 +1236,15 @@ export default function GameDetails() {
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center justify-between mt-4">
-                                        <div className="text-primary font-bold text-sm">
-                                            {t("gameDetails.pagination.pageOf", { page, total: totalPages })}
-                                        </div>
+                                    <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
+                                        <div className="text-primary font-bold text-sm">{t("gameDetails.pagination.pageOf", { page, total: totalPages })}</div>
 
                                         <div className="flex gap-2">
                                             <button
                                                 disabled={page <= 1}
                                                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                                                 className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-white/30 text-white text-sm disabled:opacity-40 hover:bg-white/5"
+                                                type="button"
                                             >
                                                 <ChevronLeft size={16} />
                                                 {t("gameDetails.pagination.prev")}
@@ -1148,10 +1254,50 @@ export default function GameDetails() {
                                                 disabled={page >= totalPages}
                                                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                                                 className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-white/30 text-white text-sm disabled:opacity-40 hover:bg-white/5"
+                                                type="button"
                                             >
                                                 {t("gameDetails.pagination.next")}
                                                 <ChevronRight size={16} />
                                             </button>
+                                        </div>
+                                    </div>
+
+                                    <div
+                                        ref={mobileToolbarRef}
+                                        className="md:hidden fixed left-0 right-0 bottom-0 z-[40] border-t border-white/10 bg-black/75 backdrop-blur-md"
+                                        style={{
+                                            paddingBottom: "env(safe-area-inset-bottom)",
+                                            paddingLeft: "env(safe-area-inset-left)",
+                                            paddingRight: "env(safe-area-inset-right)",
+                                        }}
+                                    >
+                                        <div className="px-4 py-3 flex items-center justify-between gap-3">
+                                            <div className="text-xs text-white/70 min-w-0 truncate">
+                                                {selectedFiles.length
+                                                    ? t("gameDetails.selection.selected", { count: selectedFiles.length })
+                                                    : t("gameDetails.selection.none")}
+                                            </div>
+
+                                            <div className="flex items-center gap-2 shrink-0">
+                                                <button
+                                                    type="button"
+                                                    onClick={clearSelected}
+                                                    disabled={!selectedFiles.length || zipping}
+                                                    className="px-3 py-2 rounded-lg border border-white/20 text-white text-xs font-semibold disabled:opacity-50 hover:bg-white/5"
+                                                >
+                                                    {t("gameDetails.selection.clear")}
+                                                </button>
+
+                                                <button
+                                                    type="button"
+                                                    onClick={downloadSelectedAsZip}
+                                                    disabled={!selectedFiles.length || zipping}
+                                                    className="px-3 py-2 rounded-lg bg-primary text-black text-xs font-extrabold disabled:opacity-50 inline-flex items-center gap-2"
+                                                >
+                                                    {zipping ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download size={14} />}
+                                                    {t("gameDetails.zip.button", { count: selectedFiles.length || 0 })}
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -1194,6 +1340,7 @@ export default function GameDetails() {
                                                     navigate(`/game/${g.id}`);
                                                 }}
                                                 className="group rounded-2xl overflow-hidden border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] transition"
+                                                type="button"
                                             >
                                                 <div className="aspect-[16/9] bg-black/40 overflow-hidden">
                                                     <img

@@ -11,7 +11,7 @@ import {
     where,
     orderBy,
     serverTimestamp,
-    getDocs
+    getDocs,
 } from "firebase/firestore";
 import { db } from "../firebase";
 
@@ -29,17 +29,15 @@ const tsToMillis = (v) => {
 const normalizeCollection = (c, fallback = {}) => {
     const createdAt = c?.createdAt ?? fallback?.createdAt ?? null;
     const updatedAt = c?.updatedAt ?? fallback?.updatedAt ?? null;
-    return {
-        ...fallback,
-        ...c,
-        createdAt,
-        updatedAt
-    };
+    return { ...fallback, ...c, createdAt, updatedAt };
 };
 
 export const useCollectionsStore = create(
     persist(
         (set, get) => ({
+            hasHydrated: false,
+            setHasHydrated: (v) => set({ hasHydrated: !!v }),
+
             collections: [],
             collectionItems: {},
             itemsLoading: {},
@@ -72,18 +70,15 @@ export const useCollectionsStore = create(
 
                 const nextUnsub = onSnapshot(
                     qCol,
-                    { includeMetadataChanges: true },
                     (snap) => {
                         const now = Date.now();
-
                         const serverRows = snap.docs.map((d) => ({
                             id: d.id,
                             ...d.data(),
                             __optimistic: false,
-                            __optimisticAt: null
+                            __optimisticAt: null,
                         }));
 
-                        const serverById = new Map(serverRows.map((c) => [c.id, c]));
                         const serverIds = new Set(serverRows.map((c) => c.id));
 
                         set((state) => {
@@ -95,37 +90,51 @@ export const useCollectionsStore = create(
                             });
 
                             const merged = [];
-
                             for (const row of serverRows) {
                                 const prev = (state.collections || []).find((x) => x.id === row.id) || {};
                                 merged.push(normalizeCollection(row, prev));
                             }
-
-                            for (const o of keptOptimistic) {
-                                merged.push(o);
-                            }
+                            for (const o of keptOptimistic) merged.push(o);
 
                             merged.sort((a, b) => tsToMillis(b.createdAt) - tsToMillis(a.createdAt));
 
                             const withItemCount = merged.map((c) => {
                                 const items = state.collectionItems?.[c.id];
-                                const itemCount =
-                                    typeof c.itemCount === "number"
-                                        ? c.itemCount
-                                        : items
-                                            ? items.length
-                                            : 0;
+                                const itemCount = typeof c.itemCount === "number" ? c.itemCount : items ? items.length : 0;
                                 return { ...c, itemCount };
                             });
 
-                            return { collections: withItemCount, loading: false };
+                            return { collections: withItemCount, loading: false, error: null };
                         });
                     },
-                    (err) => {
-                        set({
-                            error: err?.message || "Failed to load collections",
-                            loading: false
-                        });
+                    async (err) => {
+                        const msg = err?.message || "Failed to load collections";
+
+                        set({ error: msg, loading: false });
+
+                        const looksLikeIndex =
+                            msg.includes("The query requires an index") ||
+                            msg.includes("FAILED_PRECONDITION") ||
+                            msg.includes("requires an index");
+
+                        if (!looksLikeIndex) return;
+
+                        try {
+                            const fallbackQ = query(collection(db, "collections"), where("userId", "==", userId));
+                            const snap = await getDocs(fallbackQ);
+                            const rows = snap.docs
+                                .map((d) => ({ id: d.id, ...d.data(), __optimistic: false, __optimisticAt: null }))
+                                .sort((a, b) => tsToMillis(b.createdAt) - tsToMillis(a.createdAt));
+
+                            set((state) => {
+                                const withItemCount = rows.map((c) => {
+                                    const items = state.collectionItems?.[c.id];
+                                    const itemCount = typeof c.itemCount === "number" ? c.itemCount : items ? items.length : 0;
+                                    return { ...c, itemCount };
+                                });
+                                return { collections: withItemCount, loading: false };
+                            });
+                        } catch { }
                     }
                 );
 
@@ -135,7 +144,7 @@ export const useCollectionsStore = create(
             stopUserCollectionsListener: () => {
                 const { unsub } = get();
                 if (unsub) unsub();
-                set({ unsub: null, activeUserId: null });
+                set({ unsub: null, activeUserId: null, loading: false });
             },
 
             clearCollectionsState: () =>
@@ -144,7 +153,7 @@ export const useCollectionsStore = create(
                     collectionItems: {},
                     itemsLoading: {},
                     loading: false,
-                    error: null
+                    error: null,
                 }),
 
             loadCollectionItems: async (collectionId) => {
@@ -156,8 +165,8 @@ export const useCollectionsStore = create(
                 set({
                     itemsLoading: {
                         ...(state.itemsLoading || {}),
-                        [collectionId]: true
-                    }
+                        [collectionId]: true,
+                    },
                 });
 
                 try {
@@ -168,22 +177,20 @@ export const useCollectionsStore = create(
                     set((prev) => ({
                         collectionItems: {
                             ...(prev.collectionItems || {}),
-                            [collectionId]: items
+                            [collectionId]: items,
                         },
                         itemsLoading: {
                             ...(prev.itemsLoading || {}),
-                            [collectionId]: false
+                            [collectionId]: false,
                         },
-                        collections: (prev.collections || []).map((c) =>
-                            c.id === collectionId ? { ...c, itemCount: items.length } : c
-                        )
+                        collections: (prev.collections || []).map((c) => (c.id === collectionId ? { ...c, itemCount: items.length } : c)),
                     }));
                 } catch {
                     set((prev) => ({
                         itemsLoading: {
                             ...(prev.itemsLoading || {}),
-                            [collectionId]: false
-                        }
+                            [collectionId]: false,
+                        },
                     }));
                 }
             },
@@ -205,10 +212,10 @@ export const useCollectionsStore = create(
                             updatedAt: now,
                             itemCount: 0,
                             __optimistic: true,
-                            __optimisticAt: Date.now()
+                            __optimisticAt: Date.now(),
                         },
-                        ...(state.collections || [])
-                    ]
+                        ...(state.collections || []),
+                    ],
                 }));
 
                 try {
@@ -217,27 +224,18 @@ export const useCollectionsStore = create(
                         name,
                         isCompleted: false,
                         createdAt: serverTimestamp(),
-                        updatedAt: serverTimestamp()
+                        updatedAt: serverTimestamp(),
                     });
 
                     set((state) => ({
-                        collections: (state.collections || []).map((c) =>
-                            c.id === optimisticId
-                                ? {
-                                    ...c,
-                                    id: ref.id,
-                                    __optimistic: true,
-                                    __optimisticAt: Date.now()
-                                }
-                                : c
-                        )
+                        collections: (state.collections || []).map((c) => (c.id === optimisticId ? { ...c, id: ref.id } : c)),
                     }));
 
                     return ref.id;
                 } catch (e) {
                     set((state) => ({
                         collections: (state.collections || []).filter((c) => c.id !== optimisticId),
-                        error: e?.message || "Create collection failed"
+                        error: e?.message || "Create collection failed",
                     }));
                     return null;
                 }
@@ -249,16 +247,11 @@ export const useCollectionsStore = create(
                 const now = new Date();
 
                 set((state) => ({
-                    collections: (state.collections || []).map((c) =>
-                        c.id === collectionId ? { ...c, name, updatedAt: now } : c
-                    )
+                    collections: (state.collections || []).map((c) => (c.id === collectionId ? { ...c, name, updatedAt: now } : c)),
                 }));
 
                 try {
-                    await updateDoc(doc(db, "collections", collectionId), {
-                        name,
-                        updatedAt: serverTimestamp()
-                    });
+                    await updateDoc(doc(db, "collections", collectionId), { name, updatedAt: serverTimestamp() });
                 } catch (e) {
                     set({ error: e?.message || "Rename failed" });
                 }
@@ -273,7 +266,7 @@ export const useCollectionsStore = create(
                     return {
                         collections: (state.collections || []).filter((c) => c.id !== collectionId),
                         collectionItems: restItems,
-                        itemsLoading: restLoading
+                        itemsLoading: restLoading,
                     };
                 });
 
@@ -292,16 +285,11 @@ export const useCollectionsStore = create(
                 const now = new Date();
 
                 set((state) => ({
-                    collections: (state.collections || []).map((c) =>
-                        c.id === collectionId ? { ...c, isCompleted, updatedAt: now } : c
-                    )
+                    collections: (state.collections || []).map((c) => (c.id === collectionId ? { ...c, isCompleted, updatedAt: now } : c)),
                 }));
 
                 try {
-                    await updateDoc(doc(db, "collections", collectionId), {
-                        isCompleted,
-                        updatedAt: serverTimestamp()
-                    });
+                    await updateDoc(doc(db, "collections", collectionId), { isCompleted, updatedAt: serverTimestamp() });
                 } catch (e) {
                     set({ error: e?.message || "Update failed" });
                 }
@@ -316,11 +304,7 @@ export const useCollectionsStore = create(
                     const existing = await getDocs(query(itemsRef, where("fileURL", "==", filePayload.fileURL)));
                     if (!existing.empty) return;
 
-                    const ref = await addDoc(itemsRef, {
-                        ...filePayload,
-                        addedAt: serverTimestamp()
-                    });
-
+                    const ref = await addDoc(itemsRef, { ...filePayload, addedAt: serverTimestamp() });
                     const now = new Date();
 
                     set((state) => {
@@ -328,19 +312,12 @@ export const useCollectionsStore = create(
                         const updatedItems = [{ id: ref.id, ...filePayload, addedAt: now }, ...prevItems];
 
                         return {
-                            collectionItems: {
-                                ...(state.collectionItems || {}),
-                                [collectionId]: updatedItems
-                            },
-                            collections: (state.collections || []).map((c) =>
-                                c.id === collectionId ? { ...c, itemCount: (c.itemCount || 0) + 1 } : c
-                            )
+                            collectionItems: { ...(state.collectionItems || {}), [collectionId]: updatedItems },
+                            collections: (state.collections || []).map((c) => (c.id === collectionId ? { ...c, itemCount: (c.itemCount || 0) + 1 } : c)),
                         };
                     });
 
-                    await updateDoc(doc(db, "collections", collectionId), {
-                        updatedAt: serverTimestamp()
-                    });
+                    await updateDoc(doc(db, "collections", collectionId), { updatedAt: serverTimestamp() });
                 } catch (e) {
                     set({ error: e?.message || "Add file failed" });
                 }
@@ -357,39 +334,31 @@ export const useCollectionsStore = create(
                         const updatedItems = prevItems.filter((it) => it.id !== itemId);
 
                         return {
-                            collectionItems: {
-                                ...(state.collectionItems || {}),
-                                [collectionId]: updatedItems
-                            },
+                            collectionItems: { ...(state.collectionItems || {}), [collectionId]: updatedItems },
                             collections: (state.collections || []).map((c) =>
                                 c.id === collectionId
-                                    ? {
-                                        ...c,
-                                        itemCount: Math.max(
-                                            typeof c.itemCount === "number" ? c.itemCount - 1 : updatedItems.length,
-                                            0
-                                        )
-                                    }
+                                    ? { ...c, itemCount: Math.max(typeof c.itemCount === "number" ? c.itemCount - 1 : updatedItems.length, 0) }
                                     : c
-                            )
+                            ),
                         };
                     });
 
-                    await updateDoc(doc(db, "collections", collectionId), {
-                        updatedAt: serverTimestamp()
-                    });
+                    await updateDoc(doc(db, "collections", collectionId), { updatedAt: serverTimestamp() });
                 } catch (e) {
                     set({ error: e?.message || "Remove failed" });
                 }
-            }
+            },
         }),
         {
             name: "xpg-collections",
             storage: createJSONStorage(() => localStorage),
             partialize: (state) => ({
                 collections: state.collections,
-                collectionItems: state.collectionItems
-            })
+                collectionItems: state.collectionItems,
+            }),
+            onRehydrateStorage: () => (state) => {
+                state?.setHasHydrated?.(true);
+            },
         }
     )
 );

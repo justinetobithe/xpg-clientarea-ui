@@ -1,8 +1,63 @@
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Dialog, Transition } from "@headlessui/react";
 import { X, ExternalLink, Sparkles } from "lucide-react";
 import { useTranslation } from "react-i18next";
+
+function cx(...classes) {
+    return classes.filter(Boolean).join(" ");
+}
+
+function useBodyScrollLock(locked) {
+    useEffect(() => {
+        if (!locked) return;
+
+        const prevOverflow = document.body.style.overflow;
+        const prevTouch = document.body.style.touchAction;
+
+        document.body.style.overflow = "hidden";
+        document.body.style.touchAction = "none";
+
+        return () => {
+            document.body.style.overflow = prevOverflow;
+            document.body.style.touchAction = prevTouch;
+        };
+    }, [locked]);
+}
+
+function useMobileViewportFix(enabled) {
+    useEffect(() => {
+        if (!enabled) return;
+
+        const setVars = () => {
+            const h = window.innerHeight || 0;
+            if (h) document.documentElement.style.setProperty("--app-vh", `${h * 0.01}px`);
+            if (window.visualViewport?.height) document.documentElement.style.setProperty("--vvh", `${window.visualViewport.height * 0.01}px`);
+        };
+
+        setVars();
+
+        const vv = window.visualViewport;
+        const onVV = () => setVars();
+
+        if (vv) {
+            vv.addEventListener("resize", onVV);
+            vv.addEventListener("scroll", onVV);
+        }
+
+        window.addEventListener("resize", setVars);
+        window.addEventListener("orientationchange", setVars);
+
+        return () => {
+            window.removeEventListener("resize", setVars);
+            window.removeEventListener("orientationchange", setVars);
+            if (vv) {
+                vv.removeEventListener("resize", onVV);
+                vv.removeEventListener("scroll", onVV);
+            }
+        };
+    }, [enabled]);
+}
 
 function AnnouncementSkeletonCard() {
     return (
@@ -42,6 +97,9 @@ export default function AnnouncementsPanel({ items = [], loading = false, error 
     const [detail, setDetail] = useState(null);
     const list = useMemo(() => (Array.isArray(items) ? items : []), [items]);
 
+    useMobileViewportFix(Boolean(detail));
+    useBodyScrollLock(Boolean(detail));
+
     const Card = ({ a }) => {
         const dateLabel = formatDate(a.date || a.createdAt);
         const title = a.title || t("announcements.untitled");
@@ -56,12 +114,7 @@ export default function AnnouncementsPanel({ items = [], loading = false, error 
                 <div className="flex gap-4 p-4 md:p-6">
                     <div className="h-24 w-24 md:h-24 md:w-40 rounded-xl overflow-hidden bg-black/40 border border-white/10 shrink-0">
                         {a.imageURL ? (
-                            <img
-                                src={a.imageURL}
-                                alt={title}
-                                className="w-full h-full object-cover group-hover:scale-[1.03] transition"
-                                loading="lazy"
-                            />
+                            <img src={a.imageURL} alt={title} className="w-full h-full object-cover group-hover:scale-[1.03] transition" loading="lazy" />
                         ) : (
                             <div className="w-full h-full bg-gradient-to-br from-white/10 to-white/0" />
                         )}
@@ -80,9 +133,7 @@ export default function AnnouncementsPanel({ items = [], loading = false, error 
                         {!!desc && <div className="text-xs md:text-sm text-white/70 line-clamp-2 mt-2">{desc}</div>}
 
                         <div className="mt-3 md:mt-4 flex items-center gap-2">
-                            <span className="text-xs text-primary font-semibold group-hover:underline">
-                                {t("announcements.openDetails")}
-                            </span>
+                            <span className="text-xs text-primary font-semibold group-hover:underline">{t("announcements.openDetails")}</span>
                             {a.ctaLabel && a.ctaURL && <span className="text-[11px] text-white/50">• {a.ctaLabel}</span>}
                         </div>
                     </div>
@@ -120,9 +171,7 @@ export default function AnnouncementsPanel({ items = [], loading = false, error 
 
                 {!loading && error && <div className="text-sm text-red-400 py-6 text-center">{error}</div>}
 
-                {!loading && !error && list.length === 0 && (
-                    <div className="text-sm text-white/60 py-8 text-center">{t("announcements.empty")}</div>
-                )}
+                {!loading && !error && list.length === 0 && <div className="text-sm text-white/60 py-8 text-center">{t("announcements.empty")}</div>}
 
                 {!loading && !error && list.length > 0 && (
                     <>
@@ -138,7 +187,10 @@ export default function AnnouncementsPanel({ items = [], loading = false, error 
                         </div>
 
                         <div className="md:hidden -mx-5">
-                            <div className="flex gap-4 px-5 pb-2 overflow-x-auto snap-x snap-mandatory [-webkit-overflow-scrolling:touch]">
+                            <div
+                                className="flex gap-4 px-5 pb-2 overflow-x-auto snap-x snap-mandatory"
+                                style={{ WebkitOverflowScrolling: "touch", overscrollBehaviorX: "contain" }}
+                            >
                                 {list.map((a) => (
                                     <div key={a.id} className="snap-start shrink-0 w-[94%]">
                                         <Card a={a} />
@@ -152,20 +204,12 @@ export default function AnnouncementsPanel({ items = [], loading = false, error 
 
             <Transition appear show={Boolean(detail)} as={Fragment}>
                 <Dialog as="div" className="relative z-[80]" onClose={() => setDetail(null)}>
-                    <Transition.Child
-                        as={Fragment}
-                        enter="transition-opacity duration-200"
-                        enterFrom="opacity-0"
-                        enterTo="opacity-100"
-                        leave="transition-opacity duration-150"
-                        leaveFrom="opacity-100"
-                        leaveTo="opacity-0"
-                    >
+                    <Transition.Child as={Fragment} enter="transition-opacity duration-200" enterFrom="opacity-0" enterTo="opacity-100" leave="transition-opacity duration-150" leaveFrom="opacity-100" leaveTo="opacity-0">
                         <div className="fixed inset-0 bg-black/75" />
                     </Transition.Child>
 
-                    <div className="fixed inset-0 overflow-y-auto">
-                        <div className="min-h-full flex items-center justify-center p-4">
+                    <div className="fixed inset-0 overflow-y-auto" style={{ height: "calc(var(--vvh, var(--app-vh, 1vh)) * 100)" }}>
+                        <div className="min-h-full flex items-center justify-center p-4" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 16px)" }}>
                             <Transition.Child
                                 as={Fragment}
                                 enter="transition duration-200 ease-out"
@@ -179,12 +223,7 @@ export default function AnnouncementsPanel({ items = [], loading = false, error 
                                     <div className="relative">
                                         {detail?.imageURL ? (
                                             <div className="h-56 md:h-72 bg-black/40">
-                                                <img
-                                                    src={detail.imageURL}
-                                                    alt={detail?.title || t("announcements.modal.fallbackTitle")}
-                                                    className="w-full h-full object-cover"
-                                                    loading="lazy"
-                                                />
+                                                <img src={detail.imageURL} alt={detail?.title || t("announcements.modal.fallbackTitle")} className="w-full h-full object-cover" loading="lazy" />
                                             </div>
                                         ) : (
                                             <div className="h-44 bg-gradient-to-br from-white/10 via-white/5 to-transparent" />
@@ -196,6 +235,7 @@ export default function AnnouncementsPanel({ items = [], loading = false, error 
                                             type="button"
                                             onClick={() => setDetail(null)}
                                             className="absolute top-3 right-3 rounded-full p-2 bg-black/40 border border-white/10 text-white/80 hover:text-white hover:bg-black/60 transition"
+                                            style={{ top: "calc(12px + env(safe-area-inset-top))" }}
                                         >
                                             <X className="h-5 w-5" />
                                         </button>
@@ -224,9 +264,7 @@ export default function AnnouncementsPanel({ items = [], loading = false, error 
                                                 dangerouslySetInnerHTML={{ __html: detail.content }}
                                             />
                                         ) : (
-                                            <div className="text-white/80 text-sm">
-                                                {toText(detail?.description || "") || t("announcements.modal.noContent")}
-                                            </div>
+                                            <div className="text-white/80 text-sm">{toText(detail?.description || "") || t("announcements.modal.noContent")}</div>
                                         )}
 
                                         {(detail?.ctaLabel && detail?.ctaURL) || detail?.packURL ? (
