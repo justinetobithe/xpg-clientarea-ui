@@ -16,73 +16,20 @@ import {
 } from "lucide-react";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
-import { getAuth } from "firebase/auth";
 import { useTranslation } from "react-i18next";
+
 import { useCollectionsStore } from "../store/collectionsStore";
 import { useAuthStore } from "../store/authStore";
 import { useToast } from "../contexts/ToastContext";
+
 import { getExt, isImage, isPDF, parseSizeToBytes, formatBytes } from "../utils/fileUtils";
-
-const safeKey = (item, i) =>
-    `${String(item?.id || item?.storagePath || item?.fileURL || item?.fileName || "item")}::${String(i)}`;
-
-const safeZipName = (name) =>
-    String(name || "collection")
-        .replace(/[^\w.\-]+/g, "_")
-        .slice(0, 50);
-
-const safeFileName = (baseName, ext) => {
-    const safeBase = String(baseName || "file").replace(/[^\w.\-]+/g, "_");
-    if (!ext) return safeBase;
-    const lower = safeBase.toLowerCase();
-    const withDot = `.${ext.toLowerCase()}`;
-    return lower.endsWith(withDot) ? safeBase : `${safeBase}${withDot}`;
-};
-
-function useFakeProgress(active, onTick) {
-    const [pct, setPct] = useState(0);
-    const tRef = useRef(null);
-
-    useEffect(() => {
-        if (!active) {
-            setPct(0);
-            if (tRef.current) clearInterval(tRef.current);
-            tRef.current = null;
-            return;
-        }
-
-        setPct(8);
-        if (tRef.current) clearInterval(tRef.current);
-
-        tRef.current = setInterval(() => {
-            setPct((p) => {
-                if (p >= 92) return p;
-                const bump = p < 40 ? 6 : p < 70 ? 3 : 1;
-                const next = Math.min(92, p + bump);
-                onTick?.(next);
-                return next;
-            });
-        }, 140);
-
-        return () => {
-            if (tRef.current) clearInterval(tRef.current);
-            tRef.current = null;
-        };
-    }, [active, onTick]);
-
-    const finish = async () => {
-        setPct(100);
-        onTick?.(100);
-        await new Promise((r) => setTimeout(r, 250));
-        setPct(0);
-    };
-
-    return { pct, finish };
-}
+import { useFakeProgress } from "../hooks/useFakeProgress";
+import { fetchDownloadBlob } from "../utils/downloadService";
+import { storagePathFromFirebaseUrl } from "../utils/firebaseStoragePath";
+import { safeKey, safeZipName, safeFileName, dedupeFileName } from "../utils/zipUtils";
 
 export default function CollectionsDrawer() {
     const { t } = useTranslation();
-
     const user = useAuthStore((s) => s.user);
 
     const {
@@ -116,17 +63,21 @@ export default function CollectionsDrawer() {
 
     const createToastIdRef = useRef(null);
 
-    const createProg = useFakeProgress(creating, (p) => {
-        const id = createToastIdRef.current;
-        if (id) updateToast(id, { progress: p });
-    });
+    const createProg = useFakeProgress(
+        creating,
+        (p) => {
+            const id = createToastIdRef.current;
+            if (id) updateToast(id, { progress: p });
+        },
+        { max: 92, start: 8, intervalMs: 140 }
+    );
 
     useEffect(() => {
         if (!user?.uid) return;
         startUserCollectionsListener(user.uid);
         return () => useCollectionsStore.getState().stopUserCollectionsListener();
     }, [user?.uid, startUserCollectionsListener]);
- 
+
     const sortedCollections = useMemo(() => {
         return [...(collections || [])].sort((a, b) => {
             const an = (a.name || "").toLowerCase();
@@ -346,37 +297,6 @@ export default function CollectionsDrawer() {
         if (!collectionItems?.[id]) loadCollectionItems(id);
     };
 
-    const buildDownloadUrl = (storagePath, filename) => {
-        const base = import.meta.env.VITE_DOWNLOAD_FILE_URL;
-        if (!base) throw new Error(t("collectionsDrawer.errors.missingDownloadUrl"));
-        return `${base}?path=${encodeURIComponent(storagePath)}&name=${encodeURIComponent(
-            filename || t("collectionsDrawer.defaults.download")
-        )}`;
-    };
-
-    const storagePathFromFirebaseUrl = (fileURL) => {
-        try {
-            const u = new URL(fileURL);
-            const m = u.pathname.match(/\/o\/(.+)$/);
-            if (!m) return null;
-            return decodeURIComponent(m[1]);
-        } catch {
-            return null;
-        }
-    };
-
-    const fetchBlobFromCloudDownload = async (storagePath, filename) => {
-        const url = buildDownloadUrl(storagePath, filename);
-        const a = getAuth();
-        const token = await a.currentUser?.getIdToken?.();
-        if (!token) throw new Error(t("collectionsDrawer.errors.notAuthenticated"));
-
-        const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
-        if (!res.ok)
-            throw new Error(t("collectionsDrawer.errors.downloadFailedWithStatus", { status: res.status }));
-        return await res.blob();
-    };
-
     const handlePrepareDownload = async (collection) => {
         const items = collectionItems?.[collection.id] || [];
         if (!items.length || downloadingId) return;
@@ -403,15 +323,7 @@ export default function CollectionsDrawer() {
                 const baseName = item.fileName || `file-${i + 1}`;
                 const ext = getExt(baseName, item.ext).toLowerCase();
                 let fileName = safeFileName(baseName, ext);
-
-                const count = seenNames.get(fileName) || 0;
-                if (count > 0) {
-                    const dot = fileName.lastIndexOf(".");
-                    const namePart = dot > 0 ? fileName.slice(0, dot) : fileName;
-                    const extPart = dot > 0 ? fileName.slice(dot) : "";
-                    fileName = `${namePart} (${count + 1})${extPart}`;
-                }
-                seenNames.set(fileName, count + 1);
+                fileName = dedupeFileName(seenNames, fileName);
 
                 const storagePath = item.storagePath || (item.fileURL ? storagePathFromFirebaseUrl(item.fileURL) : null);
                 if (!storagePath) continue;
@@ -419,7 +331,11 @@ export default function CollectionsDrawer() {
                 const pct = Math.round(((i + 1) / items.length) * 90);
                 updateToast(toastId, { progress: Math.max(10, Math.min(95, pct)) });
 
-                const blob = await fetchBlobFromCloudDownload(storagePath, fileName);
+                const blob = await fetchDownloadBlob(
+                    storagePath,
+                    fileName,
+                    t("collectionsDrawer.errors.notAuthenticated")
+                );
                 folder.file(fileName, blob);
             }
 
@@ -485,42 +401,19 @@ export default function CollectionsDrawer() {
     return (
         <Transition show={drawerOpen} as={Fragment}>
             <Dialog as="div" className="relative z-[60]" onClose={closeDrawer}>
-                <Transition.Child
-                    as={Fragment}
-                    enter="transition-opacity duration-200"
-                    enterFrom="opacity-0"
-                    enterTo="opacity-100"
-                    leave="transition-opacity duration-200"
-                    leaveFrom="opacity-100"
-                    leaveTo="opacity-0"
-                >
+                <Transition.Child as={Fragment} enter="transition-opacity duration-200" enterFrom="opacity-0" enterTo="opacity-100" leave="transition-opacity duration-200" leaveFrom="opacity-100" leaveTo="opacity-0">
                     <div className="fixed inset-0 bg-black/60" />
                 </Transition.Child>
 
                 <div className="fixed inset-0 flex justify-end">
-                    <Transition.Child
-                        as={Fragment}
-                        enter="transform transition duration-200 ease-out"
-                        enterFrom="translate-x-full"
-                        enterTo="translate-x-0"
-                        leave="transform transition duration-200 ease-in"
-                        leaveFrom="translate-x-0"
-                        leaveTo="translate-x-full"
-                    >
+                    <Transition.Child as={Fragment} enter="transform transition duration-200 ease-out" enterFrom="translate-x-full" enterTo="translate-x-0" leave="transform transition duration-200 ease-in" leaveFrom="translate-x-0" leaveTo="translate-x-full">
                         <Dialog.Panel className="relative h-full w-full max-w-md bg-[#151620] border-l border-border shadow-xl flex flex-col">
                             <div className="flex items-center justify-between px-5 py-4 border-b border-border">
                                 <div className="min-w-0">
-                                    <Dialog.Title className="text-lg font-semibold text-white">
-                                        {t("collectionsDrawer.title")}
-                                    </Dialog.Title>
+                                    <Dialog.Title className="text-lg font-semibold text-white">{t("collectionsDrawer.title")}</Dialog.Title>
                                     <p className="text-xs text-white/60">{t("collectionsDrawer.subtitle")}</p>
                                 </div>
-                                <button
-                                    type="button"
-                                    onClick={closeDrawer}
-                                    className="rounded-full p-1.5 text-white/70 hover:bg-white/10"
-                                    aria-label={t("collectionsDrawer.actions.close")}
-                                >
+                                <button type="button" onClick={closeDrawer} className="rounded-full p-1.5 text-white/70 hover:bg-white/10" aria-label={t("collectionsDrawer.actions.close")}>
                                     <X size={18} />
                                 </button>
                             </div>
@@ -531,8 +424,7 @@ export default function CollectionsDrawer() {
                                     <span className="font-semibold text-white">{sortedCollections.length}</span>
                                     {globalStats.fileCount > 0 && (
                                         <span className="ml-2 text-white/60">
-                                            • {t("collectionsDrawer.stats.files", { count: globalStats.fileCount })} •{" "}
-                                            {formatBytes(globalStats.totalBytes)}
+                                            • {t("collectionsDrawer.stats.files", { count: globalStats.fileCount })} • {formatBytes(globalStats.totalBytes)}
                                         </span>
                                     )}
                                 </div>
@@ -557,21 +449,16 @@ export default function CollectionsDrawer() {
                             )}
 
                             <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
-                                {showSkeleton && (
-                                    <>
-                                        {Array.from({ length: 4 }).map((_, i) => (
-                                            <div key={i} className="rounded-lg border border-border bg-white/5 px-4 py-3 animate-pulse">
-                                                <div className="h-4 w-1/3 rounded bg-white/25 mb-2" />
-                                                <div className="h-3 w-1/4 rounded bg-white/10" />
-                                            </div>
-                                        ))}
-                                    </>
-                                )}
+                                {showSkeleton &&
+                                    Array.from({ length: 4 }).map((_, i) => (
+                                        <div key={i} className="rounded-lg border border-border bg-white/5 px-4 py-3 animate-pulse">
+                                            <div className="h-4 w-1/3 rounded bg-white/25 mb-2" />
+                                            <div className="h-3 w-1/4 rounded bg-white/10" />
+                                        </div>
+                                    ))}
 
                                 {!showSkeleton && sortedCollections.length === 0 && (
-                                    <div className="text-center text-sm text-white/60 py-10">
-                                        {t("collectionsDrawer.empty")}
-                                    </div>
+                                    <div className="text-center text-sm text-white/60 py-10">{t("collectionsDrawer.empty")}</div>
                                 )}
 
                                 {!showSkeleton &&
@@ -646,11 +533,7 @@ export default function CollectionsDrawer() {
                                                         )}
 
                                                         <div className="mt-0.5 text-xs text-white/70 flex flex-wrap items-center gap-2">
-                                                            <span>
-                                                                {c.isCompleted
-                                                                    ? t("collectionsDrawer.status.completed")
-                                                                    : t("collectionsDrawer.status.inProgress")}
-                                                            </span>
+                                                            <span>{c.isCompleted ? t("collectionsDrawer.status.completed") : t("collectionsDrawer.status.inProgress")}</span>
                                                             <span className="inline-flex items-center rounded-full bg-black/40 px-2.5 py-0.5 text-[11px] text-white/80">
                                                                 {t("collectionsDrawer.stats.files", { count: items.length })}
                                                             </span>
@@ -666,9 +549,7 @@ export default function CollectionsDrawer() {
                                                             className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80 disabled:opacity-50"
                                                         >
                                                             {itemsBusy ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
-                                                            {isExpanded
-                                                                ? t("collectionsDrawer.actions.hideFileDetails")
-                                                                : t("collectionsDrawer.actions.showFileDetails")}
+                                                            {isExpanded ? t("collectionsDrawer.actions.hideFileDetails") : t("collectionsDrawer.actions.showFileDetails")}
                                                         </button>
                                                     </div>
 
@@ -690,11 +571,7 @@ export default function CollectionsDrawer() {
                                                         disabled={downloadingId === c.id || items.length === 0 || itemsBusy}
                                                         className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-primary px-3 py-2 text-xs md:text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50"
                                                     >
-                                                        {downloadingId === c.id ? (
-                                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                                        ) : (
-                                                            <Download className="h-4 w-4" />
-                                                        )}
+                                                        {downloadingId === c.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
                                                         {t("collectionsDrawer.actions.prepareDownload")}
                                                     </button>
 
@@ -704,11 +581,7 @@ export default function CollectionsDrawer() {
                                                         disabled={busy}
                                                         className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-red-500/70 px-3 py-2 text-xs md:text-sm font-semibold text-red-100 hover:bg-red-500/10 disabled:opacity-60"
                                                     >
-                                                        {busy && confirmDeleteId === c.id ? (
-                                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                                        ) : (
-                                                            <Trash2 className="h-4 w-4" />
-                                                        )}
+                                                        {busy && confirmDeleteId === c.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                                                         {t("collectionsDrawer.actions.delete")}
                                                     </button>
                                                 </div>
@@ -716,12 +589,8 @@ export default function CollectionsDrawer() {
                                                 {isExpanded ? (
                                                     <div className="mt-2 rounded-md bg-black/40 px-3 py-2">
                                                         <div className="flex items-center justify-between mb-2">
-                                                            <div className="text-xs text-white/70">
-                                                                {t("collectionsDrawer.files.title", { count: items.length })}
-                                                            </div>
-                                                            <div className="text-xs text-white/70">
-                                                                {t("collectionsDrawer.files.totalSize", { size: formatBytes(collectionBytes) })}
-                                                            </div>
+                                                            <div className="text-xs text-white/70">{t("collectionsDrawer.files.title", { count: items.length })}</div>
+                                                            <div className="text-xs text-white/70">{t("collectionsDrawer.files.totalSize", { size: formatBytes(collectionBytes) })}</div>
                                                         </div>
 
                                                         {items.length === 0 && !itemsBusy ? (
@@ -751,9 +620,7 @@ export default function CollectionsDrawer() {
                                                                             </div>
 
                                                                             <div className="flex-1 min-w-0">
-                                                                                <div className="truncate text-[13px]">
-                                                                                    {item.fileName || t("collectionsDrawer.files.untitledFile")}
-                                                                                </div>
+                                                                                <div className="truncate text-[13px]">{item.fileName || t("collectionsDrawer.files.untitledFile")}</div>
                                                                                 <div className="text-[11px] text-white/45 truncate">{item.sectionTitle || ""}</div>
                                                                             </div>
 
@@ -782,16 +649,7 @@ export default function CollectionsDrawer() {
                                     })}
                             </div>
 
-                            <Transition
-                                show={!!confirmDeleteId}
-                                as={Fragment}
-                                enter="transition-opacity duration-150"
-                                enterFrom="opacity-0"
-                                enterTo="opacity-100"
-                                leave="transition-opacity duration-150"
-                                leaveFrom="opacity-100"
-                                leaveTo="opacity-0"
-                            >
+                            <Transition show={!!confirmDeleteId} as={Fragment} enter="transition-opacity duration-150" enterFrom="opacity-0" enterTo="opacity-100" leave="transition-opacity duration-150" leaveFrom="opacity-100" leaveTo="opacity-0">
                                 <div className="absolute inset-x-0 bottom-0 px-4 pb-4">
                                     <div className="rounded-lg border border-red-500/60 bg-red-950/95 px-4 py-3 text-xs text-red-50 flex items-center justify-between gap-3">
                                         <div>

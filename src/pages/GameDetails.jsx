@@ -17,171 +17,30 @@ import {
     Loader2,
     X,
 } from "lucide-react";
-import JSZip from "jszip";
 import { saveAs } from "file-saver";
-import { getAuth } from "firebase/auth";
+
 import { useAuthStore } from "../store/authStore";
 import { useGameDetailsStore } from "../store/gameDetailsStore";
 import { useDownloadsStore } from "../store/downloadsStore";
 import { useCollectionsStore } from "../store/collectionsStore";
+
 import HeroBanner from "../components/common/HeroBanner";
 import FiltersPanel from "../components/game-details/FiltersPanel";
 import PreviewModal from "../components/game-details/PreviewModal";
-import {
-    PAGE_SIZE,
-    getExt,
-    isImage,
-    isPDF,
-    flattenSectionsToFiles,
-    collectExtensions,
-    collectSectionNames,
-} from "../utils/fileUtils";
+
+import { collectExtensions, collectSectionNames, flattenSectionsToFiles, getExt, isImage, isPDF } from "../utils/fileUtils";
+import { fetchDownloadBlob } from "../utils/downloadService";
 import { useTranslation } from "react-i18next";
 
+import { cx, formatDimensions } from "../utils/ui";
+import ProgressBar from "../components/common/ProgressBar";
+import { useMobileViewportFix } from "../hooks/useMobileViewportFix";
+import { useBodyScrollLock } from "../hooks/useBodyScrollLock";
+import { useCollectionsActions } from "../hooks/useCollectionsActions";
+import { useGameFiles } from "../hooks/useGameFiles";
+import { useZipDownload } from "../hooks/useZipDownload";
+
 const TABLE_COLS = "44px 160px minmax(260px, 1fr) 160px minmax(240px, 280px)";
-
-function cx(...classes) {
-    return classes.filter(Boolean).join(" ");
-}
-
-function ProgressBar({ value }) {
-    const v = Math.max(0, Math.min(100, Number(value) || 0));
-    return (
-        <div className="h-1.5 w-full rounded-full bg-white/10 overflow-hidden">
-            <div className="h-full rounded-full bg-primary transition-[width] duration-150" style={{ width: `${v}%` }} />
-        </div>
-    );
-}
-
-function useFakeProgress(active) {
-    const [pct, setPct] = useState(0);
-    const tRef = useRef(null);
-
-    useEffect(() => {
-        if (!active) {
-            setPct(0);
-            if (tRef.current) clearInterval(tRef.current);
-            tRef.current = null;
-            return;
-        }
-
-        setPct(8);
-        if (tRef.current) clearInterval(tRef.current);
-
-        tRef.current = setInterval(() => {
-            setPct((p) => {
-                if (p >= 90) return p;
-                const bump = p < 35 ? 7 : p < 70 ? 3 : 1;
-                return Math.min(90, p + bump);
-            });
-        }, 140);
-
-        return () => {
-            if (tRef.current) clearInterval(tRef.current);
-            tRef.current = null;
-        };
-    }, [active]);
-
-    const finishTo = async (target = 100) => {
-        setPct(target);
-        await new Promise((r) => setTimeout(r, 250));
-    };
-
-    return { pct, setPct, finishTo };
-}
-
-const buildDownloadUrl = (storagePath, filename) => {
-    const base = import.meta.env.VITE_DOWNLOAD_FILE_URL;
-    if (!base) throw new Error("Missing VITE_DOWNLOAD_FILE_URL");
-    return `${base}?path=${encodeURIComponent(storagePath)}&name=${encodeURIComponent(filename || "download")}`;
-};
-
-const storagePathFromFirebaseUrl = (fileURL) => {
-    try {
-        const u = new URL(fileURL);
-        const m = u.pathname.match(/\/o\/(.+)$/);
-        if (!m) return null;
-        return decodeURIComponent(m[1]);
-    } catch {
-        return null;
-    }
-};
-
-const downloadViaIframe = async (storagePath, filename) => {
-    const auth = getAuth();
-    const token = await auth.currentUser?.getIdToken?.();
-    if (!token) throw new Error("Not authenticated");
-
-    const url = buildDownloadUrl(storagePath, filename);
-    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
-    if (!res.ok) throw new Error(`Download failed (${res.status})`);
-
-    const blob = await res.blob();
-    saveAs(blob, filename || "download");
-};
-
-const fetchBlobFromCloudDownload = async (storagePath, filename) => {
-    const auth = getAuth();
-    const token = await auth.currentUser?.getIdToken?.();
-    if (!token) throw new Error("Not authenticated");
-
-    const url = buildDownloadUrl(storagePath, filename);
-    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
-    if (!res.ok) throw new Error(`Download failed (${res.status})`);
-    return await res.blob();
-};
-
-function useMobileViewportFix(enabled) {
-    useEffect(() => {
-        if (!enabled) return;
-
-        const setVh = () => {
-            const h = window.innerHeight || 0;
-            if (h) document.documentElement.style.setProperty("--app-vh", `${h * 0.01}px`);
-            if (window.visualViewport?.height) {
-                document.documentElement.style.setProperty("--vvh", `${window.visualViewport.height * 0.01}px`);
-            }
-        };
-
-        setVh();
-
-        const vv = window.visualViewport;
-        const onVV = () => setVh();
-        if (vv) {
-            vv.addEventListener("resize", onVV);
-            vv.addEventListener("scroll", onVV);
-        }
-
-        window.addEventListener("resize", setVh);
-        window.addEventListener("orientationchange", setVh);
-
-        return () => {
-            window.removeEventListener("resize", setVh);
-            window.removeEventListener("orientationchange", setVh);
-            if (vv) {
-                vv.removeEventListener("resize", onVV);
-                vv.removeEventListener("scroll", onVV);
-            }
-        };
-    }, [enabled]);
-}
-
-function useBodyScrollLock(locked) {
-    useEffect(() => {
-        if (!locked) return;
-
-        const prevOverflow = document.body.style.overflow;
-        const prevTouch = document.body.style.touchAction;
-
-        document.body.style.overflow = "hidden";
-        document.body.style.touchAction = "none";
-
-        return () => {
-            document.body.style.overflow = prevOverflow;
-            document.body.style.touchAction = prevTouch;
-        };
-    }, [locked]);
-}
 
 function MobileCollectionSheet({
     open,
@@ -212,9 +71,7 @@ function MobileCollectionSheet({
 
     useEffect(() => {
         if (!open) return;
-        collections.forEach((c) => {
-            if (c?.id) ensureItemsLoaded(c.id);
-        });
+        collections.forEach((c) => c?.id && ensureItemsLoaded(c.id));
     }, [open, collections, ensureItemsLoaded]);
 
     const panelHeight = "calc(var(--vvh, var(--app-vh, 1vh)) * 100)";
@@ -223,66 +80,29 @@ function MobileCollectionSheet({
     return (
         <Transition appear show={open} as={Fragment}>
             <Dialog as="div" className="relative z-[80]" onClose={onClose}>
-                <Transition.Child
-                    as={Fragment}
-                    enter="ease-out duration-200"
-                    enterFrom="opacity-0"
-                    enterTo="opacity-100"
-                    leave="ease-in duration-150"
-                    leaveFrom="opacity-100"
-                    leaveTo="opacity-0"
-                >
+                <Transition.Child as={Fragment} enter="ease-out duration-200" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-150" leaveFrom="opacity-100" leaveTo="opacity-0">
                     <div className="fixed inset-0 bg-black/60" />
                 </Transition.Child>
 
                 <div className="fixed inset-0 flex items-end justify-center" style={{ height: panelHeight }}>
-                    <Transition.Child
-                        as={Fragment}
-                        enter="ease-out duration-200"
-                        enterFrom="opacity-0 translate-y-6"
-                        enterTo="opacity-100 translate-y-0"
-                        leave="ease-in duration-150"
-                        leaveFrom="opacity-100 translate-y-0"
-                        leaveTo="opacity-0 translate-y-6"
-                    >
+                    <Transition.Child as={Fragment} enter="ease-out duration-200" enterFrom="opacity-0 translate-y-6" enterTo="opacity-100 translate-y-0" leave="ease-in duration-150" leaveFrom="opacity-100 translate-y-0" leaveTo="opacity-0 translate-y-6">
                         <Dialog.Panel
-                            className={cx(
-                                "w-full max-w-md rounded-t-2xl border border-white/10 bg-[#0f121a]",
-                                "shadow-2xl overflow-hidden flex flex-col"
-                            )}
-                            style={{
-                                maxHeight: contentMax,
-                                paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)",
-                            }}
+                            className={cx("w-full max-w-md rounded-t-2xl border border-white/10 bg-[#0f121a]", "shadow-2xl overflow-hidden flex flex-col")}
+                            style={{ maxHeight: contentMax, paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }}
                         >
-                            <div
-                                className="px-4 pt-4 pb-3 border-b border-white/10"
-                                style={{ paddingTop: "calc(16px + env(safe-area-inset-top))" }}
-                            >
+                            <div className="px-4 pt-4 pb-3 border-b border-white/10" style={{ paddingTop: "calc(16px + env(safe-area-inset-top))" }}>
                                 <div className="flex items-center justify-between gap-3">
-                                    <Dialog.Title className="text-base font-extrabold text-white">
-                                        {t("gameDetails.collections.sheet.title")}
-                                    </Dialog.Title>
-                                    <button
-                                        type="button"
-                                        onClick={onClose}
-                                        className="h-9 w-9 rounded-full bg-white/[0.06] hover:bg-white/[0.1] grid place-items-center shrink-0"
-                                    >
+                                    <Dialog.Title className="text-base font-extrabold text-white">{t("gameDetails.collections.sheet.title")}</Dialog.Title>
+                                    <button type="button" onClick={onClose} className="h-9 w-9 rounded-full bg-white/[0.06] hover:bg-white/[0.1] grid place-items-center shrink-0">
                                         <X className="h-5 w-5 text-white/80" />
                                     </button>
                                 </div>
-
                                 <div className="mt-1 text-xs text-white/60">{t("gameDetails.collections.sheet.subtitle")}</div>
                             </div>
 
-                            <div
-                                className="flex-1 min-h-0 px-4 py-3 overflow-y-auto overscroll-contain"
-                                style={{ WebkitOverflowScrolling: "touch" }}
-                            >
+                            <div className="flex-1 min-h-0 px-4 py-3 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: "touch" }}>
                                 {collections.length === 0 ? (
-                                    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm text-white/70">
-                                        {t("gameDetails.collections.empty")}
-                                    </div>
+                                    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm text-white/70">{t("gameDetails.collections.empty")}</div>
                                 ) : (
                                     <div className="space-y-2">
                                         {collections.map((c) => {
@@ -305,9 +125,7 @@ function MobileCollectionSheet({
                                                     )}
                                                 >
                                                     <div className="min-w-0">
-                                                        <div className="text-sm font-semibold text-white truncate">
-                                                            {c.name || t("gameDetails.collections.untitled")}
-                                                        </div>
+                                                        <div className="text-sm font-semibold text-white truncate">{c.name || t("gameDetails.collections.untitled")}</div>
                                                         <div className="text-[11px] text-white/55 mt-0.5 truncate">
                                                             {inCol ? t("gameDetails.collections.alreadyIn") : t("gameDetails.collections.tapToAdd")}
                                                         </div>
@@ -315,17 +133,9 @@ function MobileCollectionSheet({
 
                                                     <div className="flex items-center gap-2 shrink-0">
                                                         {busy ? <Loader2 className="h-4 w-4 animate-spin text-white/80" /> : null}
-                                                        {inCol ? (
-                                                            <Check className="h-5 w-5 text-emerald-400" />
-                                                        ) : (
-                                                            <PlusSquare className="h-5 w-5 text-white/60" />
-                                                        )}
-                                                        {flash === "added" ? (
-                                                            <span className="text-[10px] text-emerald-300">{t("gameDetails.collections.added")}</span>
-                                                        ) : null}
-                                                        {flash === "already" ? (
-                                                            <span className="text-[10px] text-white/60">{t("gameDetails.collections.already")}</span>
-                                                        ) : null}
+                                                        {inCol ? <Check className="h-5 w-5 text-emerald-400" /> : <PlusSquare className="h-5 w-5 text-white/60" />}
+                                                        {flash === "added" ? <span className="text-[10px] text-emerald-300">{t("gameDetails.collections.added")}</span> : null}
+                                                        {flash === "already" ? <span className="text-[10px] text-white/60">{t("gameDetails.collections.already")}</span> : null}
                                                     </div>
                                                 </button>
                                             );
@@ -360,9 +170,7 @@ function MobileCollectionSheet({
                                             autoCorrect="off"
                                             autoCapitalize="sentences"
                                             enterKeyHint="done"
-                                            onKeyDown={(e) => {
-                                                if (e.key === "Enter") createAndAddCollection(file);
-                                            }}
+                                            onKeyDown={(e) => e.key === "Enter" && createAndAddCollection(file)}
                                         />
 
                                         {creatingCollection ? (
@@ -409,24 +217,25 @@ function MobileCollectionSheet({
     );
 }
 
-function AddToCollectionInline({
-    file,
-    collections,
-    ensureItemsLoaded,
-    isInCollection,
-    addToExistingCollection,
-    creatingForFile,
-    setCreatingForFile,
-    newCollectionName,
-    setNewCollectionName,
-    creatingCollection,
-    createStage,
-    createProg,
-    createAndAddCollection,
-    addingMap,
-    addedFlash,
-}) {
+function AddToCollectionInline(props) {
     const { t } = useTranslation();
+    const {
+        file,
+        collections,
+        ensureItemsLoaded,
+        isInCollection,
+        addToExistingCollection,
+        creatingForFile,
+        setCreatingForFile,
+        newCollectionName,
+        setNewCollectionName,
+        creatingCollection,
+        createStage,
+        createProg,
+        createAndAddCollection,
+        addingMap,
+        addedFlash,
+    } = props;
 
     return (
         <Popover className="relative w-full">
@@ -434,11 +243,7 @@ function AddToCollectionInline({
                 <>
                     <Popover.Button
                         onClick={() => {
-                            if (!open) {
-                                collections.forEach((c) => {
-                                    if (c?.id) ensureItemsLoaded(c.id);
-                                });
-                            }
+                            if (!open) collections.forEach((c) => c?.id && ensureItemsLoaded(c.id));
                         }}
                         className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-white/30 text-white text-xs font-semibold hover:bg-white/5 w-full"
                     >
@@ -446,22 +251,12 @@ function AddToCollectionInline({
                         {t("gameDetails.collections.addToCollection")}
                     </Popover.Button>
 
-                    <Transition
-                        as={Fragment}
-                        enter="transition duration-150 ease-out"
-                        enterFrom="opacity-0 translate-y-1"
-                        enterTo="opacity-100 translate-y-0"
-                        leave="transition duration-100 ease-in"
-                        leaveFrom="opacity-100 translate-y-0"
-                        leaveTo="opacity-0 translate-y-1"
-                    >
+                    <Transition as={Fragment} enter="transition duration-150 ease-out" enterFrom="opacity-0 translate-y-1" enterTo="opacity-100 translate-y-0" leave="transition duration-100 ease-in" leaveFrom="opacity-100 translate-y-0" leaveTo="opacity-0 translate-y-1">
                         <Popover.Panel className="absolute right-0 mt-2 w-[260px] rounded-xl border border-border bg-card shadow-xl p-2 z-20">
                             <div className="px-2 py-1 text-xs font-bold text-white/70">{t("gameDetails.collections.addTo")}</div>
 
                             <div className="max-h-48 overflow-y-auto">
-                                {collections.length === 0 && (
-                                    <div className="px-3 py-2 text-xs text-white/60">{t("gameDetails.collections.empty")}</div>
-                                )}
+                                {collections.length === 0 && <div className="px-3 py-2 text-xs text-white/60">{t("gameDetails.collections.empty")}</div>}
 
                                 {collections.map((c) => {
                                     const url = file?._url || file?.url || file?.fileURL || "";
@@ -482,16 +277,11 @@ function AddToCollectionInline({
                                             )}
                                         >
                                             <span className="truncate">{c.name || t("gameDetails.collections.untitled")}</span>
-
                                             <span className="flex items-center gap-2">
                                                 {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                                                 {inCol ? <Check size={16} className="text-emerald-400" /> : <PlusSquare size={16} className="opacity-60" />}
-                                                {flash === "added" ? (
-                                                    <span className="text-[10px] text-emerald-300">{t("gameDetails.collections.added")}</span>
-                                                ) : null}
-                                                {flash === "already" ? (
-                                                    <span className="text-[10px] text-white/60">{t("gameDetails.collections.already")}</span>
-                                                ) : null}
+                                                {flash === "added" ? <span className="text-[10px] text-emerald-300">{t("gameDetails.collections.added")}</span> : null}
+                                                {flash === "already" ? <span className="text-[10px] text-white/60">{t("gameDetails.collections.already")}</span> : null}
                                             </span>
                                         </button>
                                     );
@@ -524,9 +314,7 @@ function AddToCollectionInline({
                                         autoCorrect="off"
                                         autoCapitalize="sentences"
                                         enterKeyHint="done"
-                                        onKeyDown={(e) => {
-                                            if (e.key === "Enter") createAndAddCollection(file);
-                                        }}
+                                        onKeyDown={(e) => e.key === "Enter" && createAndAddCollection(file)}
                                     />
 
                                     {creatingCollection && (
@@ -570,11 +358,14 @@ function AddToCollectionInline({
     );
 }
 
+/* ---------------------------------------------
+   Main page
+--------------------------------------------- */
 export default function GameDetails() {
     const { t } = useTranslation();
-
     const { gameId } = useParams();
     const navigate = useNavigate();
+
     const user = useAuthStore((s) => s.user);
     const addDownload = useDownloadsStore((s) => s.addDownload);
 
@@ -599,26 +390,11 @@ export default function GameDetails() {
         stopRelatedListener,
     } = useGameDetailsStore();
 
-    const [inputValue, setInputValue] = useState("");
-    const [searchTerm, setSearchTerm] = useState("");
-    const [sortBy, setSortBy] = useState("recent");
     const [showLeftFilters, setShowLeftFilters] = useState(true);
-    const [selectedSectionNames, setSelectedSectionNames] = useState(new Set());
-    const [selectedExts, setSelectedExts] = useState(new Set());
-    const [page, setPage] = useState(1);
     const [previewOpen, setPreviewOpen] = useState(false);
     const [previewIndex, setPreviewIndex] = useState(0);
-    const [creatingForFile, setCreatingForFile] = useState(null);
-    const [newCollectionName, setNewCollectionName] = useState("");
-    const [selectedKeys, setSelectedKeys] = useState(() => new Set());
     const [zipping, setZipping] = useState(false);
 
-    const [creatingCollection, setCreatingCollection] = useState(false);
-    const [createStage, setCreateStage] = useState("");
-    const createProg = useFakeProgress(creatingCollection);
-
-    const [addingMap, setAddingMap] = useState({});
-    const [addedFlash, setAddedFlash] = useState({});
     const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
     const [sheetFile, setSheetFile] = useState(null);
 
@@ -643,203 +419,46 @@ export default function GameDetails() {
         return () => stopRelatedListener();
     }, [user, gameId, game?.name, startRelatedListener, stopRelatedListener]);
 
-    useEffect(() => {
-        const t0 = inputValue.trim();
-        const id = setTimeout(() => setSearchTerm(t0), 450);
-        return () => clearTimeout(id);
-    }, [inputValue]);
-
     const hero = useMemo(() => game?.bannerURL || game?.imageURL || "", [game]);
 
     const allSectionNames = useMemo(() => collectSectionNames(sections), [sections]);
     const allExtensions = useMemo(() => collectExtensions(sections), [sections]);
     const flatFiles = useMemo(() => flattenSectionsToFiles(sections), [sections]);
 
-    const filteredFiles = useMemo(() => {
-        const nameFilter = searchTerm.toLowerCase();
+    const files = useGameFiles({ flatFiles });
 
-        let arr = flatFiles.filter((r) => {
-            const secOK = selectedSectionNames.size === 0 || selectedSectionNames.has(r._sectionTitle);
-            const extOK = selectedExts.size === 0 || (r._ext && selectedExts.has(r._ext));
-            const nameOK = !nameFilter || r._name.toLowerCase().includes(nameFilter);
-            return secOK && extOK && nameOK;
-        });
+    const {
+        creatingForFile,
+        setCreatingForFile,
+        newCollectionName,
+        setNewCollectionName,
+        creatingCollection,
+        createStage,
+        createProg,
+        addingMap,
+        addedFlash,
+        ensureItemsLoaded,
+        isInCollection,
+        addToExistingCollection,
+        createAndAddCollection,
+    } = useCollectionsActions({
+        collections,
+        collectionItems,
+        itemsLoading,
+        loadCollectionItems,
+        createCollection,
+        addFileToCollection,
+        userId: user?.uid,
+        gameId,
+        t,
+    });
 
-        if (sortBy === "alpha") {
-            arr.sort((a, b) => a._name.localeCompare(b._name, undefined, { sensitivity: "base", numeric: true }));
-        } else {
-            arr.sort((a, b) => {
-                const ad = a._date ? +a._date : 0;
-                const bd = b._date ? +b._date : 0;
-                return bd - ad;
-            });
-        }
-
-        return arr;
-    }, [flatFiles, selectedSectionNames, selectedExts, searchTerm, sortBy]);
-
-    const totalPages = Math.max(1, Math.ceil(filteredFiles.length / PAGE_SIZE));
-
-    const pageFiles = useMemo(() => {
-        const start = (page - 1) * PAGE_SIZE;
-        return filteredFiles.slice(start, start + PAGE_SIZE);
-    }, [filteredFiles, page]);
-
-    useEffect(() => setPage(1), [searchTerm, sortBy, selectedSectionNames, selectedExts]);
-
-    useEffect(() => {
-        setSelectedKeys(new Set());
-    }, [searchTerm, sortBy, selectedSectionNames, selectedExts, page]);
+    const { downloadSelectedAsZip } = useZipDownload({ t });
 
     const openPreviewAt = useCallback((globalIndex) => {
         setPreviewIndex(globalIndex);
         setPreviewOpen(true);
     }, []);
-
-    const fileKey = (f, idx) => String(f?.id || `${f?._sectionId || "sec"}::${f?._name || "file"}::${idx}`);
-    const isSelected = (k) => selectedKeys.has(k);
-
-    const toggleSelected = (k) => {
-        setSelectedKeys((prev) => {
-            const next = new Set(prev);
-            if (next.has(k)) next.delete(k);
-            else next.add(k);
-            return next;
-        });
-    };
-
-    const clearSelected = () => setSelectedKeys(new Set());
-
-    const selectedFiles = useMemo(() => {
-        if (!selectedKeys.size) return [];
-        const keysSet = selectedKeys;
-        const currentList = filteredFiles;
-        const arr = [];
-        for (let i = 0; i < currentList.length; i += 1) {
-            const f = currentList[i];
-            const k = fileKey(f, i);
-            if (keysSet.has(k)) arr.push({ f, i, k });
-        }
-        return arr;
-    }, [selectedKeys, filteredFiles]);
-
-    const fileToCollectionPayload = (f) => ({
-        fileName: f._name,
-        fileURL: f._url,
-        thumbURL: f._thumb || null,
-        ext: f._ext,
-        size: f._size || null,
-        gameId,
-        sectionId: f._sectionId || null,
-        sectionTitle: f._sectionTitle || null,
-        storagePath: f.storagePath || f._storagePath || null,
-    });
-
-    const membershipMap = useMemo(() => {
-        const map = new Map();
-        Object.entries(collectionItems || {}).forEach(([collectionId, items]) => {
-            (items || []).forEach((it) => {
-                const key = it?.fileURL;
-                if (!key) return;
-                if (!map.has(key)) map.set(key, new Set());
-                map.get(key).add(collectionId);
-            });
-        });
-        return map;
-    }, [collectionItems]);
-
-    const isInCollection = useCallback(
-        (collectionId, file) => {
-            const url = file?._url || file?.url || file?.fileURL || null;
-            if (!url) return false;
-            const set = membershipMap.get(url);
-            return !!set && set.has(collectionId);
-        },
-        [membershipMap]
-    );
-
-    const ensureItemsLoaded = async (collectionId) => {
-        if (!collectionId) return;
-        if (collectionItems[collectionId]) return;
-        if (itemsLoading[collectionId]) return;
-        await loadCollectionItems(collectionId);
-    };
-
-    const addToExistingCollection = async (collectionId, file) => {
-        if (!collectionId) return;
-        const url = file?._url || file?.url || file?.fileURL || null;
-        if (!url) return;
-
-        const busyKey = `${collectionId}::${url}`;
-        if (addingMap[busyKey]) return;
-
-        await ensureItemsLoaded(collectionId);
-
-        if (isInCollection(collectionId, file)) {
-            setAddedFlash((p) => ({ ...p, [busyKey]: "already" }));
-            setTimeout(() => {
-                setAddedFlash((p) => {
-                    const n = { ...p };
-                    delete n[busyKey];
-                    return n;
-                });
-            }, 700);
-            return;
-        }
-
-        setAddingMap((p) => ({ ...p, [busyKey]: true }));
-        try {
-            await addFileToCollection(collectionId, fileToCollectionPayload(file));
-            setAddedFlash((p) => ({ ...p, [busyKey]: "added" }));
-            setTimeout(() => {
-                setAddedFlash((p) => {
-                    const n = { ...p };
-                    delete n[busyKey];
-                    return n;
-                });
-            }, 900);
-        } finally {
-            setAddingMap((p) => {
-                const n = { ...p };
-                delete n[busyKey];
-                return n;
-            });
-        }
-    };
-
-    const createAndAddCollection = async (file) => {
-        if (!user?.uid || creatingCollection) return;
-
-        setCreatingCollection(true);
-        setCreateStage(t("gameDetails.collections.stages.creating"));
-        try {
-            createProg.setPct(10);
-            const name = newCollectionName.trim() || t("gameDetails.collections.newCollectionFallback");
-            const id = await createCollection(user.uid, name);
-
-            if (!id) {
-                await createProg.finishTo(100);
-                return;
-            }
-
-            setCreateStage(t("gameDetails.collections.stages.addingFile"));
-            createProg.setPct(65);
-            await addFileToCollection(id, fileToCollectionPayload(file));
-
-            setCreateStage(t("gameDetails.collections.stages.done"));
-            await createProg.finishTo(100);
-
-            setCreatingForFile(null);
-            setNewCollectionName("");
-        } catch (e) {
-            alert(e?.message || t("gameDetails.alerts.createCollectionFailed"));
-        } finally {
-            await new Promise((r) => setTimeout(r, 150));
-            setCreateStage("");
-            setCreatingCollection(false);
-            createProg.setPct(0);
-        }
-    };
 
     const openMobileAddToCollection = (file) => {
         setSheetFile(file);
@@ -861,66 +480,22 @@ export default function GameDetails() {
                     fileURL: url || null,
                     ext: file?._ext || getExt(name),
                     size: file?._size || null,
+                    dimensions: file?._dimensions || file?.dimensions || null,
                     thumbURL: file?._thumb || null,
                     storagePath: file?.storagePath || file?._storagePath || null,
                 });
             }
 
-            const storagePath = file?.storagePath || file?._storagePath || (url ? storagePathFromFirebaseUrl(url) : null);
+            const storagePath = file?.storagePath || file?._storagePath || null;
             if (!storagePath) {
                 alert(t("gameDetails.alerts.missingStoragePath"));
                 return;
             }
 
-            await downloadViaIframe(storagePath, name);
+            const blob = await fetchDownloadBlob(storagePath, name);
+            saveAs(blob, name || "download");
         } catch (e) {
             alert(e?.message || t("gameDetails.alerts.downloadFailed"));
-        }
-    };
-
-    const downloadSelectedAsZip = async () => {
-        if (!selectedFiles.length || zipping) return;
-
-        setZipping(true);
-        try {
-            const zip = new JSZip();
-            const folderName = (game?.name || t("gameDetails.zip.assetsFallback")).replace(/[^\w.\-]+/g, "_").slice(0, 50);
-            const folder = zip.folder(folderName) || zip;
-
-            const seen = new Map();
-
-            for (let idx = 0; idx < selectedFiles.length; idx += 1) {
-                const { f } = selectedFiles[idx];
-                const url = f?._url || f?.url || f?.fileURL || null;
-                const baseName = f?._name || f?.name || f?.fileName || `file-${idx + 1}`;
-                const ext = getExt(baseName, f?._ext).toLowerCase();
-
-                const safeBase = String(baseName).replace(/[^\w.\-]+/g, "_");
-                let finalName = ext && !safeBase.toLowerCase().endsWith(`.${ext}`) ? `${safeBase}.${ext}` : safeBase;
-
-                const cnt = seen.get(finalName) || 0;
-                if (cnt > 0) {
-                    const dot = finalName.lastIndexOf(".");
-                    const namePart = dot > 0 ? finalName.slice(0, dot) : finalName;
-                    const extPart = dot > 0 ? finalName.slice(dot) : "";
-                    finalName = `${namePart} (${cnt + 1})${extPart}`;
-                }
-                seen.set(finalName, cnt + 1);
-
-                const storagePath = f?.storagePath || f?._storagePath || (url ? storagePathFromFirebaseUrl(url) : null);
-                if (!storagePath) continue;
-
-                const blob = await fetchBlobFromCloudDownload(storagePath, finalName);
-                folder.file(finalName, blob);
-            }
-
-            const content = await zip.generateAsync({ type: "blob" });
-            saveAs(content, `${folderName}.zip`);
-            clearSelected();
-        } catch (e) {
-            alert(e?.message || t("gameDetails.alerts.zipFailed"));
-        } finally {
-            setZipping(false);
         }
     };
 
@@ -931,9 +506,7 @@ export default function GameDetails() {
         const el = mobileToolbarRef.current;
         if (!el) return;
 
-        const ro = new ResizeObserver(() => {
-            setMobileToolbarH(el.getBoundingClientRect().height || 0);
-        });
+        const ro = new ResizeObserver(() => setMobileToolbarH(el.getBoundingClientRect().height || 0));
         ro.observe(el);
         setMobileToolbarH(el.getBoundingClientRect().height || 0);
 
@@ -942,11 +515,7 @@ export default function GameDetails() {
 
     useEffect(() => {
         if (!mobileSheetOpen && !previewOpen) return;
-        const onFocusIn = () => {
-            setTimeout(() => {
-                window.scrollTo({ top: window.scrollY, behavior: "instant" });
-            }, 0);
-        };
+        const onFocusIn = () => setTimeout(() => window.scrollTo({ top: window.scrollY, behavior: "instant" }), 0);
         document.addEventListener("focusin", onFocusIn);
         return () => document.removeEventListener("focusin", onFocusIn);
     }, [mobileSheetOpen, previewOpen]);
@@ -1001,10 +570,10 @@ export default function GameDetails() {
                                     <FiltersPanel
                                         allSectionNames={allSectionNames}
                                         allExtensions={allExtensions}
-                                        selectedSectionNames={selectedSectionNames}
-                                        setSelectedSectionNames={setSelectedSectionNames}
-                                        selectedExts={selectedExts}
-                                        setSelectedExts={setSelectedExts}
+                                        selectedSectionNames={files.selectedSectionNames}
+                                        setSelectedSectionNames={files.setSelectedSectionNames}
+                                        selectedExts={files.selectedExts}
+                                        setSelectedExts={files.setSelectedExts}
                                     />
                                 )}
 
@@ -1014,8 +583,8 @@ export default function GameDetails() {
                                             <div className="relative w-full md:max-w-xs min-w-0">
                                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-black/60" size={16} />
                                                 <input
-                                                    value={inputValue}
-                                                    onChange={(e) => setInputValue(e.target.value)}
+                                                    value={files.inputValue}
+                                                    onChange={(e) => files.setInputValue(e.target.value)}
                                                     placeholder={t("gameDetails.search.placeholder")}
                                                     className="w-full pl-9 pr-3 py-2 text-sm rounded-md bg-white text-black outline-none"
                                                     inputMode="search"
@@ -1031,8 +600,8 @@ export default function GameDetails() {
 
                                             <div className="md:ml-auto flex items-center gap-2 flex-wrap">
                                                 <select
-                                                    value={sortBy}
-                                                    onChange={(e) => setSortBy(e.target.value)}
+                                                    value={files.sortBy}
+                                                    onChange={(e) => files.setSortBy(e.target.value)}
                                                     className="bg-[#111318] border border-white/20 rounded-md px-3 py-2 text-sm outline-none"
                                                 >
                                                     <option value="recent">{t("gameDetails.sort.recent")}</option>
@@ -1041,18 +610,26 @@ export default function GameDetails() {
 
                                                 <button
                                                     type="button"
-                                                    disabled={!selectedFiles.length || zipping}
-                                                    onClick={downloadSelectedAsZip}
+                                                    disabled={!files.selectedFiles.length || zipping}
+                                                    onClick={() =>
+                                                        downloadSelectedAsZip({
+                                                            selectedFiles: files.selectedFiles,
+                                                            gameName: game?.name,
+                                                            setZipping,
+                                                            onDone: files.clearSelected,
+                                                            onError: (e) => alert(e?.message || t("gameDetails.alerts.zipFailed")),
+                                                        })
+                                                    }
                                                     className="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-primary text-black text-sm font-extrabold disabled:opacity-50"
                                                 >
                                                     {zipping ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download size={16} />}
-                                                    {t("gameDetails.zip.button", { count: selectedFiles.length || 0 })}
+                                                    {t("gameDetails.zip.button", { count: files.selectedFiles.length || 0 })}
                                                 </button>
 
                                                 <button
                                                     type="button"
-                                                    disabled={!selectedFiles.length || zipping}
-                                                    onClick={clearSelected}
+                                                    disabled={!files.selectedFiles.length || zipping}
+                                                    onClick={files.clearSelected}
                                                     className="inline-flex items-center gap-2 px-3 py-2 rounded-md border border-white/25 text-white text-sm font-semibold disabled:opacity-50 hover:bg-white/5"
                                                 >
                                                     {t("gameDetails.selection.clear")}
@@ -1060,17 +637,14 @@ export default function GameDetails() {
                                             </div>
                                         </div>
 
-                                        {!!selectedFiles.length && (
-                                            <div className="text-xs text-white/70">{t("gameDetails.selection.selected", { count: selectedFiles.length })}</div>
+                                        {!!files.selectedFiles.length && (
+                                            <div className="text-xs text-white/70">{t("gameDetails.selection.selected", { count: files.selectedFiles.length })}</div>
                                         )}
                                     </div>
 
                                     <div className="border border-white/10 bg-[#111318] rounded-xl overflow-hidden min-w-0">
                                         <div className="w-full min-w-0 overflow-x-hidden">
-                                            <div
-                                                className="hidden md:grid text-xs font-bold text-white/80 bg-[#161922] px-4 py-2 border-b border-white/10"
-                                                style={{ gridTemplateColumns: TABLE_COLS }}
-                                            >
+                                            <div className="hidden md:grid text-xs font-bold text-white/80 bg-[#161922] px-4 py-2 border-b border-white/10" style={{ gridTemplateColumns: TABLE_COLS }}>
                                                 <div />
                                                 <div>{t("gameDetails.table.preview")}</div>
                                                 <div>{t("gameDetails.table.fileName")}</div>
@@ -1086,30 +660,27 @@ export default function GameDetails() {
                                                 </div>
                                             )}
 
-                                            {!(loadingSections || loadingGame) && pageFiles.length === 0 && (
+                                            {!(loadingSections || loadingGame) && files.pageFiles.length === 0 && (
                                                 <div className="p-6 text-white/70 text-sm">{t("gameDetails.empty.noFiles")}</div>
                                             )}
 
                                             {!(loadingSections || loadingGame) &&
-                                                pageFiles.map((f, idx) => {
-                                                    const globalIndex = (page - 1) * PAGE_SIZE + idx;
+                                                files.pageFiles.map((f, idx) => {
+                                                    const globalIndex = (files.page - 1) * 10 + idx; // PAGE_SIZE in hook is 10
                                                     const ext = getExt(f._name, f._ext);
                                                     const showImg = isImage(ext) && (f._thumb || f._url);
                                                     const showPdf = isPDF(ext);
-                                                    const k = fileKey(f, globalIndex);
+                                                    const k = files.fileKey(f, globalIndex);
+                                                    const dims = formatDimensions(f?._dimensions || f?.dimensions);
 
                                                     return (
-                                                        <div
-                                                            key={k}
-                                                            className="md:grid flex flex-col md:items-center px-4 py-3 border-b border-white/5 min-w-0"
-                                                            style={{ gridTemplateColumns: TABLE_COLS }}
-                                                        >
+                                                        <div key={k} className="md:grid flex flex-col md:items-center px-4 py-3 border-b border-white/5 min-w-0" style={{ gridTemplateColumns: TABLE_COLS }}>
                                                             <div className="hidden md:flex items-center justify-center">
                                                                 <input
                                                                     type="checkbox"
                                                                     className="accent-primary"
-                                                                    checked={isSelected(k)}
-                                                                    onChange={() => toggleSelected(k)}
+                                                                    checked={files.selectedKeys.has(k)}
+                                                                    onChange={() => files.toggleSelected(k)}
                                                                 />
                                                             </div>
 
@@ -1117,8 +688,8 @@ export default function GameDetails() {
                                                                 <input
                                                                     type="checkbox"
                                                                     className="accent-primary"
-                                                                    checked={isSelected(k)}
-                                                                    onChange={() => toggleSelected(k)}
+                                                                    checked={files.selectedKeys.has(k)}
+                                                                    onChange={() => files.toggleSelected(k)}
                                                                 />
                                                                 <div className="text-xs text-white/60">
                                                                     {t("gameDetails.mobile.actionsBelow")} •{" "}
@@ -1126,11 +697,7 @@ export default function GameDetails() {
                                                                 </div>
                                                             </div>
 
-                                                            <button
-                                                                onClick={() => openPreviewAt(globalIndex)}
-                                                                className="relative h-[64px] w-[140px] mx-auto flex items-center justify-center group"
-                                                                type="button"
-                                                            >
+                                                            <button onClick={() => openPreviewAt(globalIndex)} className="relative h-[64px] w-[140px] mx-auto flex items-center justify-center group" type="button">
                                                                 {showImg ? (
                                                                     <div className="w-[140px] h-[64px] flex items-center justify-center">
                                                                         <img src={f._thumb || f._url} alt="" className="max-w-full max-h-full object-contain" loading="lazy" />
@@ -1171,9 +738,8 @@ export default function GameDetails() {
 
                                                             <div className="text-xs text-white/70 pr-0 md:pr-3 min-w-0 mt-2 md:mt-0">
                                                                 {!!f._size && <div className="truncate">{f._size}</div>}
-                                                                {!!f._date && (
-                                                                    <div className="truncate">{t("gameDetails.file.added", { date: new Date(f._date).toLocaleDateString() })}</div>
-                                                                )}
+                                                                {!!dims && <div className="truncate">{dims}</div>}
+                                                                {!!f._date && <div className="truncate">{t("gameDetails.file.added", { date: new Date(f._date).toLocaleDateString() })}</div>}
                                                             </div>
 
                                                             <div className="flex flex-col gap-2 min-w-0 mt-3 md:mt-0 items-center md:items-end">
@@ -1237,12 +803,12 @@ export default function GameDetails() {
                                     </div>
 
                                     <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
-                                        <div className="text-primary font-bold text-sm">{t("gameDetails.pagination.pageOf", { page, total: totalPages })}</div>
+                                        <div className="text-primary font-bold text-sm">{t("gameDetails.pagination.pageOf", { page: files.page, total: files.totalPages })}</div>
 
                                         <div className="flex gap-2">
                                             <button
-                                                disabled={page <= 1}
-                                                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                                                disabled={files.page <= 1}
+                                                onClick={() => files.setPage((p) => Math.max(1, p - 1))}
                                                 className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-white/30 text-white text-sm disabled:opacity-40 hover:bg-white/5"
                                                 type="button"
                                             >
@@ -1251,8 +817,8 @@ export default function GameDetails() {
                                             </button>
 
                                             <button
-                                                disabled={page >= totalPages}
-                                                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                                                disabled={files.page >= files.totalPages}
+                                                onClick={() => files.setPage((p) => Math.min(files.totalPages, p + 1))}
                                                 className="inline-flex items-center gap-2 px-3 py-1.5 rounded border border-white/30 text-white text-sm disabled:opacity-40 hover:bg-white/5"
                                                 type="button"
                                             >
@@ -1273,16 +839,14 @@ export default function GameDetails() {
                                     >
                                         <div className="px-4 py-3 flex items-center justify-between gap-3">
                                             <div className="text-xs text-white/70 min-w-0 truncate">
-                                                {selectedFiles.length
-                                                    ? t("gameDetails.selection.selected", { count: selectedFiles.length })
-                                                    : t("gameDetails.selection.none")}
+                                                {files.selectedFiles.length ? t("gameDetails.selection.selected", { count: files.selectedFiles.length }) : t("gameDetails.selection.none")}
                                             </div>
 
                                             <div className="flex items-center gap-2 shrink-0">
                                                 <button
                                                     type="button"
-                                                    onClick={clearSelected}
-                                                    disabled={!selectedFiles.length || zipping}
+                                                    onClick={files.clearSelected}
+                                                    disabled={!files.selectedFiles.length || zipping}
                                                     className="px-3 py-2 rounded-lg border border-white/20 text-white text-xs font-semibold disabled:opacity-50 hover:bg-white/5"
                                                 >
                                                     {t("gameDetails.selection.clear")}
@@ -1290,12 +854,20 @@ export default function GameDetails() {
 
                                                 <button
                                                     type="button"
-                                                    onClick={downloadSelectedAsZip}
-                                                    disabled={!selectedFiles.length || zipping}
+                                                    onClick={() =>
+                                                        downloadSelectedAsZip({
+                                                            selectedFiles: files.selectedFiles,
+                                                            gameName: game?.name,
+                                                            setZipping,
+                                                            onDone: files.clearSelected,
+                                                            onError: (e) => alert(e?.message || t("gameDetails.alerts.zipFailed")),
+                                                        })
+                                                    }
+                                                    disabled={!files.selectedFiles.length || zipping}
                                                     className="px-3 py-2 rounded-lg bg-primary text-black text-xs font-extrabold disabled:opacity-50 inline-flex items-center gap-2"
                                                 >
                                                     {zipping ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download size={14} />}
-                                                    {t("gameDetails.zip.button", { count: selectedFiles.length || 0 })}
+                                                    {t("gameDetails.zip.button", { count: files.selectedFiles.length || 0 })}
                                                 </button>
                                             </div>
                                         </div>
@@ -1317,14 +889,8 @@ export default function GameDetails() {
                                 {!loadingRelated && promotionGames.length === 0 && (
                                     <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-center">
                                         <div className="text-lg font-extrabold text-white">{t("gameDetails.related.empty.title")}</div>
-                                        <div className="text-sm text-white/65 mt-2">
-                                            {t("gameDetails.related.empty.subtitle", { name: game?.name || t("gameDetails.related.empty.this") })}
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => navigate("/")}
-                                            className="mt-4 inline-flex items-center justify-center px-4 py-2 rounded-xl bg-primary text-black font-extrabold"
-                                        >
+                                        <div className="text-sm text-white/65 mt-2">{t("gameDetails.related.empty.subtitle", { name: game?.name || t("gameDetails.related.empty.this") })}</div>
+                                        <button type="button" onClick={() => navigate("/")} className="mt-4 inline-flex items-center justify-center px-4 py-2 rounded-xl bg-primary text-black font-extrabold">
                                             {t("gameDetails.related.empty.browseAll")}
                                         </button>
                                     </div>
@@ -1346,7 +912,7 @@ export default function GameDetails() {
                                                     <img
                                                         src={g.imageURL || "https://via.placeholder.com/300?text=No+Image"}
                                                         alt={g.name}
-                                                        className="w-full h-full object-cover group-hover:scale-[1.03] transition"
+                                                        className="w-full h-full object-cover group-hover:scale-[1.03] transition object-center"
                                                         loading="lazy"
                                                     />
                                                 </div>
@@ -1390,7 +956,7 @@ export default function GameDetails() {
             <PreviewModal
                 open={previewOpen}
                 onClose={() => setPreviewOpen(false)}
-                files={filteredFiles}
+                files={files.filteredFiles}
                 index={previewIndex}
                 setIndex={setPreviewIndex}
                 onDownload={handleDownload}

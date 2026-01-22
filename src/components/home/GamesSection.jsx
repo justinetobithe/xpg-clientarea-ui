@@ -91,10 +91,10 @@ function detectTypeFromGame(game, i18n, t) {
 
 function GameCardSkeleton() {
     return (
-        <div className="rounded-xl overflow-hidden shadow-lg bg-background/40 border border-border/50 animate-pulse">
-            <div className="aspect-video bg-white/10" />
-            <div className="p-3">
-                <div className="h-4 bg-white/10 rounded w-3/4 mx-auto" />
+        <div className="rounded-xl overflow-hidden bg-white/[0.03] border border-white/10 animate-pulse">
+            <div className="aspect-[16/10] bg-white/10" />
+            <div className="px-3 py-3">
+                <div className="h-4 bg-white/10 rounded w-4/5 mx-auto" />
             </div>
         </div>
     );
@@ -183,7 +183,9 @@ function MobilePagination({ page, totalPages, onPrev, onNext, onJump }) {
                                 onClick={() => onJump(p)}
                                 className={cx(
                                     "h-9 min-w-9 px-3 rounded-lg border text-sm font-semibold transition",
-                                    p === page ? "bg-primary text-black border-primary" : "border-white/15 bg-white/[0.03] text-white hover:bg-white/[0.06]"
+                                    p === page
+                                        ? "bg-primary text-black border-primary"
+                                        : "border-white/15 bg-white/[0.03] text-white hover:bg-white/[0.06]"
                                 )}
                             >
                                 {p}
@@ -202,13 +204,54 @@ function GameImage({ src, alt }) {
 
     if (!src || failed) {
         return (
-            <div className="w-full h-full flex items-center justify-center bg-white/[0.06] text-white/50 text-xs">
+            <div className="absolute inset-0 flex items-center justify-center bg-black/30 text-white/50 text-xs">
                 {t("games.image.noImage")}
             </div>
         );
     }
 
-    return <img src={src} alt={alt} loading="lazy" onError={() => setFailed(true)} className="w-full h-full object-cover" />;
+    return (
+        <img
+            src={src}
+            alt={alt}
+            loading="lazy"
+            onError={() => setFailed(true)}
+            className="absolute inset-0 h-full w-full object-cover object-center"
+            draggable="false"
+        />
+    );
+}
+
+function GameCard({ to, imageURL, title, onClick, variant = "default" }) {
+    const base =
+        "group rounded-xl overflow-hidden border transition will-change-transform";
+    const vibe =
+        variant === "default"
+            ? "bg-white/[0.03] border-white/10 shadow-[0_10px_30px_-18px_rgba(0,0,0,0.8)] hover:shadow-primary/30"
+            : "bg-white/[0.03] border-white/10 shadow-[0_10px_30px_-18px_rgba(0,0,0,0.8)] hover:shadow-primary/30";
+
+    return (
+        <Link
+            to={to}
+            onClick={onClick}
+            className={cx(
+                base,
+                vibe,
+                "hover:-translate-y-0.5 hover:scale-[1.02] active:scale-[0.99]"
+            )}
+        >
+            <div className="relative aspect-[16/10] bg-black/20 overflow-hidden">
+                <GameImage src={imageURL} alt={title} />
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-black/0 to-black/0 opacity-90" />
+            </div>
+
+            <div className="px-3 py-3">
+                <div className="text-center text-white text-sm font-semibold leading-tight truncate">
+                    {title}
+                </div>
+            </div>
+        </Link>
+    );
 }
 
 export default function GamesSection() {
@@ -396,17 +439,19 @@ export default function GamesSection() {
                                 onClick={() => setActiveType("All")}
                                 className={cx(
                                     "snap-start shrink-0 w-[48%] sm:w-[32%] lg:w-[24%]",
-                                    "group rounded-xl overflow-hidden shadow-lg hover:shadow-primary/50 transition-all duration-300 transform hover:scale-[1.03]",
-                                    "bg-background/50 border border-border/50 block text-left",
-                                    activeType === "All" ? "ring-2 ring-primary" : ""
+                                    "rounded-xl overflow-hidden border border-white/10 bg-white/[0.03] shadow-[0_10px_30px_-18px_rgba(0,0,0,0.8)]",
+                                    "hover:-translate-y-0.5 hover:scale-[1.02] transition"
                                 )}
                             >
-                                <div className="aspect-video relative overflow-hidden bg-white/[0.03]">
-                                    <div className="w-full h-full flex items-center justify-center bg-white/[0.06] text-white/70 text-xs">
+                                <div className="relative aspect-[16/10] bg-black/20 overflow-hidden">
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black/30 text-white/70 text-xs">
                                         {t("games.list.allGames")}
                                     </div>
+                                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-black/0 to-black/0 opacity-90" />
                                 </div>
-                                <div className="p-3 text-center text-white text-sm font-medium truncate">{t("games.list.allGames")}</div>
+                                <div className="px-3 py-3 text-center text-white text-sm font-semibold truncate">
+                                    {t("games.list.allGames")}
+                                </div>
                             </button>
 
                             {typeCards.map((tc) => (
@@ -415,15 +460,16 @@ export default function GamesSection() {
                                         type="button"
                                         onClick={() => setActiveType(tc.type)}
                                         className={cx(
-                                            "group rounded-xl overflow-hidden shadow-lg hover:shadow-primary/50 transition-all duration-300 transform hover:scale-[1.03]",
-                                            "bg-background/50 border border-border/50 block w-full text-left",
+                                            "w-full rounded-xl overflow-hidden border bg-white/[0.03] shadow-[0_10px_30px_-18px_rgba(0,0,0,0.8)] transition",
+                                            "border-white/10 hover:-translate-y-0.5 hover:scale-[1.02]",
                                             activeType === tc.type ? "ring-2 ring-primary" : ""
                                         )}
                                     >
-                                        <div className="aspect-video relative overflow-hidden bg-white/[0.03]">
+                                        <div className="relative aspect-[16/10] bg-black/20 overflow-hidden">
                                             <GameImage src={tc.imageURL} alt={tc.type} />
+                                            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-black/0 to-black/0 opacity-90" />
                                         </div>
-                                        <div className="p-3 text-center text-white text-sm font-medium truncate">{tc.type}</div>
+                                        <div className="px-3 py-3 text-center text-white text-sm font-semibold truncate">{tc.type}</div>
                                     </button>
                                 </div>
                             ))}
@@ -462,7 +508,7 @@ export default function GamesSection() {
                                 value={inputValue}
                                 onChange={handleSearchChange}
                                 placeholder={t("games.list.searchPlaceholder")}
-                                className="w-full bg-background/30 rounded-lg py-2 pl-10 pr-10 text-sm text-white border border-border focus:outline-none focus:ring-1 focus:ring-primary transition"
+                                className="w-full bg-white/[0.03] rounded-lg py-2 pl-10 pr-10 text-sm text-white border border-white/10 focus:outline-none focus:ring-1 focus:ring-primary transition"
                                 inputMode="search"
                                 enterKeyHint="search"
                                 autoCorrect="off"
@@ -489,24 +535,29 @@ export default function GamesSection() {
                         <Listbox value={sortBy} onChange={setSortBy}>
                             {({ open }) => (
                                 <div className="relative w-full sm:w-48 z-10">
-                                    <Listbox.Button className="relative w-full cursor-default rounded-lg bg-background/30 py-2 pl-3 pr-10 text-left shadow-md focus:outline-none border border-border text-white transition hover:bg-background/40">
+                                    <Listbox.Button className="relative w-full cursor-default rounded-lg bg-white/[0.03] py-2 pl-3 pr-10 text-left shadow-md focus:outline-none border border-white/10 text-white transition hover:bg-white/[0.05]">
                                         <span className="block truncate text-xs">{sortBy.label}</span>
                                         <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                                             <ChevronDown className={cx("h-5 w-5 text-gray-400 transition", open ? "rotate-180" : "")} />
                                         </span>
                                     </Listbox.Button>
 
-                                    <Listbox.Options className="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-background py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm border border-border">
+                                    <Listbox.Options className="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-[#151620] py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm border border-white/10">
                                         {sortOptions.map((option) => (
                                             <Listbox.Option
                                                 key={option.value}
                                                 className={({ active }) =>
-                                                    cx("relative cursor-default select-none py-2 px-4 text-xs", active ? "bg-primary/50 text-white" : "text-white")
+                                                    cx(
+                                                        "relative cursor-default select-none py-2 px-4 text-xs",
+                                                        active ? "bg-primary/30 text-white" : "text-white"
+                                                    )
                                                 }
                                                 value={option}
                                             >
                                                 {({ selected }) => (
-                                                    <span className={cx("block truncate", selected ? "font-medium" : "font-normal")}>{option.label}</span>
+                                                    <span className={cx("block truncate", selected ? "font-medium" : "font-normal")}>
+                                                        {option.label}
+                                                    </span>
                                                 )}
                                             </Listbox.Option>
                                         ))}
@@ -519,22 +570,17 @@ export default function GamesSection() {
 
                 {showSkeleton && <GamesGridSkeleton count={8} />}
                 {!showSkeleton && error && <div className="text-red-400 text-sm">{error?.message || t("games.list.failedToLoad")}</div>}
-
                 {!showSkeleton && !error && allGames.length > 0 && games.length === 0 && <div className="text-white/70 text-sm">{t("games.list.noGamesFound")}</div>}
 
                 {!showSkeleton && !error && games.length > 0 && (
                     <div className="hidden md:grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
                         {games.map((game) => (
-                            <Link
+                            <GameCard
                                 key={game.id}
                                 to={`/game/${game.id}`}
-                                className="group rounded-xl overflow-hidden cursor-pointer shadow-lg hover:shadow-primary/50 transition-all duration-300 transform hover:scale-[1.03] bg-background/50 border border-border/50 block"
-                            >
-                                <div className="aspect-video relative overflow-hidden bg-white/[0.03]">
-                                    <GameImage src={game.imageURL} alt={getGameName(game, i18n, t)} />
-                                </div>
-                                <div className="p-3 text-center text-white text-sm font-medium truncate">{getGameName(game, i18n, t)}</div>
-                            </Link>
+                                imageURL={game.imageURL}
+                                title={getGameName(game, i18n, t)}
+                            />
                         ))}
                     </div>
                 )}
@@ -543,17 +589,16 @@ export default function GamesSection() {
                     <>
                         <div className="md:hidden grid grid-cols-2 gap-4">
                             {mobileSlice.map((game) => (
-                                <Link
+                                <GameCard
                                     key={game.id}
                                     to={`/game/${game.id}`}
-                                    className="group rounded-xl overflow-hidden cursor-pointer shadow-lg bg-background/50 border border-border/50 block active:scale-[0.99] transition"
-                                    onClick={() => navigate(`/game/${game.id}`)}
-                                >
-                                    <div className="aspect-video relative overflow-hidden bg-white/[0.03]">
-                                        <GameImage src={game.imageURL} alt={getGameName(game, i18n, t)} />
-                                    </div>
-                                    <div className="p-3 text-center text-white text-sm font-medium truncate">{getGameName(game, i18n, t)}</div>
-                                </Link>
+                                    imageURL={game.imageURL}
+                                    title={getGameName(game, i18n, t)}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        navigate(`/game/${game.id}`);
+                                    }}
+                                />
                             ))}
                         </div>
 
