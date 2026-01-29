@@ -3,9 +3,6 @@ import { useTranslation } from "react-i18next";
 export default function Footer() {
     const { t } = useTranslation();
 
-    const certUrl =
-        "https://firebasestorage.googleapis.com/v0/b/xpg-system.firebasestorage.app/o/files%2FiTech%20Certificate.pdf?alt=media&token=27702b7e-a90b-491f-8732-7f85ce4288c9";
-
     return (
         <footer className="bg-black/90 border-t border-white/10">
             <div className="max-w-6xl mx-auto px-4 md:px-8 py-10 md:py-12 text-center">
@@ -22,20 +19,13 @@ export default function Footer() {
                 </div>
 
                 <div className="mt-8 flex items-center justify-center">
-                    <a
-                        href={certUrl}
-                        target="_blank"
-                        rel="noreferrer"
+                    <img
+                        src="/image/itech-lab-icon.png"
+                        alt={t("footer.certAlt")}
                         title={t("footer.certTitle")}
-                        className="inline-flex items-center justify-center hover:opacity-90 transition"
-                    >
-                        <img
-                            src="/image/itech-lab-icon.png"
-                            alt={t("footer.certAlt")}
-                            className="h-14 md:h-16 object-contain opacity-95"
-                            style={{ filter: "grayscale(1) brightness(3) contrast(1.05)" }}
-                        />
-                    </a>
+                        className="h-14 md:h-16 object-contain opacity-95"
+                        style={{ filter: "grayscale(1) brightness(3) contrast(1.05)" }}
+                    />
                 </div>
             </div>
         </footer>
