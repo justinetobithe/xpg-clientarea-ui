@@ -1,25 +1,47 @@
+import { useEffect, useMemo, useState } from "react";
+
 export default function HeroBanner({
     image,
     children,
     className = "",
     overlayClassName = "",
     alt = "Hero banner",
-    heightClassName = "h-[280px] sm:h-[360px] md:h-[520px] lg:h-[680px]",
-    imgClassName = "object-[center_20%] sm:object-center md:object-center",
+    imgClassName = "",
+    fallbackAspect = "16/9",
 }) {
+    const [ratio, setRatio] = useState(null);
+
+    useEffect(() => {
+        if (!image) return;
+
+        const img = new Image();
+        img.src = image;
+
+        img.onload = () => {
+            if (img.naturalWidth && img.naturalHeight) {
+                setRatio(`${img.naturalWidth}/${img.naturalHeight}`);
+            }
+        };
+    }, [image]);
+
+    const aspect = useMemo(() => ratio || fallbackAspect, [ratio, fallbackAspect]);
+
     return (
         <section
             className={[
-                "relative w-screen left-1/2 right-1/2 -mx-[50vw] overflow-hidden border-b border-border",
-                heightClassName,
+                "relative w-screen left-1/2 right-1/2 -mx-[50vw] overflow-hidden border-b border-border bg-black",
                 className,
             ].join(" ")}
+            style={{ aspectRatio: aspect }}
         >
             {image ? (
                 <img
                     src={image}
                     alt={alt}
-                    className={["absolute inset-0 h-full w-full object-cover select-none", imgClassName].join(" ")}
+                    className={[
+                        "absolute inset-0 w-full h-full object-cover object-center select-none",
+                        imgClassName,
+                    ].join(" ")}
                     loading="eager"
                     draggable={false}
                 />
@@ -29,8 +51,8 @@ export default function HeroBanner({
 
             <div
                 className={[
-                    "absolute inset-0",
-                    overlayClassName || "bg-gradient-to-b from-black/20 via-black/55 to-black/85",
+                    "absolute inset-0 pointer-events-none",
+                    overlayClassName || "bg-gradient-to-b from-black/10 via-black/30 to-black/70",
                 ].join(" ")}
             />
 

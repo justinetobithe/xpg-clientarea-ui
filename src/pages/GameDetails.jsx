@@ -528,7 +528,11 @@ export default function GameDetails() {
 
     return (
         <div className="min-h-[calc(var(--vvh, var(--app-vh, 1vh))*100)] bg-[#0b0d13] text-white overflow-x-hidden">
-            <HeroBanner image={hero} overlayClassName="bg-gradient-to-b from-black/5 via-black/35 to-black/70" />
+            <HeroBanner
+                image={hero}
+                overlayClassName="bg-gradient-to-b from-black/5 via-black/35 to-black/70"
+                fallbackAspect="21/9"
+            />
 
             <div className="w-full px-4 md:px-6 lg:max-w-7xl lg:mx-auto py-6" style={{ paddingBottom: pageBottomPad }}>
                 <div className="mb-4">
