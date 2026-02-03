@@ -1,8 +1,8 @@
-import { Fragment, useMemo, useState } from "react";
-import { Dialog, Transition } from "@headlessui/react";
-import { Calendar, ExternalLink, Search, Sparkles, X } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Calendar, Search, Sparkles } from "lucide-react";
 import { useAnnouncementStore } from "../store/announcementStore";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 
 const formatLongDate = (val) => {
     if (!val) return "";
@@ -21,6 +21,21 @@ const getPlainText = (html) => {
         .trim();
 };
 
+const getAnnouncementHTML = (item) => {
+    if (!item) return "";
+    const v =
+        item?.content ??
+        item?.contentHtml ??
+        item?.contentHTML ??
+        item?.details ??
+        item?.description ??
+        item?.body ??
+        item?.html ??
+        item?.text ??
+        "";
+    return typeof v === "string" ? v : "";
+};
+
 const SkeletonCard = () => (
     <div className="rounded-2xl overflow-hidden border border-white/10 bg-white/[0.04] animate-pulse">
         <div className="h-44 bg-white/5" />
@@ -32,20 +47,19 @@ const SkeletonCard = () => (
     </div>
 );
 
-function AnnouncementCard({ item, onOpen, faded }) {
+function AnnouncementCard({ item, faded }) {
     const { t } = useTranslation();
 
     const title = item?.title || t("announcements.page.fallbackTitle");
     const dateLabel = formatLongDate(item?.date || item?.createdAt);
-    const snippet = getPlainText(item?.content || "").slice(0, 140);
+    const snippet = getPlainText(getAnnouncementHTML(item)).slice(0, 140);
 
     return (
-        <button
-            type="button"
-            onClick={() => onOpen(item)}
+        <Link
+            to={`/announcement/${item.id}`}
             className={[
-                "group w-full text-left rounded-2xl overflow-hidden border border-white/10 bg-white/[0.035] hover:bg-white/[0.06] transition shadow-[0_20px_90px_rgba(0,0,0,0.4)]",
-                faded ? "opacity-70 hover:opacity-100" : "",
+                "group block w-full text-left rounded-2xl overflow-hidden border border-white/10 bg-white/[0.035] hover:bg-white/[0.06] transition shadow-[0_20px_90px_rgba(0,0,0,0.4)]",
+                faded ? "opacity-80 hover:opacity-100" : "",
             ].join(" ")}
         >
             <div className="relative">
@@ -55,17 +69,17 @@ function AnnouncementCard({ item, onOpen, faded }) {
                     <div className="h-44 bg-gradient-to-br from-white/10 via-white/5 to-transparent" />
                 )}
 
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
 
                 <div className="absolute bottom-0 left-0 right-0 p-4">
-                    <div className="flex items-center gap-2 text-[11px] text-white/75 flex-wrap">
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-black/40 border border-white/10 px-2 py-1">
-                            <Calendar className="h-3.5 w-3.5" />
-                            {dateLabel}
+                    <div className="flex items-center gap-2 text-[11px] text-white/90 flex-wrap">
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-black/45 border border-white/15 px-2 py-1">
+                            <Calendar className="h-3.5 w-3.5 text-white" />
+                            <span className="text-white">{dateLabel}</span>
                         </span>
 
                         {faded ? (
-                            <span className="rounded-full px-2 py-1 bg-white/10 border border-white/10 text-white/60">
+                            <span className="rounded-full px-2 py-1 bg-white/10 border border-white/15 text-white/80">
                                 {t("announcements.page.older")}
                             </span>
                         ) : null}
@@ -78,19 +92,20 @@ function AnnouncementCard({ item, onOpen, faded }) {
             </div>
 
             <div className="p-4">
-                <div className="text-white/70 text-sm line-clamp-2 break-words">{snippet || t("announcements.page.openToReadMore")}</div>
+                <div className="text-white/85 text-sm line-clamp-2 break-words">
+                    {snippet || t("announcements.page.openToReadMore")}
+                </div>
                 <div className="mt-4 flex justify-end">
                     <span className="text-primary text-sm font-semibold">{t("announcements.page.open")}</span>
                 </div>
             </div>
-        </button>
+        </Link>
     );
 }
 
 export default function Announcements() {
     const { t } = useTranslation();
     const { items, loading } = useAnnouncementStore();
-    const [detail, setDetail] = useState(null);
     const [query, setQuery] = useState("");
 
     const sorted = useMemo(() => {
@@ -107,7 +122,7 @@ export default function Announcements() {
         if (!q) return sorted;
         return sorted.filter((a) => {
             const tt = (a?.title || "").toLowerCase();
-            const c = getPlainText(a?.content || "").toLowerCase();
+            const c = getPlainText(getAnnouncementHTML(a)).toLowerCase();
             return tt.includes(q) || c.includes(q);
         });
     }, [sorted, query]);
@@ -117,24 +132,24 @@ export default function Announcements() {
             <header className="bg-darken-evo border-b border-border py-10">
                 <div className="max-w-7xl mx-auto px-4 md:px-8">
                     <div className="flex items-start gap-4 min-w-0">
-                        <div className="h-11 w-11 rounded-2xl bg-primary/15 border border-primary/25 flex items-center justify-center shrink-0">
+                        <div className="h-12 w-12 rounded-2xl bg-primary/20 border border-primary/35 flex items-center justify-center shrink-0 shadow-[0_10px_40px_rgba(0,0,0,0.35)]">
                             <Sparkles className="h-5 w-5 text-primary" />
                         </div>
 
                         <div className="min-w-0">
-                            <p className="text-sm text-white/50 mb-1">{t("announcements.page.crumb")}</p>
-                            <h1 className="text-3xl font-bold text-white mb-2 break-words">{t("announcements.page.title")}</h1>
-                            <p className="text-sm text-white/70 break-words">{t("announcements.page.subtitle")}</p>
+                            <p className="text-sm text-white/80 mb-1">{t("announcements.page.crumb")}</p>
+                            <h1 className="text-3xl font-extrabold text-white mb-2 break-words">{t("announcements.page.title")}</h1>
+                            <p className="text-sm text-white/85 break-words">{t("announcements.page.subtitle")}</p>
                         </div>
                     </div>
 
                     <div className="mt-6 max-w-xl relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/50" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/70" />
                         <input
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
                             placeholder={t("announcements.page.searchPlaceholder")}
-                            className="w-full rounded-xl bg-black/20 border border-border pl-9 pr-3 py-2.5 text-[16px] md:text-sm text-white placeholder:text-white/40 outline-none focus:ring-1 focus:ring-primary"
+                            className="w-full rounded-xl bg-black/25 border border-white/15 pl-9 pr-3 py-2.5 text-[16px] md:text-sm text-white placeholder:text-white/60 outline-none focus:ring-1 focus:ring-primary"
                         />
                     </div>
                 </div>
@@ -148,102 +163,18 @@ export default function Announcements() {
                         ))}
                     </div>
                 ) : filtered.length === 0 ? (
-                    <div className="rounded-2xl border border-border bg-card p-6">
+                    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
                         <div className="text-white font-semibold text-lg mb-1">{t("announcements.page.empty.title")}</div>
-                        <div className="text-white/60 text-sm">{t("announcements.page.empty.subtitle")}</div>
+                        <div className="text-white/80 text-sm">{t("announcements.page.empty.subtitle")}</div>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {filtered.map((a, idx) => (
-                            <AnnouncementCard key={a.id} item={a} onOpen={setDetail} faded={idx >= 6} />
+                            <AnnouncementCard key={a.id} item={a} faded={idx >= 6} />
                         ))}
                     </div>
                 )}
             </div>
-
-            <Transition appear show={Boolean(detail)} as={Fragment}>
-                <Dialog as="div" className="relative z-[80]" onClose={() => setDetail(null)}>
-                    <Transition.Child
-                        as={Fragment}
-                        enter="transition-opacity duration-200"
-                        enterFrom="opacity-0"
-                        enterTo="opacity-100"
-                        leave="transition-opacity duration-150"
-                        leaveFrom="opacity-100"
-                        leaveTo="opacity-0"
-                    >
-                        <div className="fixed inset-0 bg-black/75" />
-                    </Transition.Child>
-
-                    <div className="fixed inset-0 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
-                        <div className="min-h-full flex items-center justify-center p-4 pt-[max(16px,env(safe-area-inset-top))] pb-[max(16px,env(safe-area-inset-bottom))]">
-                            <Transition.Child
-                                as={Fragment}
-                                enter="transition duration-200 ease-out"
-                                enterFrom="opacity-0 scale-95"
-                                enterTo="opacity-100 scale-100"
-                                leave="transition duration-150 ease-in"
-                                leaveFrom="opacity-100 scale-100"
-                                leaveTo="opacity-0 scale-95"
-                            >
-                                <Dialog.Panel className="w-full max-w-3xl rounded-2xl border border-white/10 bg-[#0f1118] shadow-2xl overflow-hidden max-h-[88vh] flex flex-col">
-                                    <div className="relative shrink-0">
-                                        {detail?.imageURL ? (
-                                            <img
-                                                src={detail.imageURL}
-                                                alt={detail?.title || t("announcements.page.fallbackTitle")}
-                                                className="h-56 w-full object-cover"
-                                                loading="lazy"
-                                            />
-                                        ) : (
-                                            <div className="h-40 bg-gradient-to-br from-white/10 to-transparent" />
-                                        )}
-
-                                        <button
-                                            type="button"
-                                            onClick={() => setDetail(null)}
-                                            className="absolute top-3 right-3 p-2 rounded-full bg-black/40 border border-white/10 text-white hover:bg-black/60"
-                                            aria-label="Close"
-                                        >
-                                            <X className="h-5 w-5" />
-                                        </button>
-
-                                        <div className="absolute bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-black/80 to-transparent">
-                                            <h2 className="text-2xl font-extrabold text-white break-words">
-                                                {detail?.title || t("announcements.page.fallbackTitle")}
-                                            </h2>
-                                            <p className="text-white/70 text-xs mt-1">{formatLongDate(detail?.date || detail?.createdAt)}</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="p-6 overflow-y-auto [-webkit-overflow-scrolling:touch]">
-                                        {detail?.content ? (
-                                            <div
-                                                className="prose prose-invert max-w-none text-sm leading-relaxed break-words"
-                                                dangerouslySetInnerHTML={{ __html: detail.content }}
-                                            />
-                                        ) : (
-                                            <div className="text-white/70 text-sm">{t("announcements.page.noContent")}</div>
-                                        )}
-
-                                        {detail?.packURL ? (
-                                            <a
-                                                href={detail.packURL}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="inline-flex items-center gap-2 mt-6 rounded-xl border border-white/15 bg-white/[0.04] px-4 py-2.5 text-sm font-semibold text-white hover:bg-white/[0.08] w-full sm:w-auto justify-center"
-                                            >
-                                                {t("announcements.page.viewMarketingPack")}
-                                                <ExternalLink className="h-4 w-4" />
-                                            </a>
-                                        ) : null}
-                                    </div>
-                                </Dialog.Panel>
-                            </Transition.Child>
-                        </div>
-                    </div>
-                </Dialog>
-            </Transition>
         </div>
     );
 }
