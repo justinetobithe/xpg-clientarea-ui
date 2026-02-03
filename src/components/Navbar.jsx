@@ -238,7 +238,7 @@ export default function Navbar() {
     const startLiveGamesListener = useLiveGamesStore((s) => s.startLiveGamesListener);
     const stopLiveGamesListener = useLiveGamesStore((s) => s.stopLiveGamesListener);
 
-    const xpgLiveBase = (import.meta.env.VITE_XPG_LIVE_URL || "https://xpg.live").replace(/\/+$/, "");
+    const lobbyBase = (import.meta.env.VITE_XPG_LOBBY_URL || "https://lobby.xpgdemo.com").replace(/\/+$/, "");
     const resolvedLang = (i18n.resolvedLanguage || i18n.language || DEFAULT_LANG_CODE || "en").split("-")[0];
 
     const selectedLang = useMemo(() => {
@@ -362,8 +362,8 @@ export default function Navbar() {
     };
 
     const openLiveGame = useCallback(() => {
-        window.open(xpgLiveBase, "_blank", "noopener,noreferrer");
-    }, [xpgLiveBase]);
+        window.open(lobbyBase, "_blank", "noopener,noreferrer");
+    }, [lobbyBase]);
 
     const mobilePrimaryLinks = useMemo(
         () => [
