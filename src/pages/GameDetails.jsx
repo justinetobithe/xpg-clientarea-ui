@@ -28,7 +28,8 @@ import HeroBanner from "../components/common/HeroBanner";
 import FiltersPanel from "../components/game-details/FiltersPanel";
 import PreviewModal from "../components/game-details/PreviewModal";
 
-import { collectExtensions, collectSectionNames, flattenSectionsToFiles, getExt, isImage, isPDF } from "../utils/fileUtils";
+import { collectExtensions, collectSectionNames, flattenSectionsToFiles, getExt, isImage, isPDF, storagePathFromFirebaseUrl } from "../utils/fileUtils";
+
 import { fetchDownloadBlob } from "../utils/downloadService";
 import { useTranslation } from "react-i18next";
 
@@ -467,8 +468,14 @@ export default function GameDetails() {
 
     const handleDownload = async (file) => {
         try {
-            const url = file?._url || file?.url || file?.fileURL;
+            const url = file?._url || file?.url || file?.fileURL || "";
             const name = file?._name || file?.name || file?.fileName || t("gameDetails.download.defaultName");
+
+            const resolvedStoragePath =
+                file?.storagePath ||
+                file?._storagePath ||
+                (url ? storagePathFromFirebaseUrl(url) : null) ||
+                null;
 
             if (user?.uid) {
                 addDownload({
@@ -482,17 +489,24 @@ export default function GameDetails() {
                     size: file?._size || null,
                     dimensions: file?._dimensions || file?.dimensions || null,
                     thumbURL: file?._thumb || null,
-                    storagePath: file?.storagePath || file?._storagePath || null,
+                    storagePath: resolvedStoragePath,
                 });
             }
 
-            const storagePath = file?.storagePath || file?._storagePath || null;
-            if (!storagePath) {
+            if (resolvedStoragePath) {
+                const blob = await fetchDownloadBlob(resolvedStoragePath, name);
+                saveAs(blob, name || "download");
+                return;
+            }
+
+            if (!url) {
                 alert(t("gameDetails.alerts.missingStoragePath"));
                 return;
             }
 
-            const blob = await fetchDownloadBlob(storagePath, name);
+            const res = await fetch(url);
+            if (!res.ok) throw new Error("Failed to download file");
+            const blob = await res.blob();
             saveAs(blob, name || "download");
         } catch (e) {
             alert(e?.message || t("gameDetails.alerts.downloadFailed"));

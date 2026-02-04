@@ -1,4 +1,4 @@
-import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -56,13 +56,12 @@ export default function App() {
   const requireAccess = (element) =>
     isAuthed && hasAccess ? <ProtectedLayout>{element}</ProtectedLayout> : <Navigate to="/login" replace />;
 
-  const guestOnly = (element) =>
-    !isAuthed || !hasAccess ? element : <Navigate to="/" replace />;
+  const guestOnly = (element) => (!isAuthed || !hasAccess ? element : <Navigate to="/" replace />);
 
   return (
     <ToastProvider>
       <DialogProvider>
-        <HashRouter>
+        <BrowserRouter>
           {loading ? (
             <Splash />
           ) : (
@@ -82,7 +81,7 @@ export default function App() {
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           )}
-        </HashRouter>
+        </BrowserRouter>
       </DialogProvider>
     </ToastProvider>
   );

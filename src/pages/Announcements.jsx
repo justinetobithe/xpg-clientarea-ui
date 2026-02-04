@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Calendar, Search, Sparkles } from "lucide-react";
+import { Calendar, Search, Sparkles, ArrowUpRight } from "lucide-react";
 import { useAnnouncementStore } from "../store/announcementStore";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
@@ -46,6 +46,28 @@ const SkeletonCard = () => (
         </div>
     </div>
 );
+
+function CtaBadge({ label, url }) {
+    if (!label || !url) return null;
+
+    const onClick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        window.open(url, "_blank", "noopener,noreferrer");
+    };
+
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 border border-primary/35 px-2.5 py-1 text-[11px] font-semibold text-primary hover:bg-primary/25 hover:border-primary/50 transition"
+            title={label}
+        >
+            <span className="truncate max-w-[180px]">{label}</span>
+            <ArrowUpRight className="h-3.5 w-3.5" />
+        </button>
+    );
+}
 
 function AnnouncementCard({ item, faded }) {
     const { t } = useTranslation();
@@ -95,7 +117,9 @@ function AnnouncementCard({ item, faded }) {
                 <div className="text-white/85 text-sm line-clamp-2 break-words">
                     {snippet || t("announcements.page.openToReadMore")}
                 </div>
-                <div className="mt-4 flex justify-end">
+
+                <div className="mt-4 flex items-center justify-between gap-3">
+                    <CtaBadge label={item?.ctaLabel} url={item?.ctaURL} />
                     <span className="text-primary text-sm font-semibold">{t("announcements.page.open")}</span>
                 </div>
             </div>

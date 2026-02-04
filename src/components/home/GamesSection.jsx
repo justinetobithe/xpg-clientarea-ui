@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Listbox } from "@headlessui/react";
 import { ChevronDown, Search, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useGamesQuery } from "../../hooks/useGamesQuery";
@@ -222,21 +222,13 @@ function GameImage({ src, alt }) {
     );
 }
 
-function GameCard({ to, imageURL, title, onClick, variant = "default" }) {
-    const base =
-        "group rounded-xl overflow-hidden border transition will-change-transform";
-    const vibe =
-        variant === "default"
-            ? "bg-white/[0.03] border-white/10 shadow-[0_10px_30px_-18px_rgba(0,0,0,0.8)] hover:shadow-primary/30"
-            : "bg-white/[0.03] border-white/10 shadow-[0_10px_30px_-18px_rgba(0,0,0,0.8)] hover:shadow-primary/30";
-
+function GameCard({ to, imageURL, title }) {
     return (
         <Link
             to={to}
-            onClick={onClick}
             className={cx(
-                base,
-                vibe,
+                "group rounded-xl overflow-hidden border transition will-change-transform",
+                "bg-white/[0.03] border-white/10 shadow-[0_10px_30px_-18px_rgba(0,0,0,0.8)] hover:shadow-primary/30",
                 "hover:-translate-y-0.5 hover:scale-[1.02] active:scale-[0.99]"
             )}
         >
@@ -246,9 +238,7 @@ function GameCard({ to, imageURL, title, onClick, variant = "default" }) {
             </div>
 
             <div className="px-3 py-3">
-                <div className="text-center text-white text-sm font-semibold leading-tight truncate">
-                    {title}
-                </div>
+                <div className="text-center text-white text-sm font-semibold leading-tight truncate">{title}</div>
             </div>
         </Link>
     );
@@ -256,7 +246,6 @@ function GameCard({ to, imageURL, title, onClick, variant = "default" }) {
 
 export default function GamesSection() {
     const { t, i18n } = useTranslation();
-    const navigate = useNavigate();
     const { data: allGames = [], isLoading, error } = useGamesQuery();
 
     useMobileViewportFix(true);
@@ -427,11 +416,7 @@ export default function GamesSection() {
                     <div className="-mx-0">
                         <div
                             ref={typesTrackRef}
-                            className={cx(
-                                "flex gap-4 pb-1 overflow-x-auto",
-                                "snap-x snap-mandatory",
-                                "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-                            )}
+                            className={cx("flex gap-4 pb-1 overflow-x-auto", "snap-x snap-mandatory", "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden")}
                             style={{ WebkitOverflowScrolling: "touch", overscrollBehaviorX: "contain" }}
                         >
                             <button
@@ -449,9 +434,7 @@ export default function GamesSection() {
                                     </div>
                                     <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-black/0 to-black/0 opacity-90" />
                                 </div>
-                                <div className="px-3 py-3 text-center text-white text-sm font-semibold truncate">
-                                    {t("games.list.allGames")}
-                                </div>
+                                <div className="px-3 py-3 text-center text-white text-sm font-semibold truncate">{t("games.list.allGames")}</div>
                             </button>
 
                             {typeCards.map((tc) => (
@@ -547,18 +530,11 @@ export default function GamesSection() {
                                             <Listbox.Option
                                                 key={option.value}
                                                 className={({ active }) =>
-                                                    cx(
-                                                        "relative cursor-default select-none py-2 px-4 text-xs",
-                                                        active ? "bg-primary/30 text-white" : "text-white"
-                                                    )
+                                                    cx("relative cursor-default select-none py-2 px-4 text-xs", active ? "bg-primary/30 text-white" : "text-white")
                                                 }
                                                 value={option}
                                             >
-                                                {({ selected }) => (
-                                                    <span className={cx("block truncate", selected ? "font-medium" : "font-normal")}>
-                                                        {option.label}
-                                                    </span>
-                                                )}
+                                                {({ selected }) => <span className={cx("block truncate", selected ? "font-medium" : "font-normal")}>{option.label}</span>}
                                             </Listbox.Option>
                                         ))}
                                     </Listbox.Options>
@@ -575,12 +551,7 @@ export default function GamesSection() {
                 {!showSkeleton && !error && games.length > 0 && (
                     <div className="hidden md:grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
                         {games.map((game) => (
-                            <GameCard
-                                key={game.id}
-                                to={`/game/${game.id}`}
-                                imageURL={game.imageURL}
-                                title={getGameName(game, i18n, t)}
-                            />
+                            <GameCard key={game.id} to={`/game/${game.id}`} imageURL={game.imageURL} title={getGameName(game, i18n, t)} />
                         ))}
                     </div>
                 )}
@@ -589,16 +560,7 @@ export default function GamesSection() {
                     <>
                         <div className="md:hidden grid grid-cols-2 gap-4">
                             {mobileSlice.map((game) => (
-                                <GameCard
-                                    key={game.id}
-                                    to={`/game/${game.id}`}
-                                    imageURL={game.imageURL}
-                                    title={getGameName(game, i18n, t)}
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        navigate(`/game/${game.id}`);
-                                    }}
-                                />
+                                <GameCard key={game.id} to={`/game/${game.id}`} imageURL={game.imageURL} title={getGameName(game, i18n, t)} />
                             ))}
                         </div>
 

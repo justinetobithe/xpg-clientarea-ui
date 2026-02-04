@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Sparkles } from "lucide-react";
+import { Sparkles, ArrowUpRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 function cx(...classes) {
@@ -32,6 +32,32 @@ const formatDate = (val) => {
     if (isNaN(d.getTime())) return "";
     return d.toLocaleDateString();
 };
+
+function CtaBadge({ label, url }) {
+    if (!label || !url) return null;
+
+    const onClick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        window.open(url, "_blank", "noopener,noreferrer");
+    };
+
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            className={cx(
+                "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold",
+                "bg-primary/15 border border-primary/35 text-primary",
+                "hover:bg-primary/25 hover:border-primary/50 transition"
+            )}
+            title={label}
+        >
+            <span className="truncate max-w-[180px]">{label}</span>
+            <ArrowUpRight className="h-3.5 w-3.5" />
+        </button>
+    );
+}
 
 export default function AnnouncementsPanel({ items = [], loading = false, error = null, skeletonCount = 3 }) {
     const { t } = useTranslation();
@@ -74,11 +100,12 @@ export default function AnnouncementsPanel({ items = [], loading = false, error 
 
                         {!!desc && <div className="text-xs md:text-sm text-white/85 line-clamp-2 mt-2">{desc}</div>}
 
-                        <div className="mt-3 md:mt-4 flex items-center gap-2">
+                        <div className="mt-3 md:mt-4 flex items-center justify-between gap-3">
                             <span className="text-xs text-primary font-semibold group-hover:underline">
                                 {t("announcements.openDetails")}
                             </span>
-                            {a.ctaLabel && a.ctaURL ? <span className="text-[11px] text-white/60">• {a.ctaLabel}</span> : null}
+
+                            <CtaBadge label={a.ctaLabel} url={a.ctaURL} />
                         </div>
                     </div>
                 </div>
