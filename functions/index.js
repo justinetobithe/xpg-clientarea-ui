@@ -1,3 +1,5 @@
+"use strict";
+
 const { onRequest, onCall, HttpsError } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
 const admin = require("firebase-admin");
@@ -148,7 +150,7 @@ const deleteUserStorage = async (uid) => {
 };
 
 const getFetch = () => {
-    if (typeof fetch === "function") return fetch; 
+    if (typeof fetch === "function") return fetch;
     return require("node-fetch");
 };
 
@@ -223,7 +225,12 @@ exports.downloadFile = onRequest({ region: REGION }, async (req, res) => {
         res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
         res.setHeader("Cache-Control", "no-store");
 
-        file.createReadStream().pipe(res);
+        const stream = file.createReadStream();
+        stream.on("error", () => {
+            if (!res.headersSent) res.status(500).send("Stream error");
+            else res.end();
+        });
+        stream.pipe(res);
         return null;
     } catch {
         return res.status(401).send("Unauthorized");
