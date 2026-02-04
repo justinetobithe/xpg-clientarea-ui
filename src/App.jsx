@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -53,46 +53,36 @@ export default function App() {
   const isAuthed = !!user;
   const hasAccess = profile?.access === true;
 
+  const requireAccess = (element) =>
+    isAuthed && hasAccess ? <ProtectedLayout>{element}</ProtectedLayout> : <Navigate to="/login" replace />;
+
+  const guestOnly = (element) =>
+    !isAuthed || !hasAccess ? element : <Navigate to="/" replace />;
+
   return (
     <ToastProvider>
       <DialogProvider>
-        <BrowserRouter>
+        <HashRouter>
           {loading ? (
             <Splash />
           ) : (
             <Routes>
-              <Route
-                path="/"
-                element={isAuthed && hasAccess ? <ProtectedLayout><Home /></ProtectedLayout> : <Navigate to="/login" />}
-              />
-              <Route
-                path="/search"
-                element={isAuthed && hasAccess ? <ProtectedLayout><Search /></ProtectedLayout> : <Navigate to="/login" />}
-              />
-              <Route
-                path="/announcements"
-                element={isAuthed && hasAccess ? <ProtectedLayout><Announcements /></ProtectedLayout> : <Navigate to="/login" />}
-              />
-              <Route
-                path="/announcement/:id"
-                element={isAuthed && hasAccess ? <ProtectedLayout><AnnouncementDetails /></ProtectedLayout> : <Navigate to="/login" />}
-              />
-              <Route
-                path="/game/:gameId"
-                element={isAuthed && hasAccess ? <ProtectedLayout><GameDetails /></ProtectedLayout> : <Navigate to="/login" />}
-              />
-              <Route
-                path="/settings"
-                element={isAuthed && hasAccess ? <ProtectedLayout><Settings /></ProtectedLayout> : <Navigate to="/login" />}
-              />
+              <Route path="/" element={requireAccess(<Home />)} />
+              <Route path="/search" element={requireAccess(<Search />)} />
+              <Route path="/announcements" element={requireAccess(<Announcements />)} />
+              <Route path="/announcement/:id" element={requireAccess(<AnnouncementDetails />)} />
+              <Route path="/game/:gameId" element={requireAccess(<GameDetails />)} />
+              <Route path="/settings" element={requireAccess(<Settings />)} />
 
-              <Route path="/login" element={!isAuthed || !hasAccess ? <Login /> : <Navigate to="/" />} />
-              <Route path="/register" element={!isAuthed ? <Register /> : <Navigate to="/" />} />
-              <Route path="/forgot-password" element={!isAuthed ? <ForgotPassword /> : <Navigate to="/" />} />
-              <Route path="/reset-password" element={!isAuthed ? <ResetPassword /> : <Navigate to="/" />} />
+              <Route path="/login" element={guestOnly(<Login />)} />
+              <Route path="/register" element={!isAuthed ? <Register /> : <Navigate to="/" replace />} />
+              <Route path="/forgot-password" element={!isAuthed ? <ForgotPassword /> : <Navigate to="/" replace />} />
+              <Route path="/reset-password" element={!isAuthed ? <ResetPassword /> : <Navigate to="/" replace />} />
+
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           )}
-        </BrowserRouter>
+        </HashRouter>
       </DialogProvider>
     </ToastProvider>
   );
