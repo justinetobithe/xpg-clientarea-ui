@@ -1,5 +1,5 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import { Dialog, Tab, Popover, Transition } from "@headlessui/react";
 import {
     Search,
@@ -52,6 +52,23 @@ import { useZipDownload } from "../hooks/useZipDownload";
 import NotFound from "./NotFound";
 
 const TABLE_COLS = "44px 160px minmax(260px, 1fr) 160px minmax(240px, 280px)";
+
+const getFileName = (f) => String(f?._name || f?.name || f?.fileName || "").trim();
+const getFileUrl = (f) => String(f?._url || f?.url || f?.fileURL || f?.fileUrl || "").trim();
+const getStoragePath = (f) => String(f?.storagePath || f?._storagePath || "").trim();
+
+const isValidDisplayFile = (f) => {
+    const name = getFileName(f);
+    const url = getFileUrl(f);
+    const storagePath = getStoragePath(f);
+
+    if (!name) return false;
+    if (name.toLowerCase() === "untitled") return false;
+
+    if (!url && !storagePath) return false;
+
+    return true;
+};
 
 function MobileCollectionSheet({
     open,
@@ -510,9 +527,15 @@ export default function GameDetails() {
 
     const allSectionNames = useMemo(() => collectSectionNames(sections), [sections]);
     const allExtensions = useMemo(() => collectExtensions(sections), [sections]);
+
     const flatFiles = useMemo(() => flattenSectionsToFiles(sections), [sections]);
 
-    const files = useGameFiles({ flatFiles });
+    const safeFlatFiles = useMemo(() => {
+        const list = Array.isArray(flatFiles) ? flatFiles : [];
+        return list.filter(isValidDisplayFile);
+    }, [flatFiles]);
+
+    const files = useGameFiles({ flatFiles: safeFlatFiles });
 
     const {
         creatingForFile,
@@ -620,15 +643,11 @@ export default function GameDetails() {
     const pageBottomPad = `calc(${mobileToolbarH}px + env(safe-area-inset-bottom) + 16px)`;
 
     if (!loadingGame && error === "GAME_NOT_FOUND") {
-        return (
-            <NotFound title="Game not found" message="This game does not exist (or was removed). Please search again." />
-        );
+        return <NotFound title="Game not found" message="This game does not exist (or was removed). Please search again." />;
     }
 
     if (error) {
-        return (
-            <div className="max-w-6xl mx-auto pt-24 pb-10 px-4 text-center text-red-400 text-lg">{error}</div>
-        );
+        return <div className="max-w-6xl mx-auto pt-24 pb-10 px-4 text-center text-red-400 text-lg">{error}</div>;
     }
 
     return (
@@ -900,7 +919,7 @@ export default function GameDetails() {
 
                                                                         <button
                                                                             onClick={() => openPreviewAt(globalIndex)}
-                                                                            className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-white/30 text-white text-xs font-semibold hover:bg-white/5"
+                                                                            className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] text-white text-xs font-semibold"
                                                                             type="button"
                                                                         >
                                                                             <Eye size={14} />
