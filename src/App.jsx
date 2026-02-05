@@ -16,6 +16,7 @@ import { DialogProvider } from "./contexts/DialogContext";
 import GameDetails from "./pages/GameDetails";
 import { ToastProvider } from "./contexts/ToastContext";
 import CollectionsDrawer from "./components/CollectionsDrawer";
+import NotFound from "./pages/NotFound";
 
 function ProtectedLayout({ children }) {
   return (
@@ -58,6 +59,8 @@ export default function App() {
 
   const guestOnly = (element) => (!isAuthed || !hasAccess ? element : <Navigate to="/" replace />);
 
+  const notFoundElement = isAuthed && hasAccess ? requireAccess(<NotFound />) : <NotFound />;
+
   return (
     <ToastProvider>
       <DialogProvider>
@@ -78,7 +81,7 @@ export default function App() {
               <Route path="/forgot-password" element={!isAuthed ? <ForgotPassword /> : <Navigate to="/" replace />} />
               <Route path="/reset-password" element={!isAuthed ? <ResetPassword /> : <Navigate to="/" replace />} />
 
-              <Route path="*" element={<Navigate to="/" replace />} />
+              <Route path="*" element={notFoundElement} />
             </Routes>
           )}
         </BrowserRouter>

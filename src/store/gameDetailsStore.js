@@ -1,5 +1,15 @@
 import { create } from "zustand";
-import { doc, getDoc, collection, query, where, getDocs, orderBy, limit, onSnapshot } from "firebase/firestore";
+import {
+    doc,
+    getDoc,
+    collection,
+    query,
+    where,
+    getDocs,
+    orderBy,
+    limit,
+    onSnapshot,
+} from "firebase/firestore";
 import { db } from "../firebase";
 
 const norm = (s) => String(s || "").toLowerCase().trim();
@@ -24,7 +34,7 @@ const detectFamilyKey = (gameName) => {
         "bullbull",
         "mahjong",
         "fan tan",
-        "fantan"
+        "fantan",
     ];
 
     for (const k of keys) {
@@ -49,8 +59,7 @@ const getUserRole = async (user) => {
 
     try {
         const snap = await getDoc(doc(db, "users", uid));
-        const role = String(snap.data()?.role || "").trim();
-        return role;
+        return String(snap.data()?.role || "").trim();
     } catch {
         return "";
     }
@@ -68,14 +77,18 @@ export const useGameDetailsStore = create((set, get) => ({
 
     fetchGame: async (gameId) => {
         if (!gameId) return;
+
         set({ loadingGame: true, error: null });
+
         try {
             const snap = await getDoc(doc(db, "games", gameId));
+
             if (!snap.exists()) {
-                set({ game: null, loadingGame: false, error: "Game not found" });
+                set({ game: null, loadingGame: false, error: "GAME_NOT_FOUND" });
                 return;
             }
-            set({ game: { id: snap.id, ...snap.data() }, loadingGame: false });
+
+            set({ game: { id: snap.id, ...snap.data() }, loadingGame: false, error: null });
         } catch {
             set({ game: null, loadingGame: false, error: "Error fetching game" });
         }
@@ -83,10 +96,13 @@ export const useGameDetailsStore = create((set, get) => ({
 
     fetchSections: async (gameId, user) => {
         if (!gameId || !user?.uid) return;
-        set({ loadingSections: true, error: null });
+
+        set({ loadingSections: true });
 
         try {
-            const sectSnap = await getDocs(query(collection(db, "sections"), where("gameId", "==", gameId)));
+            const sectSnap = await getDocs(
+                query(collection(db, "sections"), where("gameId", "==", gameId))
+            );
 
             let raw = sectSnap.docs.map((d) => {
                 const data = d.data() || {};
@@ -95,7 +111,12 @@ export const useGameDetailsStore = create((set, get) => ({
                     sectionId: d.id,
                     title: data.title || s.title || "Untitled Section",
                     files: data.files || s.files || [],
-                    order: typeof data.order === "number" ? data.order : typeof s.order === "number" ? s.order : 999
+                    order:
+                        typeof data.order === "number"
+                            ? data.order
+                            : typeof s.order === "number"
+                                ? s.order
+                                : 999,
                 };
             });
 
@@ -123,19 +144,31 @@ export const useGameDetailsStore = create((set, get) => ({
                 raw = raw.filter((s) => allowed.has(s.sectionId));
 
                 if (!raw.length) {
-                    set({
+                    set((state) => ({
                         sections: [],
                         loadingSections: false,
-                        error: "No sections available for your account. Ask admin to grant section permissions."
-                    });
+                        error:
+                            state.error === "GAME_NOT_FOUND"
+                                ? state.error
+                                : "No sections available for your account. Ask admin to grant section permissions.",
+                    }));
                     return;
                 }
             }
 
             raw.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
-            set({ sections: raw, loadingSections: false, error: null });
+
+            set((state) => ({
+                sections: raw,
+                loadingSections: false,
+                error: state.error === "GAME_NOT_FOUND" ? state.error : null,
+            }));
         } catch {
-            set({ sections: [], loadingSections: false, error: "Error fetching sections" });
+            set((state) => ({
+                sections: [],
+                loadingSections: false,
+                error: state.error === "GAME_NOT_FOUND" ? state.error : "Error fetching sections",
+            }));
         }
     },
 
@@ -156,7 +189,11 @@ export const useGameDetailsStore = create((set, get) => ({
 
             if (role !== "super admin") {
                 const accessSnap = await getDocs(
-                    query(collection(db, "permissions"), where("userId", "==", user.uid), where("view", "==", true))
+                    query(
+                        collection(db, "permissions"),
+                        where("userId", "==", user.uid),
+                        where("view", "==", true)
+                    )
                 );
 
                 allowedGameIds = new Set(accessSnap.docs.map((d) => d.data()?.gameId).filter(Boolean));
@@ -194,5 +231,5 @@ export const useGameDetailsStore = create((set, get) => ({
         const { relatedUnsub } = get();
         if (relatedUnsub) relatedUnsub();
         set({ relatedUnsub: null });
-    }
+    },
 }));

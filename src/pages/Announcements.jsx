@@ -1,8 +1,10 @@
-import { useMemo, useState } from "react";
-import { Calendar, Search, Sparkles, ArrowUpRight } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Calendar, Search, Sparkles, Image as ImageIcon, BookOpen, ArrowUpRight } from "lucide-react";
 import { useAnnouncementStore } from "../store/announcementStore";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
+
+const cx = (...classes) => classes.filter(Boolean).join(" ");
 
 const formatLongDate = (val) => {
     if (!val) return "";
@@ -36,101 +38,132 @@ const getAnnouncementHTML = (item) => {
     return typeof v === "string" ? v : "";
 };
 
+const pickCtaUrl = (item) => {
+    const v =
+        item?.ctaURL ??
+        item?.ctaUrl ??
+        item?.marketingPackURL ??
+        item?.marketingPackUrl ??
+        item?.marketing_pack_url ??
+        item?.packURL ??
+        item?.packUrl ??
+        "";
+    return typeof v === "string" ? v.trim() : "";
+};
+
+const isExternalUrl = (url) => /^https?:\/\//i.test(url);
+
 const SkeletonCard = () => (
-    <div className="rounded-2xl overflow-hidden border border-white/10 bg-white/[0.04] animate-pulse">
-        <div className="h-44 bg-white/5" />
-        <div className="p-4 space-y-3">
-            <div className="h-4 bg-white/10 rounded w-4/5" />
-            <div className="h-3 bg-white/10 rounded w-3/5" />
-            <div className="h-9 bg-white/10 rounded w-full" />
+    <div className="rounded-3xl overflow-hidden border border-white/10 bg-white/[0.03] animate-pulse">
+        <div className="h-56 bg-white/5" />
+        <div className="p-5 space-y-3">
+            <div className="h-7 bg-white/10 rounded w-4/5" />
+            <div className="h-4 bg-white/10 rounded w-3/5" />
+            <div className="h-12 bg-white/10 rounded w-full" />
+            <div className="h-12 bg-white/10 rounded w-full" />
+            <div className="h-4 bg-white/10 rounded w-32" />
         </div>
     </div>
 );
 
-function CtaBadge({ label, url }) {
-    if (!label || !url) return null;
+function ActionRow({ icon: Icon, label, href, to }) {
+    const base = cx(
+        "w-full inline-flex items-center gap-3 rounded-2xl",
+        "bg-white/[0.03] hover:bg-white/[0.07] transition px-4 py-3 text-left"
+    );
 
-    const onClick = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        window.open(url, "_blank", "noopener,noreferrer");
-    };
+    const content = (
+        <>
+            <span className="h-9 w-9 rounded-xl bg-white/[0.08] grid place-items-center shrink-0">
+                <Icon className="h-5 w-5 text-white/90" />
+            </span>
+            <span className="flex-1 min-w-0">
+                <span className="block text-sm font-semibold text-primary truncate">{label}</span>
+            </span>
+            <ArrowUpRight className="h-4 w-4 text-white/55 shrink-0" />
+        </>
+    );
+
+    if (href) {
+        if (isExternalUrl(href)) {
+            return (
+                <a
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={base}
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    {content}
+                </a>
+            );
+        }
+
+        return (
+            <Link to={href} className={base} onClick={(e) => e.stopPropagation()}>
+                {content}
+            </Link>
+        );
+    }
 
     return (
-        <button
-            type="button"
-            onClick={onClick}
-            className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 border border-primary/35 px-2.5 py-1 text-[11px] font-semibold text-primary hover:bg-primary/25 hover:border-primary/50 transition"
-            title={label}
-        >
-            <span className="truncate max-w-[180px]">{label}</span>
-            <ArrowUpRight className="h-3.5 w-3.5" />
-        </button>
+        <Link to={to} className={base} onClick={(e) => e.stopPropagation()}>
+            {content}
+        </Link>
     );
 }
-
-function AnnouncementCard({ item, faded }) {
+ 
+function AnnouncementCard({ item }) {
     const { t } = useTranslation();
 
     const title = item?.title || t("announcements.page.fallbackTitle");
     const dateLabel = formatLongDate(item?.date || item?.createdAt);
-    const snippet = getPlainText(getAnnouncementHTML(item)).slice(0, 140);
+    const snippet = getPlainText(getAnnouncementHTML(item)).slice(0, 120);
+
+    const ctaLabel = item?.ctaLabel || "View Marketing Pack";
+    const ctaURL = pickCtaUrl(item);
 
     return (
-        <Link
-            to={`/announcement/${item.id}`}
-            className={[
-                "group block w-full text-left rounded-2xl overflow-hidden border border-white/10 bg-white/[0.035] hover:bg-white/[0.06] transition shadow-[0_20px_90px_rgba(0,0,0,0.4)]",
-                faded ? "opacity-80 hover:opacity-100" : "",
-            ].join(" ")}
-        >
+        <div className="rounded-3xl overflow-hidden border border-white/10 bg-white/[0.03] hover:bg-white/[0.05] transition shadow-[0_22px_90px_rgba(0,0,0,0.45)]">
             <div className="relative">
                 {item?.imageURL ? (
-                    <img src={item.imageURL} alt={title} className="h-44 w-full object-cover" loading="lazy" />
+                    <img src={item.imageURL} alt={title} className="h-56 w-full object-cover" loading="lazy" />
                 ) : (
-                    <div className="h-44 bg-gradient-to-br from-white/10 via-white/5 to-transparent" />
+                    <div className="h-56 bg-gradient-to-br from-white/10 via-white/5 to-transparent" />
                 )}
-
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
-
-                <div className="absolute bottom-0 left-0 right-0 p-4">
-                    <div className="flex items-center gap-2 text-[11px] text-white/90 flex-wrap">
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-black/45 border border-white/15 px-2 py-1">
-                            <Calendar className="h-3.5 w-3.5 text-white" />
-                            <span className="text-white">{dateLabel}</span>
-                        </span>
-
-                        {faded ? (
-                            <span className="rounded-full px-2 py-1 bg-white/10 border border-white/15 text-white/80">
-                                {t("announcements.page.older")}
-                            </span>
-                        ) : null}
-                    </div>
-
-                    <div className="mt-2 text-white font-extrabold text-lg leading-snug line-clamp-2 group-hover:text-primary transition break-words">
-                        {title}
-                    </div>
-                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
             </div>
 
-            <div className="p-4">
-                <div className="text-white/85 text-sm line-clamp-2 break-words">
+            <div className="p-5">
+                <div className="text-white font-extrabold text-xl leading-snug line-clamp-2 break-words">{title}</div>
+
+                <div className="mt-2 text-sm text-white/70 line-clamp-2 min-h-[40px] break-words">
                     {snippet || t("announcements.page.openToReadMore")}
                 </div>
 
-                <div className="mt-4 flex items-center justify-between gap-3">
-                    <CtaBadge label={item?.ctaLabel} url={item?.ctaURL} />
-                    <span className="text-primary text-sm font-semibold">{t("announcements.page.open")}</span>
+                <div className="mt-4 space-y-2">
+                    {!!ctaURL && <ActionRow icon={ImageIcon} label={ctaLabel} href={ctaURL} />}
+                    <ActionRow icon={BookOpen} label={t("announcements.page.open") || "Read Announcement"} to={`/announcement/${item.id}`} />
+                </div>
+
+                <div className="mt-4 flex items-center gap-2 text-white/55 text-xs">
+                    <Calendar className="h-4 w-4" />
+                    <span>{dateLabel}</span>
                 </div>
             </div>
-        </Link>
+        </div>
     );
 }
 
 export default function Announcements() {
     const { t } = useTranslation();
-    const { items, loading } = useAnnouncementStore();
+    const { items, loading, startAnnouncementsListener, stopAnnouncementsListener } = useAnnouncementStore();
     const [query, setQuery] = useState("");
+
+    useEffect(() => {
+        startAnnouncementsListener(50);
+        return () => stopAnnouncementsListener();
+    }, [startAnnouncementsListener, stopAnnouncementsListener]);
 
     const sorted = useMemo(() => {
         const all = Array.isArray(items) ? items : [];
@@ -181,8 +214,8 @@ export default function Announcements() {
 
             <div className="max-w-7xl mx-auto px-4 md:px-8 py-10">
                 {loading || items === null ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {Array.from({ length: 9 }).map((_, i) => (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                        {Array.from({ length: 6 }).map((_, i) => (
                             <SkeletonCard key={i} />
                         ))}
                     </div>
@@ -192,9 +225,9 @@ export default function Announcements() {
                         <div className="text-white/80 text-sm">{t("announcements.page.empty.subtitle")}</div>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {filtered.map((a, idx) => (
-                            <AnnouncementCard key={a.id} item={a} faded={idx >= 6} />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                        {filtered.map((a) => (
+                            <AnnouncementCard key={a.id} item={a} />
                         ))}
                     </div>
                 )}

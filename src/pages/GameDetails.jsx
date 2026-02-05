@@ -28,7 +28,15 @@ import HeroBanner from "../components/common/HeroBanner";
 import FiltersPanel from "../components/game-details/FiltersPanel";
 import PreviewModal from "../components/game-details/PreviewModal";
 
-import { collectExtensions, collectSectionNames, flattenSectionsToFiles, getExt, isImage, isPDF, storagePathFromFirebaseUrl } from "../utils/fileUtils";
+import {
+    collectExtensions,
+    collectSectionNames,
+    flattenSectionsToFiles,
+    getExt,
+    isImage,
+    isPDF,
+    storagePathFromFirebaseUrl,
+} from "../utils/fileUtils";
 
 import { fetchDownloadBlob } from "../utils/downloadService";
 import { useTranslation } from "react-i18next";
@@ -40,6 +48,8 @@ import { useBodyScrollLock } from "../hooks/useBodyScrollLock";
 import { useCollectionsActions } from "../hooks/useCollectionsActions";
 import { useGameFiles } from "../hooks/useGameFiles";
 import { useZipDownload } from "../hooks/useZipDownload";
+
+import NotFound from "./NotFound";
 
 const TABLE_COLS = "44px 160px minmax(260px, 1fr) 160px minmax(240px, 280px)";
 
@@ -81,29 +91,62 @@ function MobileCollectionSheet({
     return (
         <Transition appear show={open} as={Fragment}>
             <Dialog as="div" className="relative z-[80]" onClose={onClose}>
-                <Transition.Child as={Fragment} enter="ease-out duration-200" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-150" leaveFrom="opacity-100" leaveTo="opacity-0">
+                <Transition.Child
+                    as={Fragment}
+                    enter="ease-out duration-200"
+                    enterFrom="opacity-0"
+                    enterTo="opacity-100"
+                    leave="ease-in duration-150"
+                    leaveFrom="opacity-100"
+                    leaveTo="opacity-0"
+                >
                     <div className="fixed inset-0 bg-black/60" />
                 </Transition.Child>
 
                 <div className="fixed inset-0 flex items-end justify-center" style={{ height: panelHeight }}>
-                    <Transition.Child as={Fragment} enter="ease-out duration-200" enterFrom="opacity-0 translate-y-6" enterTo="opacity-100 translate-y-0" leave="ease-in duration-150" leaveFrom="opacity-100 translate-y-0" leaveTo="opacity-0 translate-y-6">
+                    <Transition.Child
+                        as={Fragment}
+                        enter="ease-out duration-200"
+                        enterFrom="opacity-0 translate-y-6"
+                        enterTo="opacity-100 translate-y-0"
+                        leave="ease-in duration-150"
+                        leaveFrom="opacity-100 translate-y-0"
+                        leaveTo="opacity-0 translate-y-6"
+                    >
                         <Dialog.Panel
-                            className={cx("w-full max-w-md rounded-t-2xl border border-white/10 bg-[#0f121a]", "shadow-2xl overflow-hidden flex flex-col")}
+                            className={cx(
+                                "w-full max-w-md rounded-t-2xl border border-white/10 bg-[#0f121a]",
+                                "shadow-2xl overflow-hidden flex flex-col"
+                            )}
                             style={{ maxHeight: contentMax, paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }}
                         >
-                            <div className="px-4 pt-4 pb-3 border-b border-white/10" style={{ paddingTop: "calc(16px + env(safe-area-inset-top))" }}>
+                            <div
+                                className="px-4 pt-4 pb-3 border-b border-white/10"
+                                style={{ paddingTop: "calc(16px + env(safe-area-inset-top))" }}
+                            >
                                 <div className="flex items-center justify-between gap-3">
-                                    <Dialog.Title className="text-base font-extrabold text-white">{t("gameDetails.collections.sheet.title")}</Dialog.Title>
-                                    <button type="button" onClick={onClose} className="h-9 w-9 rounded-full bg-white/[0.06] hover:bg-white/[0.1] grid place-items-center shrink-0">
+                                    <Dialog.Title className="text-base font-extrabold text-white">
+                                        {t("gameDetails.collections.sheet.title")}
+                                    </Dialog.Title>
+                                    <button
+                                        type="button"
+                                        onClick={onClose}
+                                        className="h-9 w-9 rounded-full bg-white/[0.06] hover:bg-white/[0.1] grid place-items-center shrink-0"
+                                    >
                                         <X className="h-5 w-5 text-white/80" />
                                     </button>
                                 </div>
                                 <div className="mt-1 text-xs text-white/60">{t("gameDetails.collections.sheet.subtitle")}</div>
                             </div>
 
-                            <div className="flex-1 min-h-0 px-4 py-3 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: "touch" }}>
+                            <div
+                                className="flex-1 min-h-0 px-4 py-3 overflow-y-auto overscroll-contain"
+                                style={{ WebkitOverflowScrolling: "touch" }}
+                            >
                                 {collections.length === 0 ? (
-                                    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm text-white/70">{t("gameDetails.collections.empty")}</div>
+                                    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm text-white/70">
+                                        {t("gameDetails.collections.empty")}
+                                    </div>
                                 ) : (
                                     <div className="space-y-2">
                                         {collections.map((c) => {
@@ -126,17 +169,33 @@ function MobileCollectionSheet({
                                                     )}
                                                 >
                                                     <div className="min-w-0">
-                                                        <div className="text-sm font-semibold text-white truncate">{c.name || t("gameDetails.collections.untitled")}</div>
+                                                        <div className="text-sm font-semibold text-white truncate">
+                                                            {c.name || t("gameDetails.collections.untitled")}
+                                                        </div>
                                                         <div className="text-[11px] text-white/55 mt-0.5 truncate">
-                                                            {inCol ? t("gameDetails.collections.alreadyIn") : t("gameDetails.collections.tapToAdd")}
+                                                            {inCol
+                                                                ? t("gameDetails.collections.alreadyIn")
+                                                                : t("gameDetails.collections.tapToAdd")}
                                                         </div>
                                                     </div>
 
                                                     <div className="flex items-center gap-2 shrink-0">
                                                         {busy ? <Loader2 className="h-4 w-4 animate-spin text-white/80" /> : null}
-                                                        {inCol ? <Check className="h-5 w-5 text-emerald-400" /> : <PlusSquare className="h-5 w-5 text-white/60" />}
-                                                        {flash === "added" ? <span className="text-[10px] text-emerald-300">{t("gameDetails.collections.added")}</span> : null}
-                                                        {flash === "already" ? <span className="text-[10px] text-white/60">{t("gameDetails.collections.already")}</span> : null}
+                                                        {inCol ? (
+                                                            <Check className="h-5 w-5 text-emerald-400" />
+                                                        ) : (
+                                                            <PlusSquare className="h-5 w-5 text-white/60" />
+                                                        )}
+                                                        {flash === "added" ? (
+                                                            <span className="text-[10px] text-emerald-300">
+                                                                {t("gameDetails.collections.added")}
+                                                            </span>
+                                                        ) : null}
+                                                        {flash === "already" ? (
+                                                            <span className="text-[10px] text-white/60">
+                                                                {t("gameDetails.collections.already")}
+                                                            </span>
+                                                        ) : null}
                                                     </div>
                                                 </button>
                                             );
@@ -178,7 +237,9 @@ function MobileCollectionSheet({
                                             <div className="space-y-1">
                                                 <ProgressBar value={createProg.pct} />
                                                 <div className="text-[11px] text-white/60 flex items-center justify-between">
-                                                    <span className="truncate">{createStage || t("gameDetails.collections.processing")}</span>
+                                                    <span className="truncate">
+                                                        {createStage || t("gameDetails.collections.processing")}
+                                                    </span>
                                                     <span className="shrink-0">{Math.min(99, Math.round(createProg.pct))}%</span>
                                                 </div>
                                             </div>
@@ -252,12 +313,26 @@ function AddToCollectionInline(props) {
                         {t("gameDetails.collections.addToCollection")}
                     </Popover.Button>
 
-                    <Transition as={Fragment} enter="transition duration-150 ease-out" enterFrom="opacity-0 translate-y-1" enterTo="opacity-100 translate-y-0" leave="transition duration-100 ease-in" leaveFrom="opacity-100 translate-y-0" leaveTo="opacity-0 translate-y-1">
+                    <Transition
+                        as={Fragment}
+                        enter="transition duration-150 ease-out"
+                        enterFrom="opacity-0 translate-y-1"
+                        enterTo="opacity-100 translate-y-0"
+                        leave="transition duration-100 ease-in"
+                        leaveFrom="opacity-100 translate-y-0"
+                        leaveTo="opacity-0 translate-y-1"
+                    >
                         <Popover.Panel className="absolute right-0 mt-2 w-[260px] rounded-xl border border-border bg-card shadow-xl p-2 z-20">
-                            <div className="px-2 py-1 text-xs font-bold text-white/70">{t("gameDetails.collections.addTo")}</div>
+                            <div className="px-2 py-1 text-xs font-bold text-white/70">
+                                {t("gameDetails.collections.addTo")}
+                            </div>
 
                             <div className="max-h-48 overflow-y-auto">
-                                {collections.length === 0 && <div className="px-3 py-2 text-xs text-white/60">{t("gameDetails.collections.empty")}</div>}
+                                {collections.length === 0 ? (
+                                    <div className="px-3 py-2 text-xs text-white/60">
+                                        {t("gameDetails.collections.empty")}
+                                    </div>
+                                ) : null}
 
                                 {collections.map((c) => {
                                     const url = file?._url || file?.url || file?.fileURL || "";
@@ -280,9 +355,21 @@ function AddToCollectionInline(props) {
                                             <span className="truncate">{c.name || t("gameDetails.collections.untitled")}</span>
                                             <span className="flex items-center gap-2">
                                                 {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                                                {inCol ? <Check size={16} className="text-emerald-400" /> : <PlusSquare size={16} className="opacity-60" />}
-                                                {flash === "added" ? <span className="text-[10px] text-emerald-300">{t("gameDetails.collections.added")}</span> : null}
-                                                {flash === "already" ? <span className="text-[10px] text-white/60">{t("gameDetails.collections.already")}</span> : null}
+                                                {inCol ? (
+                                                    <Check size={16} className="text-emerald-400" />
+                                                ) : (
+                                                    <PlusSquare size={16} className="opacity-60" />
+                                                )}
+                                                {flash === "added" ? (
+                                                    <span className="text-[10px] text-emerald-300">
+                                                        {t("gameDetails.collections.added")}
+                                                    </span>
+                                                ) : null}
+                                                {flash === "already" ? (
+                                                    <span className="text-[10px] text-white/60">
+                                                        {t("gameDetails.collections.already")}
+                                                    </span>
+                                                ) : null}
                                             </span>
                                         </button>
                                     );
@@ -291,7 +378,7 @@ function AddToCollectionInline(props) {
 
                             <div className="border-t border-white/10 my-2" />
 
-                            {creatingForFile?.id !== file.id ? (
+                            {creatingForFile?.id !== file?.id ? (
                                 <button
                                     onClick={() => {
                                         setCreatingForFile(file);
@@ -318,15 +405,17 @@ function AddToCollectionInline(props) {
                                         onKeyDown={(e) => e.key === "Enter" && createAndAddCollection(file)}
                                     />
 
-                                    {creatingCollection && (
+                                    {creatingCollection ? (
                                         <div className="space-y-1">
                                             <ProgressBar value={createProg.pct} />
                                             <div className="text-[11px] text-white/60 flex items-center justify-between">
-                                                <span className="truncate">{createStage || t("gameDetails.collections.processing")}</span>
+                                                <span className="truncate">
+                                                    {createStage || t("gameDetails.collections.processing")}
+                                                </span>
                                                 <span>{Math.min(99, Math.round(createProg.pct))}%</span>
                                             </div>
                                         </div>
-                                    )}
+                                    ) : null}
 
                                     <div className="grid grid-cols-2 gap-2">
                                         <button
@@ -359,9 +448,6 @@ function AddToCollectionInline(props) {
     );
 }
 
-/* ---------------------------------------------
-   Main page
---------------------------------------------- */
 export default function GameDetails() {
     const { t } = useTranslation();
     const { gameId } = useParams();
@@ -472,10 +558,7 @@ export default function GameDetails() {
             const name = file?._name || file?.name || file?.fileName || t("gameDetails.download.defaultName");
 
             const resolvedStoragePath =
-                file?.storagePath ||
-                file?._storagePath ||
-                (url ? storagePathFromFirebaseUrl(url) : null) ||
-                null;
+                file?.storagePath || file?._storagePath || (url ? storagePathFromFirebaseUrl(url) : null) || null;
 
             if (user?.uid) {
                 addDownload({
@@ -536,8 +619,16 @@ export default function GameDetails() {
 
     const pageBottomPad = `calc(${mobileToolbarH}px + env(safe-area-inset-bottom) + 16px)`;
 
+    if (!loadingGame && error === "GAME_NOT_FOUND") {
+        return (
+            <NotFound title="Game not found" message="This game does not exist (or was removed). Please search again." />
+        );
+    }
+
     if (error) {
-        return <div className="max-w-6xl mx-auto pt-24 pb-10 px-4 text-center text-red-400 text-lg">{error}</div>;
+        return (
+            <div className="max-w-6xl mx-auto pt-24 pb-10 px-4 text-center text-red-400 text-lg">{error}</div>
+        );
     }
 
     return (
@@ -571,7 +662,9 @@ export default function GameDetails() {
                                     <button
                                         className={cx(
                                             "px-4 py-2 rounded-md text-sm font-semibold border transition whitespace-nowrap",
-                                            selected ? "bg-primary text-black border-primary" : "bg-transparent text-white/80 border-white/20 hover:bg-white/5"
+                                            selected
+                                                ? "bg-primary text-black border-primary"
+                                                : "bg-transparent text-white/80 border-white/20 hover:bg-white/5"
                                         )}
                                     >
                                         {tt}
@@ -612,7 +705,10 @@ export default function GameDetails() {
                                                 />
                                             </div>
 
-                                            <button onClick={() => setShowLeftFilters((v) => !v)} className="text-sm text-white/80 hover:text-white w-fit">
+                                            <button
+                                                onClick={() => setShowLeftFilters((v) => !v)}
+                                                className="text-sm text-white/80 hover:text-white w-fit"
+                                            >
                                                 {showLeftFilters ? t("gameDetails.filters.hide") : t("gameDetails.filters.show")}
                                             </button>
 
@@ -656,13 +752,18 @@ export default function GameDetails() {
                                         </div>
 
                                         {!!files.selectedFiles.length && (
-                                            <div className="text-xs text-white/70">{t("gameDetails.selection.selected", { count: files.selectedFiles.length })}</div>
+                                            <div className="text-xs text-white/70">
+                                                {t("gameDetails.selection.selected", { count: files.selectedFiles.length })}
+                                            </div>
                                         )}
                                     </div>
 
                                     <div className="border border-white/10 bg-[#111318] rounded-xl overflow-hidden min-w-0">
                                         <div className="w-full min-w-0 overflow-x-hidden">
-                                            <div className="hidden md:grid text-xs font-bold text-white/80 bg-[#161922] px-4 py-2 border-b border-white/10" style={{ gridTemplateColumns: TABLE_COLS }}>
+                                            <div
+                                                className="hidden md:grid text-xs font-bold text-white/80 bg-[#161922] px-4 py-2 border-b border-white/10"
+                                                style={{ gridTemplateColumns: TABLE_COLS }}
+                                            >
                                                 <div />
                                                 <div>{t("gameDetails.table.preview")}</div>
                                                 <div>{t("gameDetails.table.fileName")}</div>
@@ -670,21 +771,21 @@ export default function GameDetails() {
                                                 <div className="text-right pr-2">{t("gameDetails.table.actions")}</div>
                                             </div>
 
-                                            {(loadingSections || loadingGame) && (
+                                            {(loadingSections || loadingGame) ? (
                                                 <div className="p-4 space-y-3">
                                                     {Array.from({ length: 6 }).map((_, i) => (
                                                         <div key={i} className="h-14 bg-white/5 rounded" />
                                                     ))}
                                                 </div>
-                                            )}
+                                            ) : null}
 
-                                            {!(loadingSections || loadingGame) && files.pageFiles.length === 0 && (
+                                            {!(loadingSections || loadingGame) && files.pageFiles.length === 0 ? (
                                                 <div className="p-6 text-white/70 text-sm">{t("gameDetails.empty.noFiles")}</div>
-                                            )}
+                                            ) : null}
 
-                                            {!(loadingSections || loadingGame) &&
-                                                files.pageFiles.map((f, idx) => {
-                                                    const globalIndex = (files.page - 1) * 10 + idx; // PAGE_SIZE in hook is 10
+                                            {!(loadingSections || loadingGame)
+                                                ? files.pageFiles.map((f, idx) => {
+                                                    const globalIndex = (files.page - 1) * 10 + idx;
                                                     const ext = getExt(f._name, f._ext);
                                                     const showImg = isImage(ext) && (f._thumb || f._url);
                                                     const showPdf = isPDF(ext);
@@ -692,7 +793,11 @@ export default function GameDetails() {
                                                     const dims = formatDimensions(f?._dimensions || f?.dimensions);
 
                                                     return (
-                                                        <div key={k} className="md:grid flex flex-col md:items-center px-4 py-3 border-b border-white/5 min-w-0" style={{ gridTemplateColumns: TABLE_COLS }}>
+                                                        <div
+                                                            key={k}
+                                                            className="md:grid flex flex-col md:items-center px-4 py-3 border-b border-white/5 min-w-0"
+                                                            style={{ gridTemplateColumns: TABLE_COLS }}
+                                                        >
                                                             <div className="hidden md:flex items-center justify-center">
                                                                 <input
                                                                     type="checkbox"
@@ -711,29 +816,42 @@ export default function GameDetails() {
                                                                 />
                                                                 <div className="text-xs text-white/60">
                                                                     {t("gameDetails.mobile.actionsBelow")} •{" "}
-                                                                    <span className="text-white/80 font-semibold">{t("gameDetails.collections.addToCollection")}</span>
+                                                                    <span className="text-white/80 font-semibold">
+                                                                        {t("gameDetails.collections.addToCollection")}
+                                                                    </span>
                                                                 </div>
                                                             </div>
 
-                                                            <button onClick={() => openPreviewAt(globalIndex)} className="relative h-[64px] w-[140px] mx-auto flex items-center justify-center group" type="button">
+                                                            <button
+                                                                onClick={() => openPreviewAt(globalIndex)}
+                                                                className="relative h-[64px] w-[140px] mx-auto flex items-center justify-center group"
+                                                                type="button"
+                                                            >
                                                                 {showImg ? (
                                                                     <div className="w-[140px] h-[64px] flex items-center justify-center">
-                                                                        <img src={f._thumb || f._url} alt="" className="max-w-full max-h-full object-contain" loading="lazy" />
+                                                                        <img
+                                                                            src={f._thumb || f._url}
+                                                                            alt=""
+                                                                            className="max-w-full max-h-full object-contain"
+                                                                            loading="lazy"
+                                                                        />
                                                                     </div>
                                                                 ) : showPdf ? (
                                                                     <FileText className="text-red-400" size={22} />
                                                                 ) : (
                                                                     <div className="flex flex-col items-center text-white/80">
                                                                         <File size={20} />
-                                                                        <div className="text-[10px] mt-1">{ext || t("gameDetails.file.fileLabel")}</div>
+                                                                        <div className="text-[10px] mt-1">
+                                                                            {ext || t("gameDetails.file.fileLabel")}
+                                                                        </div>
                                                                     </div>
                                                                 )}
 
-                                                                {showImg && (
+                                                                {showImg ? (
                                                                     <div className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
                                                                         <ZoomIn size={18} className="drop-shadow" />
                                                                     </div>
-                                                                )}
+                                                                ) : null}
                                                             </button>
 
                                                             <div className="min-w-0 px-0 md:px-3 mt-2 md:mt-0">
@@ -746,7 +864,9 @@ export default function GameDetails() {
                                                                         <File size={16} className="text-white/70 mt-0.5 flex-shrink-0" />
                                                                     )}
 
-                                                                    <span className="min-w-0 break-words whitespace-normal leading-snug line-clamp-3">{f._name}</span>
+                                                                    <span className="min-w-0 break-words whitespace-normal leading-snug line-clamp-3">
+                                                                        {f._name}
+                                                                    </span>
                                                                 </div>
 
                                                                 <div className="text-xs text-white/60 mt-1 break-words whitespace-normal">
@@ -755,9 +875,15 @@ export default function GameDetails() {
                                                             </div>
 
                                                             <div className="text-xs text-white/70 pr-0 md:pr-3 min-w-0 mt-2 md:mt-0">
-                                                                {!!f._size && <div className="truncate">{f._size}</div>}
-                                                                {!!dims && <div className="truncate">{dims}</div>}
-                                                                {!!f._date && <div className="truncate">{t("gameDetails.file.added", { date: new Date(f._date).toLocaleDateString() })}</div>}
+                                                                {!!f._size ? <div className="truncate">{f._size}</div> : null}
+                                                                {!!dims ? <div className="truncate">{dims}</div> : null}
+                                                                {!!f._date ? (
+                                                                    <div className="truncate">
+                                                                        {t("gameDetails.file.added", {
+                                                                            date: new Date(f._date).toLocaleDateString(),
+                                                                        })}
+                                                                    </div>
+                                                                ) : null}
                                                             </div>
 
                                                             <div className="flex flex-col gap-2 min-w-0 mt-3 md:mt-0 items-center md:items-end">
@@ -816,12 +942,15 @@ export default function GameDetails() {
                                                             </div>
                                                         </div>
                                                     );
-                                                })}
+                                                })
+                                                : null}
                                         </div>
                                     </div>
 
                                     <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
-                                        <div className="text-primary font-bold text-sm">{t("gameDetails.pagination.pageOf", { page: files.page, total: files.totalPages })}</div>
+                                        <div className="text-primary font-bold text-sm">
+                                            {t("gameDetails.pagination.pageOf", { page: files.page, total: files.totalPages })}
+                                        </div>
 
                                         <div className="flex gap-2">
                                             <button
@@ -857,7 +986,9 @@ export default function GameDetails() {
                                     >
                                         <div className="px-4 py-3 flex items-center justify-between gap-3">
                                             <div className="text-xs text-white/70 min-w-0 truncate">
-                                                {files.selectedFiles.length ? t("gameDetails.selection.selected", { count: files.selectedFiles.length }) : t("gameDetails.selection.none")}
+                                                {files.selectedFiles.length
+                                                    ? t("gameDetails.selection.selected", { count: files.selectedFiles.length })
+                                                    : t("gameDetails.selection.none")}
                                             </div>
 
                                             <div className="flex items-center gap-2 shrink-0">
@@ -896,25 +1027,35 @@ export default function GameDetails() {
 
                         <Tab.Panel>
                             <div className="mt-4">
-                                {loadingRelated && (
+                                {loadingRelated ? (
                                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                                         {Array.from({ length: 8 }).map((_, i) => (
                                             <div key={i} className="h-44 bg-white/5 rounded-2xl border border-white/10" />
                                         ))}
                                     </div>
-                                )}
+                                ) : null}
 
-                                {!loadingRelated && promotionGames.length === 0 && (
+                                {!loadingRelated && promotionGames.length === 0 ? (
                                     <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-center">
-                                        <div className="text-lg font-extrabold text-white">{t("gameDetails.related.empty.title")}</div>
-                                        <div className="text-sm text-white/65 mt-2">{t("gameDetails.related.empty.subtitle", { name: game?.name || t("gameDetails.related.empty.this") })}</div>
-                                        <button type="button" onClick={() => navigate("/")} className="mt-4 inline-flex items-center justify-center px-4 py-2 rounded-xl bg-primary text-black font-extrabold">
+                                        <div className="text-lg font-extrabold text-white">
+                                            {t("gameDetails.related.empty.title")}
+                                        </div>
+                                        <div className="text-sm text-white/65 mt-2">
+                                            {t("gameDetails.related.empty.subtitle", {
+                                                name: game?.name || t("gameDetails.related.empty.this"),
+                                            })}
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => navigate("/")}
+                                            className="mt-4 inline-flex items-center justify-center px-4 py-2 rounded-xl bg-primary text-black font-extrabold"
+                                        >
                                             {t("gameDetails.related.empty.browseAll")}
                                         </button>
                                     </div>
-                                )}
+                                ) : null}
 
-                                {!loadingRelated && promotionGames.length > 0 && (
+                                {!loadingRelated && promotionGames.length > 0 ? (
                                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                                         {promotionGames.map((g) => (
                                             <button
@@ -935,11 +1076,13 @@ export default function GameDetails() {
                                                     />
                                                 </div>
                                                 <div className="p-3 text-sm font-extrabold text-left text-white truncate">{g.name}</div>
-                                                <div className="px-3 pb-3 text-[11px] text-white/60 text-left">{t("gameDetails.related.viewAssets")}</div>
+                                                <div className="px-3 pb-3 text-[11px] text-white/60 text-left">
+                                                    {t("gameDetails.related.viewAssets")}
+                                                </div>
                                             </button>
                                         ))}
                                     </div>
-                                )}
+                                ) : null}
                             </div>
                         </Tab.Panel>
                     </Tab.Panels>
