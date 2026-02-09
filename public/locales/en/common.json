@@ -367,10 +367,17 @@
         "sort": {
             "defaultOrder": "Default Order",
             "nameAsc": "Name (A-Z)",
-            "nameDesc": "Name (Z-A)"
+            "nameDesc": "Name (Z-A)",
+            "typeAsc": "Type (A-Z)"
+        },
+        "categories": {
+            "title": "Categories",
+            "all": "All Categories",
+            "loading": "Loading..."
         },
         "types": {
             "title": "Game Types",
+            "all": "All Types",
             "prev": "Previous",
             "next": "Next",
             "loading": "Loading...",
@@ -378,9 +385,11 @@
             "swipeHint": "Swipe left/right to view"
         },
         "list": {
+            "title": "Games",
             "allGames": "All Games",
             "typeGames": "{{type}} Games",
             "clearType": "Clear Type",
+            "clearAll": "Clear",
             "searchPlaceholder": "Search games...",
             "failedToLoad": "Failed to load games",
             "noGamesFound": "No games found."
