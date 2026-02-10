@@ -122,8 +122,18 @@ function getGameName(game, i18n, t) {
     return name || t("games.untitled");
 }
 
+const TURKISH_TABLE_GAME_NAMES = new Set([
+    "royal blackjack",
+    "turkish blackjack",
+    "diamon blackjack",
+    "diamond blackjack",
+    "royal roulette",
+]);
+
 function detectTypeFromGame(game, i18n, t) {
-    const n = normalize(getGameName(game, i18n, t)).replace(/\s+/g, " ");
+    const rawName = getGameName(game, i18n, t);
+    const n = normalize(rawName).replace(/\s+/g, " ");
+    if (TURKISH_TABLE_GAME_NAMES.has(n)) return "Turkish Tables";
     if (n.includes("turkish")) return "Turkish Tables";
     if (n.includes("baccarat")) return "Baccarat";
     if (n.includes("teen patti") || n.includes("teenpatti")) return "Teen Patti";
@@ -588,7 +598,7 @@ export default function GamesSection() {
                                 count={categoryCounts.get(c.id) || 0}
                                 onClick={() => setActiveCategory(c.id)}
                             />
-                        ))} 
+                        ))}
                     </div>
                 )}
 
@@ -608,9 +618,7 @@ export default function GamesSection() {
                             <span className="text-white/60"> · </span>
                             <span className="text-white/85">{activeType === "All" ? t("games.types.all") || "All Types" : activeType}</span>
                             <span className="text-white/60"> · </span>
-                            <span className="text-white/85">
-                                {showSkeleton ? allGames.length : filteredGames.length}
-                            </span>
+                            <span className="text-white/85">{showSkeleton ? allGames.length : filteredGames.length}</span>
                         </div>
 
                         {(activeCategory !== "All" || activeType !== "All" || inputValue) && (
