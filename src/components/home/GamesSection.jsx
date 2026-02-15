@@ -5,50 +5,56 @@ import { ChevronDown, Search, ChevronLeft, ChevronRight, X } from "lucide-react"
 import { useGamesQuery } from "../../hooks/useGamesQuery";
 import { useTranslation } from "react-i18next";
 
-const TYPE_ORDER = ["Baccarat", "Teen Patti", "Roulette", "Blackjack", "Dragon Tiger", "Sic Bo", "Poker", "Andar Bahar", "Other"];
+const TYPE_ORDER = ["Baccarat", "Teen Patti", "Roulette", "Blackjack", "Dragon Tiger", "Sic Bo", "Poker", "Andar Bahar", "Dealer Cutouts", "Lobby Assets", "Other"];
 
 const CATEGORY_DEFS = [
     {
         id: "lobby-assets",
         label: "Lobby Assets",
-        image: "/image/categories/lobby-assets.png",
-        types: ["Lobby Assets", "Baccarat"],
+        image: "/image/categories/lobby-assets-banner.png",
+        types: ["Lobby Assets"],
     },
     {
         id: "roulette",
         label: "Roulette",
-        image: "/image/categories/roulette.png",
+        image: "/image/categories/roulette-banner.png",
         types: ["Roulette"],
     },
     {
         id: "blackjack",
         label: "Blackjack",
-        image: "/image/categories/blackjack.png",
+        image: "/image/categories/blackjack-banner.png",
         types: ["Blackjack"],
     },
     {
         id: "baccarat",
         label: "Baccarat",
-        image: "/image/categories/baccarat.png",
+        image: "/image/categories/baccarat-banner.png",
         types: ["Baccarat"],
     },
     {
         id: "dice-games",
         label: "Dice Games",
-        image: "/image/categories/dice-games.png",
+        image: "/image/categories/dice-games-banner.png",
         types: ["Sic Bo"],
     },
     {
         id: "high-low",
         label: "High/Low",
-        image: "/image/categories/high-low.png",
+        image: "/image/categories/high-low-banner.png",
         types: ["Dragon Tiger", "Andar Bahar"],
     },
     {
         id: "poker",
         label: "Poker",
-        image: "/image/categories/poker.png",
+        image: "/image/categories/poker-banner.png",
         types: ["Teen Patti", "Poker"],
+    },
+    {
+        id: "dealer-cutouts",
+        label: "Dealer Cutouts",
+        image: "/image/categories/dealer-cutouts.png",
+        types: ["Dealer Cutouts"],
     },
     {
         id: "turkish-tables",
@@ -125,7 +131,6 @@ function getGameName(game, i18n, t) {
 const TURKISH_TABLE_GAME_NAMES = new Set([
     "royal blackjack",
     "turkish blackjack",
-    "diamon blackjack",
     "diamond blackjack",
     "royal roulette",
 ]);
@@ -133,8 +138,10 @@ const TURKISH_TABLE_GAME_NAMES = new Set([
 function detectTypeFromGame(game, i18n, t) {
     const rawName = getGameName(game, i18n, t);
     const n = normalize(rawName).replace(/\s+/g, " ");
+
     if (TURKISH_TABLE_GAME_NAMES.has(n)) return "Turkish Tables";
     if (n.includes("turkish")) return "Turkish Tables";
+    if (n.includes("dealer cutout") || n.includes("dealer-cutout") || n.includes("dealer")) return "Dealer Cutouts";
     if (n.includes("baccarat")) return "Baccarat";
     if (n.includes("teen patti") || n.includes("teenpatti")) return "Teen Patti";
     if (n.includes("roulette")) return "Roulette";
@@ -311,9 +318,7 @@ function Pagination({ page, totalPages, onPrev, onNext, onJump }) {
                                 onClick={() => onJump(p)}
                                 className={cx(
                                     "h-9 min-w-9 px-3 rounded-lg border text-sm font-semibold transition",
-                                    p === page
-                                        ? "bg-primary text-black border-primary"
-                                        : "border-white/15 bg-white/[0.03] text-white hover:bg-white/[0.06]"
+                                    p === page ? "bg-primary text-black border-primary" : "border-white/15 bg-white/[0.03] text-white hover:bg-white/[0.06]"
                                 )}
                             >
                                 {p}
@@ -408,9 +413,7 @@ export default function GamesSection() {
         const set = new Set();
 
         const allowedByCategory =
-            activeCategory === "All"
-                ? null
-                : CATEGORY_DEFS.find((c) => c.id === activeCategory)?.types || null;
+            activeCategory === "All" ? null : CATEGORY_DEFS.find((c) => c.id === activeCategory)?.types || null;
 
         for (const g of list) {
             const type = detectTypeFromGame(g, i18n, t);
@@ -472,9 +475,7 @@ export default function GamesSection() {
         let list = Array.isArray(allGames) ? [...allGames] : [];
 
         const allowedByCategory =
-            activeCategory === "All"
-                ? null
-                : CATEGORY_DEFS.find((c) => c.id === activeCategory)?.types || null;
+            activeCategory === "All" ? null : CATEGORY_DEFS.find((c) => c.id === activeCategory)?.types || null;
 
         if (allowedByCategory) {
             list = list.filter((g) => allowedByCategory.includes(detectTypeFromGame(g, i18n, t)));
@@ -584,7 +585,7 @@ export default function GamesSection() {
                         <CategoryCard
                             active={activeCategory === "All"}
                             label={t("games.categories.all") || "All Games"}
-                            image="/image/categories/all-games.png"
+                            image="/image/categories/all-games-banner.png"
                             count={allGames.length}
                             onClick={() => setActiveCategory("All")}
                         />
@@ -611,9 +612,7 @@ export default function GamesSection() {
                         <div className="text-lg font-semibold text-white min-w-0 truncate">
                             {(t("games.list.title") || "Games")}:{" "}
                             <span className="text-white/85">
-                                {activeCategory === "All"
-                                    ? t("games.categories.all") || "All Categories"
-                                    : CATEGORY_DEFS.find((c) => c.id === activeCategory)?.label}
+                                {activeCategory === "All" ? t("games.categories.all") || "All Categories" : CATEGORY_DEFS.find((c) => c.id === activeCategory)?.label}
                             </span>
                             <span className="text-white/60"> · </span>
                             <span className="text-white/85">{activeType === "All" ? t("games.types.all") || "All Types" : activeType}</span>
@@ -633,15 +632,30 @@ export default function GamesSection() {
                         )}
                     </div>
 
-                    <div
-                        className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto"
-                        style={{ paddingLeft: "env(safe-area-inset-left)", paddingRight: "env(safe-area-inset-right)" }}
-                    >
+                    <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto" style={{ paddingLeft: "env(safe-area-inset-left)", paddingRight: "env(safe-area-inset-right)" }}>
                         <div className="relative flex items-center flex-1 min-w-0">
                             <input
                                 type="text"
                                 value={inputValue}
-                                onChange={handleSearchChange}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    setInputValue(val);
+
+                                    const trimmed = val.trim();
+                                    if (timerRef.current) clearTimeout(timerRef.current);
+
+                                    if (trimmed.length < 2) {
+                                        setSearchTerm("");
+                                        setIsSearching(false);
+                                        return;
+                                    }
+
+                                    setIsSearching(true);
+                                    timerRef.current = setTimeout(() => {
+                                        setSearchTerm(trimmed);
+                                        setIsSearching(false);
+                                    }, 450);
+                                }}
                                 placeholder={t("games.list.searchPlaceholder") || "Search games..."}
                                 className="w-full bg-white/[0.03] rounded-lg py-2 pl-10 pr-10 text-sm text-white border border-white/10 focus:outline-none focus:ring-1 focus:ring-primary transition"
                                 inputMode="search"
@@ -681,9 +695,7 @@ export default function GamesSection() {
                                         {availableTypes.map((tp) => (
                                             <Listbox.Option
                                                 key={tp}
-                                                className={({ active }) =>
-                                                    cx("relative cursor-default select-none py-2 px-4 text-xs", active ? "bg-primary/30 text-white" : "text-white")
-                                                }
+                                                className={({ active }) => cx("relative cursor-default select-none py-2 px-4 text-xs", active ? "bg-primary/30 text-white" : "text-white")}
                                                 value={tp}
                                             >
                                                 {({ selected }) => (
@@ -712,9 +724,7 @@ export default function GamesSection() {
                                         {sortOptions.map((option) => (
                                             <Listbox.Option
                                                 key={option.value}
-                                                className={({ active }) =>
-                                                    cx("relative cursor-default select-none py-2 px-4 text-xs", active ? "bg-primary/30 text-white" : "text-white")
-                                                }
+                                                className={({ active }) => cx("relative cursor-default select-none py-2 px-4 text-xs", active ? "bg-primary/30 text-white" : "text-white")}
                                                 value={option}
                                             >
                                                 {({ selected }) => (
