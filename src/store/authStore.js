@@ -6,15 +6,45 @@ import {
     reauthenticateWithCredential,
     updatePassword as fbUpdatePassword,
 } from "firebase/auth";
-import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
+import {
+    collection,
+    doc,
+    getDoc,
+    getDocs,
+    limit,
+    query,
+    setDoc,
+    serverTimestamp,
+    where,
+    deleteDoc,
+} from "firebase/firestore";
 import { httpsCallable, getFunctions } from "firebase/functions";
 import { auth, db } from "../firebase";
 
 const functions = getFunctions(undefined, "us-central1");
 
-const normalizeAccess = (v) => v === true || v === "true";
+const normalizeAccess = (v) => v === true || v === "true" || v === 1;
 const normalizeRole = (v) => (v ? String(v) : "user");
 const normalizeStatus = (v) => (v ? String(v) : "pending");
+
+async function findProfileDoc(uid, email) {
+    const byUidField = query(collection(db, "users"), where("uid", "==", uid), limit(1));
+    const s1 = await getDocs(byUidField);
+    if (!s1.empty) return s1.docs[0];
+
+    const byIdField = query(collection(db, "users"), where("id", "==", uid), limit(1));
+    const s2 = await getDocs(byIdField);
+    if (!s2.empty) return s2.docs[0];
+
+    const cleanEmail = String(email || "").trim().toLowerCase();
+    if (cleanEmail) {
+        const byEmail = query(collection(db, "users"), where("email", "==", cleanEmail), limit(1));
+        const s3 = await getDocs(byEmail);
+        if (!s3.empty) return s3.docs[0];
+    }
+
+    return null;
+}
 
 export const useAuthStore = create((set, get) => ({
     user: null,
@@ -23,13 +53,13 @@ export const useAuthStore = create((set, get) => ({
     error: null,
 
     setLoading: (loading) => set({ loading: !!loading }),
+    setError: (error) => set({ error: error ? String(error) : null }),
 
     setAuthUser: (firebaseUser) => {
         if (!firebaseUser?.uid) {
             set({ user: null });
             return;
         }
-
         set({
             user: {
                 uid: firebaseUser.uid,
@@ -48,22 +78,42 @@ export const useAuthStore = create((set, get) => ({
             return;
         }
 
-        const ref = doc(db, "users", firebaseUser.uid);
-        const snap = await getDoc(ref);
+        const uid = firebaseUser.uid;
+        const email = (firebaseUser.email || "").toLowerCase();
 
         const baseUser = {
-            uid: firebaseUser.uid,
+            uid,
             email: firebaseUser.email || "",
             displayName: firebaseUser.displayName || "",
             photoURL: firebaseUser.photoURL || "",
         };
 
-        if (!snap.exists()) {
+        const refByUid = doc(db, "users", uid);
+        const snapByUid = await getDoc(refByUid);
+
+        let profileDocId = uid;
+        let profileData = null;
+
+        if (snapByUid.exists()) {
+            profileData = snapByUid.data() || {};
+            profileDocId = uid;
+        } else {
+            const found = await findProfileDoc(uid, email);
+            if (found) {
+                profileData = found.data() || {};
+                profileDocId = found.id;
+            }
+        }
+
+        if (!profileData) {
             const newProfile = {
-                uid: firebaseUser.uid,
+                uid,
+                id: uid,
                 email: firebaseUser.email || "",
                 name: firebaseUser.displayName || "",
-                role: "user",
+                // role: "user",
+                // role_key: "user",
+                role_id: "",
                 access: false,
                 status: "pending",
                 company: "",
@@ -74,11 +124,17 @@ export const useAuthStore = create((set, get) => ({
                 updatedAt: serverTimestamp(),
             };
 
-            await setDoc(ref, newProfile, { merge: true });
+            await setDoc(refByUid, newProfile, { merge: true });
+
+            const access = normalizeAccess(newProfile.access);
+            const role = normalizeRole(newProfile.role);
+            const status = normalizeStatus(newProfile.status);
+
+            const mergedProfile = { ...newProfile, access, role, status };
 
             set({
-                user: { ...baseUser, ...newProfile, access: false, role: "user", status: "pending" },
-                profile: { ...newProfile, access: false, role: "user", status: "pending" },
+                user: { ...baseUser, ...mergedProfile },
+                profile: mergedProfile,
                 loading: false,
                 error: null,
             });
@@ -86,16 +142,34 @@ export const useAuthStore = create((set, get) => ({
             return;
         }
 
-        const profile = snap.data() || {};
-        const access = normalizeAccess(profile.access);
-        const role = normalizeRole(profile.role);
-        const status = normalizeStatus(profile.status);
+        const migrated = profileDocId !== uid;
 
-        const mergedProfile = { ...profile, access, role, status };
+        const access = normalizeAccess(profileData.access);
+        const role = normalizeRole(profileData.role);
+        const status = normalizeStatus(profileData.status);
+
+        const normalizedProfile = {
+            ...profileData,
+            uid: profileData.uid || uid,
+            id: uid,
+            email: (profileData.email || firebaseUser.email || "").toLowerCase(),
+            access,
+            role,
+            status,
+            updatedAt: serverTimestamp(),
+        };
+
+        if (migrated) {
+            await setDoc(refByUid, normalizedProfile, { merge: true });
+            try {
+                await deleteDoc(doc(db, "users", profileDocId));
+            } catch { }
+            profileDocId = uid;
+        }
 
         set({
-            user: { ...baseUser, ...mergedProfile },
-            profile: mergedProfile,
+            user: { ...baseUser, ...normalizedProfile },
+            profile: normalizedProfile,
             loading: false,
             error: null,
         });

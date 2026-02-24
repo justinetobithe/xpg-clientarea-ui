@@ -32,7 +32,7 @@ async function verifyRecaptchaToken(token) {
     const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token })
+        body: JSON.stringify({ token }),
     });
 
     const data = await res.json().catch(() => ({}));
@@ -49,7 +49,7 @@ async function fetchIpInfo() {
             city: data.city || null,
             region: data.region || null,
             country: data.country_name || null,
-            loc: data.loc || null
+            loc: data.loc || null,
         };
     } catch {
         return null;
@@ -92,15 +92,15 @@ export default function Register() {
                     newsletter: z.boolean().optional(),
                     notice: z.boolean(),
                     privacy: z.boolean(),
-                    recaptchaToken: z.string().min(1, t("auth.register.errors.recaptchaComplete"))
+                    recaptchaToken: z.string().min(1, t("auth.register.errors.recaptchaComplete")),
                 })
                 .refine((v) => v.password === v.confirmPassword, {
                     message: t("auth.register.errors.passwordMismatch"),
-                    path: ["confirmPassword"]
+                    path: ["confirmPassword"],
                 })
                 .refine((v) => v.notice && v.privacy, {
                     message: t("auth.register.errors.policiesRequired"),
-                    path: ["privacy"]
+                    path: ["privacy"],
                 }),
         [t]
     );
@@ -159,7 +159,7 @@ export default function Register() {
         handleSubmit,
         setValue,
         watch,
-        formState: { errors }
+        formState: { errors },
     } = useForm({
         resolver: zodResolver(schema),
         defaultValues: {
@@ -172,8 +172,8 @@ export default function Register() {
             newsletter: false,
             notice: false,
             privacy: false,
-            recaptchaToken: ""
-        }
+            recaptchaToken: "",
+        },
     });
 
     const recaptchaToken = watch("recaptchaToken");
@@ -202,6 +202,7 @@ export default function Register() {
                 department: form.department,
                 email: form.email,
                 role: "user",
+                role_id: "1",
                 access: false,
                 newsletter: !!form.newsletter,
                 createdAt: new Date().toISOString(),
@@ -214,8 +215,8 @@ export default function Register() {
                     city: ipInfo?.city || null,
                     region: ipInfo?.region || null,
                     country: ipInfo?.country || null,
-                    coordinates: ipInfo?.loc || null
-                }
+                    coordinates: ipInfo?.loc || null,
+                },
             });
 
             await signOut(auth);
@@ -232,7 +233,7 @@ export default function Register() {
             showToast({
                 title: t("auth.register.toast.submittedTitle"),
                 description: t("auth.register.toast.submittedDesc"),
-                variant: "success"
+                variant: "success",
             });
         },
         onError: (error) => {
@@ -251,9 +252,9 @@ export default function Register() {
             showToast({
                 title: t("auth.register.toast.failedTitle"),
                 description: msg,
-                variant: "error"
+                variant: "error",
             });
-        }
+        },
     });
 
     const onSubmit = useCallback(

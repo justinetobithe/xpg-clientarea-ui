@@ -1,22 +1,25 @@
 import { create } from "zustand";
 import {
+    collection,
     doc,
     getDoc,
-    collection,
-    query,
-    where,
     getDocs,
-    orderBy,
     limit,
     onSnapshot,
+    orderBy,
+    query,
+    where,
 } from "firebase/firestore";
 import { db } from "../firebase";
 
 const norm = (s) => String(s || "").toLowerCase().trim();
 
+const truthy = (v) => v === true || v === "true" || v === 1;
+
+const isHidden = (g) => g?.hidden === true || g?.hidden === "true" || g?.hidden === 1;
+
 const detectFamilyKey = (gameName) => {
     const n = norm(gameName);
-
     const keys = [
         "baccarat",
         "roulette",
@@ -36,11 +39,9 @@ const detectFamilyKey = (gameName) => {
         "fan tan",
         "fantan",
     ];
-
     for (const k of keys) {
         if (n.includes(k)) return k.replace(/\s+/g, "");
     }
-
     return "";
 };
 
@@ -50,20 +51,47 @@ const matchFamily = (candidateName, familyKey) => {
     return c.includes(familyKey);
 };
 
-const getUserRole = async (user) => {
-    const direct = String(user?.role || "").trim();
-    if (direct) return direct;
+const getRoleId = (user) => String(user?.role_id || "").trim();
 
-    const uid = user?.uid;
-    if (!uid) return "";
-
-    try {
-        const snap = await getDoc(doc(db, "users", uid));
-        return String(snap.data()?.role || "").trim();
-    } catch {
-        return "";
-    }
+const getSectionIdFromPerm = (p) => {
+    const v = p?.sectionId ?? p?.section_id ?? p?.section ?? "";
+    const s = String(v || "").trim();
+    return s || "";
 };
+
+const getGameIdFromPerm = (p) => {
+    const v = p?.gameId ?? p?.game_id ?? p?.game ?? "";
+    const s = String(v || "").trim();
+    return s || "";
+};
+
+async function getAllowedForRole(roleId) {
+    const rid = String(roleId || "").trim();
+    if (!rid) return { gameIds: new Set(), sectionIdsByGame: new Map() };
+
+    const snap = await getDocs(
+        query(collection(db, "permissionss"), where("role_id", "==", rid), where("view", "==", true), limit(5000))
+    );
+
+    const gameIds = new Set();
+    const sectionIdsByGame = new Map();
+
+    snap.docs.forEach((d) => {
+        const p = d.data() || {};
+        const gid = getGameIdFromPerm(p);
+        if (!gid) return;
+
+        gameIds.add(gid);
+
+        const sid = getSectionIdFromPerm(p);
+        if (!sid) return;
+
+        if (!sectionIdsByGame.has(gid)) sectionIdsByGame.set(gid, new Set());
+        sectionIdsByGame.get(gid).add(sid);
+    });
+
+    return { gameIds, sectionIdsByGame };
+}
 
 export const useGameDetailsStore = create((set, get) => ({
     game: null,
@@ -81,13 +109,11 @@ export const useGameDetailsStore = create((set, get) => ({
         set({ loadingGame: true, error: null });
 
         try {
-            const snap = await getDoc(doc(db, "games", gameId));
-
+            const snap = await getDoc(doc(db, "games", String(gameId)));
             if (!snap.exists()) {
                 set({ game: null, loadingGame: false, error: "GAME_NOT_FOUND" });
                 return;
             }
-
             set({ game: { id: snap.id, ...snap.data() }, loadingGame: false, error: null });
         } catch {
             set({ game: null, loadingGame: false, error: "Error fetching game" });
@@ -95,14 +121,15 @@ export const useGameDetailsStore = create((set, get) => ({
     },
 
     fetchSections: async (gameId, user) => {
-        if (!gameId || !user?.uid) return;
+        const gid = String(gameId || "").trim();
+        const rid = getRoleId(user);
+
+        if (!gid || !user?.uid) return;
 
         set({ loadingSections: true });
 
         try {
-            const sectSnap = await getDocs(
-                query(collection(db, "sections"), where("gameId", "==", gameId))
-            );
+            const sectSnap = await getDocs(query(collection(db, "sections"), where("gameId", "==", gid)));
 
             let raw = sectSnap.docs.map((d) => {
                 const data = d.data() || {};
@@ -120,40 +147,32 @@ export const useGameDetailsStore = create((set, get) => ({
                 };
             });
 
-            const role = String(await getUserRole(user)).toLowerCase();
+            if (!rid) {
+                set((state) => ({
+                    sections: [],
+                    loadingSections: false,
+                    error: state.error === "GAME_NOT_FOUND" ? state.error : "No role assigned to your account.",
+                }));
+                return;
+            }
 
-            if (role !== "super admin") {
-                const permSnap = await getDocs(
-                    query(
-                        collection(db, "permissions"),
-                        where("userId", "==", user.uid),
-                        where("gameId", "==", gameId),
-                        where("view", "==", true)
-                    )
-                );
+            const { gameIds, sectionIdsByGame } = await getAllowedForRole(rid);
 
-                const allowed = new Set(
-                    permSnap.docs
-                        .map((d) => {
-                            const data = d.data() || {};
-                            return data.sectionId || data.section_id || null;
-                        })
-                        .filter(Boolean)
-                );
+            if (!gameIds.has(gid)) {
+                set((state) => ({
+                    sections: [],
+                    loadingSections: false,
+                    error:
+                        state.error === "GAME_NOT_FOUND"
+                            ? state.error
+                            : "No access to this game. Ask admin to grant game permissions.",
+                }));
+                return;
+            }
 
-                raw = raw.filter((s) => allowed.has(s.sectionId));
-
-                if (!raw.length) {
-                    set((state) => ({
-                        sections: [],
-                        loadingSections: false,
-                        error:
-                            state.error === "GAME_NOT_FOUND"
-                                ? state.error
-                                : "No sections available for your account. Ask admin to grant section permissions.",
-                    }));
-                    return;
-                }
+            const allowedSectionIds = sectionIdsByGame.get(gid);
+            if (allowedSectionIds && allowedSectionIds.size) {
+                raw = raw.filter((s) => allowedSectionIds.has(String(s.sectionId)));
             }
 
             raw.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
@@ -173,6 +192,9 @@ export const useGameDetailsStore = create((set, get) => ({
     },
 
     startRelatedListener: async (gameId, user, currentGameName = "") => {
+        const gid = String(gameId || "").trim();
+        const rid = getRoleId(user);
+
         if (!user?.uid) return;
 
         const { relatedUnsub } = get();
@@ -183,36 +205,28 @@ export const useGameDetailsStore = create((set, get) => ({
         const familyKey = detectFamilyKey(currentGameName);
 
         try {
-            let allowedGameIds = null;
-
-            const role = String(await getUserRole(user)).toLowerCase();
-
-            if (role !== "super admin") {
-                const accessSnap = await getDocs(
-                    query(
-                        collection(db, "permissions"),
-                        where("userId", "==", user.uid),
-                        where("view", "==", true)
-                    )
-                );
-
-                allowedGameIds = new Set(accessSnap.docs.map((d) => d.data()?.gameId).filter(Boolean));
-
-                if (!allowedGameIds.size) {
-                    set({ promotionGames: [], loadingRelated: false });
-                    return;
-                }
+            if (!rid) {
+                set({ promotionGames: [], loadingRelated: false });
+                return;
             }
 
-            const qGames = query(collection(db, "games"), orderBy("createdAt", "desc"), limit(80));
+            const { gameIds } = await getAllowedForRole(rid);
+
+            if (!gameIds.size) {
+                set({ promotionGames: [], loadingRelated: false });
+                return;
+            }
+
+            const qGames = query(collection(db, "games"), orderBy("createdAt", "desc"), limit(120));
 
             const unsub = onSnapshot(
                 qGames,
                 (snap) => {
                     const list = snap.docs
                         .map((d) => ({ id: d.id, ...d.data() }))
-                        .filter((g) => g.id !== gameId)
-                        .filter((g) => (allowedGameIds ? allowedGameIds.has(g.id) : true))
+                        .filter((g) => !isHidden(g))
+                        .filter((g) => String(g.id) !== gid)
+                        .filter((g) => gameIds.has(String(g.id)))
                         .filter((g) => matchFamily(g?.name || "", familyKey))
                         .slice(0, 12);
 
