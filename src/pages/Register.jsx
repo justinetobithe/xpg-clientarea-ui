@@ -4,7 +4,7 @@ import { Fieldset, Field, Input, Label } from "@headlessui/react";
 import { useMutation } from "@tanstack/react-query";
 import { auth, db } from "../firebase";
 import { createUserWithEmailAndPassword, updateProfile, signOut } from "firebase/auth";
-import { doc, setDoc, getDocs, collection, query, orderBy, limit } from "firebase/firestore";
+import { doc, setDoc, getDocs, collection, query, orderBy, limit, where } from "firebase/firestore";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -54,6 +54,14 @@ async function fetchIpInfo() {
     } catch {
         return null;
     }
+}
+
+async function getRoleIdByName(roleName) {
+    const rolesRef = collection(db, "roles");
+    const q = query(rolesRef, where("name", "==", roleName), limit(1));
+    const snap = await getDocs(q);
+    if (snap.empty) throw new Error("ROLE_NOT_FOUND");
+    return snap.docs[0].id;
 }
 
 export default function Register() {
@@ -185,6 +193,8 @@ export default function Register() {
             const ipInfo = userIPInfo || (await fetchIpInfo());
             if (!userIPInfo) setUserIPInfo(ipInfo);
 
+            const roleId = await getRoleIdByName("User");
+
             const usersRef = collection(db, "users");
             const q = query(usersRef, orderBy("opid", "desc"), limit(1));
             const snap = await getDocs(q);
@@ -202,7 +212,7 @@ export default function Register() {
                 department: form.department,
                 email: form.email,
                 role: "user",
-                role_id: "1",
+                role_id: roleId,
                 access: false,
                 newsletter: !!form.newsletter,
                 createdAt: new Date().toISOString(),
@@ -245,7 +255,9 @@ export default function Register() {
                     ? t("auth.register.errors.recaptchaMissing")
                     : error?.message === "RECAPTCHA_INVALID"
                         ? t("auth.register.errors.recaptchaInvalid")
-                        : toUserMessage(error, t);
+                        : error?.message === "ROLE_NOT_FOUND"
+                            ? t("auth.register.errors.failedGeneric")
+                            : toUserMessage(error, t);
 
             setErr(msg);
 
@@ -297,7 +309,9 @@ export default function Register() {
                         <img src="/image/logo-white.png" alt="Logo" className="h-[90px]" />
                     </div>
 
-                    <h1 className="text-center text-xl font-semibold text-white mb-2">{t("auth.register.pending.title")}</h1>
+                    <h1 className="text-center text-xl font-semibold text-white mb-2">
+                        {t("auth.register.pending.title")}
+                    </h1>
                     <p className="text-center text-white/80 text-sm">{t("auth.register.pending.subtitle")}</p>
 
                     <div className="mt-6 rounded-lg border border-white/10 bg-black/30 p-4">
@@ -361,7 +375,9 @@ export default function Register() {
                                 {...register("fullName")}
                                 className="w-full rounded-md border border-input bg-background/10 px-4 py-3 text-base text-white placeholder:text-white/50 outline-none focus:ring-2 focus:ring-ring"
                             />
-                            {errors.fullName && <div className="text-sm text-red-400 mt-1">{errors.fullName.message}</div>}
+                            {errors.fullName && (
+                                <div className="text-sm text-red-400 mt-1">{errors.fullName.message}</div>
+                            )}
                         </Field>
 
                         <Field>
@@ -371,7 +387,9 @@ export default function Register() {
                                 {...register("company")}
                                 className="w-full rounded-md border border-input bg-background/10 px-4 py-3 text-base text-white placeholder:text-white/50 outline-none focus:ring-2 focus:ring-ring"
                             />
-                            {errors.company && <div className="text-sm text-red-400 mt-1">{errors.company.message}</div>}
+                            {errors.company && (
+                                <div className="text-sm text-red-400 mt-1">{errors.company.message}</div>
+                            )}
                         </Field>
 
                         <Field>
@@ -381,7 +399,9 @@ export default function Register() {
                                 {...register("department")}
                                 className="w-full rounded-md border border-input bg-background/10 px-4 py-3 text-base text-white placeholder:text-white/50 outline-none focus:ring-2 focus:ring-ring"
                             />
-                            {errors.department && <div className="text-sm text-red-400 mt-1">{errors.department.message}</div>}
+                            {errors.department && (
+                                <div className="text-sm text-red-400 mt-1">{errors.department.message}</div>
+                            )}
                         </Field>
 
                         <Field className="md:col-span-2">
@@ -391,7 +411,9 @@ export default function Register() {
                                 {...register("email")}
                                 className="w-full rounded-md border border-input bg-background/10 px-4 py-3 text-base text-white placeholder:text-white/50 outline-none focus:ring-2 focus:ring-ring"
                             />
-                            {errors.email && <div className="text-sm text-red-400 mt-1">{errors.email.message}</div>}
+                            {errors.email && (
+                                <div className="text-sm text-red-400 mt-1">{errors.email.message}</div>
+                            )}
                         </Field>
 
                         <Field>
@@ -402,7 +424,9 @@ export default function Register() {
                                 {...register("password")}
                                 className="w-full rounded-md border border-input bg-background/10 px-4 py-3 text-base text-white placeholder:text-white/50 outline-none focus:ring-2 focus:ring-ring"
                             />
-                            {errors.password && <div className="text-sm text-red-400 mt-1">{errors.password.message}</div>}
+                            {errors.password && (
+                                <div className="text-sm text-red-400 mt-1">{errors.password.message}</div>
+                            )}
                         </Field>
 
                         <Field>
@@ -413,7 +437,9 @@ export default function Register() {
                                 {...register("confirmPassword")}
                                 className="w-full rounded-md border border-input bg-background/10 px-4 py-3 text-base text-white placeholder:text-white/50 outline-none focus:ring-2 focus:ring-ring"
                             />
-                            {errors.confirmPassword && <div className="text-sm text-red-400 mt-1">{errors.confirmPassword.message}</div>}
+                            {errors.confirmPassword && (
+                                <div className="text-sm text-red-400 mt-1">{errors.confirmPassword.message}</div>
+                            )}
                         </Field>
 
                         <div className="md:col-span-2 space-y-3 pt-1">
@@ -425,7 +451,11 @@ export default function Register() {
                             <label className="flex items-center gap-3 text-sm text-white/90">
                                 <input type="checkbox" {...register("notice")} />
                                 <span>{t("auth.register.checkbox.noticePrefix")}&nbsp;</span>
-                                <button type="button" onClick={handleOpenCookiePolicy} className="text-primary hover:underline">
+                                <button
+                                    type="button"
+                                    onClick={handleOpenCookiePolicy}
+                                    className="text-primary hover:underline"
+                                >
                                     {t("auth.register.policy.cookie")}
                                 </button>
                             </label>
@@ -433,27 +463,40 @@ export default function Register() {
                             <label className="flex items-center gap-3 text-sm text-white/90">
                                 <input type="checkbox" {...register("privacy")} />
                                 <span>{t("auth.register.checkbox.privacyPrefix")}&nbsp;</span>
-                                <button type="button" onClick={handleOpenPrivacyPolicy} className="text-primary hover:underline">
+                                <button
+                                    type="button"
+                                    onClick={handleOpenPrivacyPolicy}
+                                    className="text-primary hover:underline"
+                                >
                                     {t("auth.register.policy.privacy")}
                                 </button>
                             </label>
 
-                            {(errors.privacy || err) && <div className="text-sm text-red-400 pt-1">{errors.privacy?.message || err}</div>}
+                            {(errors.privacy || err) && (
+                                <div className="text-sm text-red-400 pt-1">{errors.privacy?.message || err}</div>
+                            )}
                         </div>
 
-                        <div ref={recaptchaHostRef} className="md:col-span-2 pt-2 flex flex-col items-center gap-3 min-h-[92px]">
+                        <div
+                            ref={recaptchaHostRef}
+                            className="md:col-span-2 pt-2 flex flex-col items-center gap-3 min-h-[92px]"
+                        >
                             {recaptchaReady ? (
                                 <ReCAPTCHA
                                     ref={recaptchaRef}
                                     sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY || ""}
-                                    onChange={(token) => setValue("recaptchaToken", token || "", { shouldValidate: true })}
+                                    onChange={(token) =>
+                                        setValue("recaptchaToken", token || "", { shouldValidate: true })
+                                    }
                                     onExpired={() => setValue("recaptchaToken", "", { shouldValidate: true })}
                                     theme="dark"
                                 />
                             ) : (
                                 <div className="text-sm text-white/70">{t("auth.register.recaptcha.loading")}</div>
                             )}
-                            {errors.recaptchaToken && <div className="text-sm text-red-400">{errors.recaptchaToken.message}</div>}
+                            {errors.recaptchaToken && (
+                                <div className="text-sm text-red-400">{errors.recaptchaToken.message}</div>
+                            )}
                         </div>
 
                         <div className="md:col-span-2 pt-2 flex flex-col items-center gap-4">
@@ -461,13 +504,17 @@ export default function Register() {
                                 disabled={registerMutation.isPending || !recaptchaToken}
                                 className="w-fit mx-auto block rounded-md bg-primary px-9 py-3 text-base font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-60"
                             >
-                                {registerMutation.isPending ? t("auth.register.button.registering") : t("auth.register.button.requestAccess")}
+                                {registerMutation.isPending
+                                    ? t("auth.register.button.registering")
+                                    : t("auth.register.button.requestAccess")}
                             </button>
                         </div>
                     </Fieldset>
                 </form>
 
-                <div className="text-center text-sm mt-8 text-white/80">{t("auth.register.footer.alreadyHave")}</div>
+                <div className="text-center text-sm mt-8 text-white/80">
+                    {t("auth.register.footer.alreadyHave")}
+                </div>
                 <div className="text-center mt-2">
                     <Link to="/login" className="text-sm text-primary hover:underline">
                         {t("auth.register.footer.signIn")}
