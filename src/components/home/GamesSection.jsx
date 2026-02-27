@@ -5,63 +5,18 @@ import { ChevronDown, Search, ChevronLeft, ChevronRight, X } from "lucide-react"
 import { useGamesQuery } from "../../hooks/useGamesQuery";
 import { useTranslation } from "react-i18next";
 
-const TYPE_ORDER = ["Baccarat", "Teen Patti", "Roulette", "Blackjack", "Dragon Tiger", "Sic Bo", "Poker", "Andar Bahar", "Dealer Cutouts", "Lobby Assets", "Other"];
-
-const CATEGORY_DEFS = [
-    {
-        id: "lobby-assets",
-        label: "Lobby Assets",
-        image: "/image/categories/lobby-assets-banner.png",
-        types: ["Lobby Assets"],
-    },
-    {
-        id: "roulette",
-        label: "Roulette",
-        image: "/image/categories/roulette-banner.png",
-        types: ["Roulette"],
-    },
-    {
-        id: "blackjack",
-        label: "Blackjack",
-        image: "/image/categories/blackjack-banner.png",
-        types: ["Blackjack"],
-    },
-    {
-        id: "baccarat",
-        label: "Baccarat",
-        image: "/image/categories/baccarat-banner.png",
-        types: ["Baccarat"],
-    },
-    {
-        id: "dice-games",
-        label: "Dice Games",
-        image: "/image/categories/dice-games-banner.png",
-        types: ["Sic Bo"],
-    },
-    {
-        id: "high-low",
-        label: "High/Low",
-        image: "/image/categories/high-low-banner.png",
-        types: ["Dragon Tiger", "Andar Bahar"],
-    },
-    {
-        id: "poker",
-        label: "Poker",
-        image: "/image/categories/poker-banner.png",
-        types: ["Teen Patti", "Poker"],
-    },
-    {
-        id: "dealer-cutouts",
-        label: "Dealer Cutouts",
-        image: "/image/categories/dealer-cutouts.png",
-        types: ["Dealer Cutouts"],
-    },
-    {
-        id: "turkish-tables",
-        label: "Turkish Tables",
-        image: "/image/categories/turkish-table.png",
-        types: ["Turkish Tables"],
-    },
+const TYPE_ORDER = [
+    "Baccarat",
+    "Teen Patti",
+    "Roulette",
+    "Blackjack",
+    "Dragon Tiger",
+    "Sic Bo",
+    "Poker",
+    "Andar Bahar",
+    "Dealer Cutouts",
+    "Lobby Assets",
+    "Other",
 ];
 
 function cx(...classes) {
@@ -128,6 +83,11 @@ function getGameName(game, i18n, t) {
     return name || t("games.untitled");
 }
 
+function isGanamosByName(game, i18n, t) {
+    const n = normalize(getGameName(game, i18n, t)).replace(/\s+/g, " ");
+    return n === "ganamos" || n.includes("ganamos");
+}
+
 const TURKISH_TABLE_GAME_NAMES = new Set([
     "royal blackjack",
     "turkish blackjack",
@@ -150,7 +110,7 @@ function detectTypeFromGame(game, i18n, t) {
     if (n.includes("andar bahar") || n.includes("andarbahar")) return "Andar Bahar";
     if (n.includes("sic bo") || n.includes("sicbo")) return "Sic Bo";
     if (n.includes("poker")) return "Poker";
-    if (n.includes("lobby") || n.includes("asset") || n.includes("banner")) return "Lobby Assets";
+    if (n.includes("lobby") || n.includes("asset")) return "Lobby Assets";
     return "Other";
 }
 
@@ -318,7 +278,9 @@ function Pagination({ page, totalPages, onPrev, onNext, onJump }) {
                                 onClick={() => onJump(p)}
                                 className={cx(
                                     "h-9 min-w-9 px-3 rounded-lg border text-sm font-semibold transition",
-                                    p === page ? "bg-primary text-black border-primary" : "border-white/15 bg-white/[0.03] text-white hover:bg-white/[0.06]"
+                                    p === page
+                                        ? "bg-primary text-black border-primary"
+                                        : "border-white/15 bg-white/[0.03] text-white hover:bg-white/[0.06]"
                                 )}
                             >
                                 {p}
@@ -330,6 +292,69 @@ function Pagination({ page, totalPages, onPrev, onNext, onJump }) {
         </div>
     );
 }
+
+const BASE_CATEGORY_DEFS = [
+    {
+        id: "ganamos",
+        label: "Ganamos",
+        image: "/image/categories/ganamos-banner.png",
+        types: ["__GANAMOS__"],
+    },
+    {
+        id: "lobby-assets",
+        label: "Lobby Assets",
+        image: "/image/categories/lobby-assets-banner.png",
+        types: ["Lobby Assets"],
+    },
+    {
+        id: "roulette",
+        label: "Roulette",
+        image: "/image/categories/roulette-banner.png",
+        types: ["Roulette"],
+    },
+    {
+        id: "blackjack",
+        label: "Blackjack",
+        image: "/image/categories/blackjack-banner.png",
+        types: ["Blackjack"],
+    },
+    {
+        id: "baccarat",
+        label: "Baccarat",
+        image: "/image/categories/baccarat-banner.png",
+        types: ["Baccarat"],
+    },
+    {
+        id: "dice-games",
+        label: "Dice Games",
+        image: "/image/categories/dice-games-banner.png",
+        types: ["Sic Bo"],
+    },
+    {
+        id: "high-low",
+        label: "High/Low",
+        image: "/image/categories/high-low-banner.png",
+        types: ["Dragon Tiger", "Andar Bahar"],
+    },
+    {
+        id: "poker",
+        label: "Poker",
+        image: "/image/categories/poker-banner.png",
+        types: ["Teen Patti", "Poker"],
+    },
+    {
+        id: "dealer-cutouts",
+        label: "Dealer Cutouts",
+        image: "/image/categories/dealer-cutouts.png",
+        types: ["Dealer Cutouts"],
+    },
+    {
+        id: "turkish-tables",
+        label: "Turkish Tables",
+        image: "/image/categories/turkish-table.png",
+        types: ["Turkish Tables"],
+    },
+];
 
 export default function GamesSection() {
     const { t, i18n } = useTranslation();
@@ -349,6 +374,16 @@ export default function GamesSection() {
         [t]
     );
 
+    const hasGanamosPermission = useMemo(() => {
+        const list = Array.isArray(allGames) ? allGames : [];
+        return list.some((g) => isGanamosByName(g, i18n, t));
+    }, [allGames, i18n, t]);
+
+    const CATEGORY_DEFS = useMemo(() => {
+        const defs = [...BASE_CATEGORY_DEFS];
+        return defs.filter((c) => (c.id === "ganamos" ? hasGanamosPermission : true));
+    }, [hasGanamosPermission]);
+
     const [activeCategory, setActiveCategory] = useState("All");
     const [activeType, setActiveType] = useState("All");
     const [inputValue, setInputValue] = useState("");
@@ -367,26 +402,6 @@ export default function GamesSection() {
         setSortBy((cur) => sortOptions.find((o) => o.value === cur?.value) || sortOptions[0]);
     }, [sortOptions]);
 
-    const handleSearchChange = (e) => {
-        const val = e.target.value;
-        setInputValue(val);
-
-        const trimmed = val.trim();
-        if (timerRef.current) clearTimeout(timerRef.current);
-
-        if (trimmed.length < 2) {
-            setSearchTerm("");
-            setIsSearching(false);
-            return;
-        }
-
-        setIsSearching(true);
-        timerRef.current = setTimeout(() => {
-            setSearchTerm(trimmed);
-            setIsSearching(false);
-        }, 450);
-    };
-
     useEffect(() => {
         return () => {
             if (timerRef.current) clearTimeout(timerRef.current);
@@ -398,24 +413,32 @@ export default function GamesSection() {
         const counts = new Map();
         for (const c of CATEGORY_DEFS) counts.set(c.id, 0);
 
+        const ganamosCount = list.filter((g) => isGanamosByName(g, i18n, t)).length;
+        if (counts.has("ganamos")) counts.set("ganamos", ganamosCount);
+
         for (const g of list) {
+            if (isGanamosByName(g, i18n, t)) continue;
             const type = detectTypeFromGame(g, i18n, t);
             for (const c of CATEGORY_DEFS) {
+                if (c.id === "ganamos") continue;
                 if (c.types.includes(type)) counts.set(c.id, (counts.get(c.id) || 0) + 1);
             }
         }
 
         return counts;
-    }, [allGames, i18n, t]);
+    }, [allGames, CATEGORY_DEFS, i18n, t]);
 
     const availableTypes = useMemo(() => {
         const list = Array.isArray(allGames) ? allGames : [];
         const set = new Set();
 
+        if (activeCategory === "ganamos") return ["All"];
+
         const allowedByCategory =
             activeCategory === "All" ? null : CATEGORY_DEFS.find((c) => c.id === activeCategory)?.types || null;
 
         for (const g of list) {
+            if (isGanamosByName(g, i18n, t)) continue;
             const type = detectTypeFromGame(g, i18n, t);
             if (allowedByCategory && !allowedByCategory.includes(type)) continue;
             set.add(type);
@@ -432,11 +455,15 @@ export default function GamesSection() {
         });
 
         return ["All", ...arr];
-    }, [allGames, activeCategory, i18n, t]);
+    }, [allGames, activeCategory, CATEGORY_DEFS, i18n, t]);
 
     useEffect(() => {
+        if (activeCategory === "ganamos") {
+            if (activeType !== "All") setActiveType("All");
+            return;
+        }
         if (activeType !== "All" && !availableTypes.includes(activeType)) setActiveType("All");
-    }, [availableTypes, activeType]);
+    }, [availableTypes, activeType, activeCategory]);
 
     const updateCatArrows = useCallback(() => {
         const el = catTrackRef.current;
@@ -474,15 +501,20 @@ export default function GamesSection() {
     const filteredGames = useMemo(() => {
         let list = Array.isArray(allGames) ? [...allGames] : [];
 
-        const allowedByCategory =
-            activeCategory === "All" ? null : CATEGORY_DEFS.find((c) => c.id === activeCategory)?.types || null;
+        if (activeCategory === "ganamos") {
+            list = list.filter((g) => isGanamosByName(g, i18n, t));
+        } else {
+            list = list.filter((g) => !isGanamosByName(g, i18n, t));
+            const allowedByCategory =
+                activeCategory === "All" ? null : CATEGORY_DEFS.find((c) => c.id === activeCategory)?.types || null;
 
-        if (allowedByCategory) {
-            list = list.filter((g) => allowedByCategory.includes(detectTypeFromGame(g, i18n, t)));
-        }
+            if (allowedByCategory) {
+                list = list.filter((g) => allowedByCategory.includes(detectTypeFromGame(g, i18n, t)));
+            }
 
-        if (activeType !== "All") {
-            list = list.filter((g) => detectTypeFromGame(g, i18n, t) === activeType);
+            if (activeType !== "All") {
+                list = list.filter((g) => detectTypeFromGame(g, i18n, t) === activeType);
+            }
         }
 
         if (searchTerm.length >= 2) {
@@ -510,7 +542,7 @@ export default function GamesSection() {
         }
 
         return list;
-    }, [allGames, activeCategory, activeType, searchTerm, sortBy.value, i18n, t]);
+    }, [allGames, activeCategory, activeType, searchTerm, sortBy.value, CATEGORY_DEFS, i18n, t]);
 
     const showSkeleton = isLoading || isSearching;
 
@@ -532,10 +564,15 @@ export default function GamesSection() {
     };
 
     const orderedCategories = useMemo(() => {
+        const ganamos = CATEGORY_DEFS.find((c) => c.id === "ganamos");
         const turkish = CATEGORY_DEFS.find((c) => c.id === "turkish-tables");
-        const rest = CATEGORY_DEFS.filter((c) => c.id !== "turkish-tables");
-        return turkish ? [turkish, ...rest] : rest;
-    }, []);
+        const rest = CATEGORY_DEFS.filter((c) => c.id !== "ganamos" && c.id !== "turkish-tables");
+        const out = [];
+        if (ganamos) out.push(ganamos);
+        if (turkish) out.push(turkish);
+        out.push(...rest);
+        return out;
+    }, [CATEGORY_DEFS]);
 
     return (
         <section className="mt-8 space-y-8">
@@ -612,7 +649,9 @@ export default function GamesSection() {
                         <div className="text-lg font-semibold text-white min-w-0 truncate">
                             {(t("games.list.title") || "Games")}:{" "}
                             <span className="text-white/85">
-                                {activeCategory === "All" ? t("games.categories.all") || "All Categories" : CATEGORY_DEFS.find((c) => c.id === activeCategory)?.label}
+                                {activeCategory === "All"
+                                    ? t("games.categories.all") || "All Categories"
+                                    : CATEGORY_DEFS.find((c) => c.id === activeCategory)?.label}
                             </span>
                             <span className="text-white/60"> · </span>
                             <span className="text-white/85">{activeType === "All" ? t("games.types.all") || "All Types" : activeType}</span>

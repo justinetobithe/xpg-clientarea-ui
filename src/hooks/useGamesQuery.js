@@ -5,7 +5,6 @@ import {
     documentId,
     getDocs,
     limit,
-    orderBy,
     query,
     where,
 } from "firebase/firestore";
@@ -19,7 +18,9 @@ const chunk = (arr, size) => {
 };
 
 const truthy = (v) => v === true || v === "true" || v === 1;
-const isHidden = (g) => g?.hidden === true || g?.hidden === "true" || g?.hidden === 1;
+
+const isHidden = (g) =>
+    g?.hidden === true || g?.hidden === "true" || g?.hidden === 1;
 
 function extractGameIdsFromPermissionsSnap(snap) {
     return Array.from(
@@ -35,7 +36,9 @@ function extractGameIdsFromPermissionsSnap(snap) {
 
 async function fetchGamesByIds(gameIds) {
     const colGames = collection(db, "games");
-    const ids = Array.from(new Set(gameIds.map((x) => String(x || "").trim()).filter(Boolean)));
+    const ids = Array.from(
+        new Set(gameIds.map((x) => String(x || "").trim()).filter(Boolean))
+    );
     if (!ids.length) return [];
 
     const out = [];
