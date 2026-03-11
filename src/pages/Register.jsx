@@ -4,7 +4,7 @@ import { Fieldset, Field, Input, Label } from "@headlessui/react";
 import { useMutation } from "@tanstack/react-query";
 import { auth, db } from "../firebase";
 import { createUserWithEmailAndPassword, updateProfile, signOut } from "firebase/auth";
-import { doc, setDoc, getDocs, collection, query, orderBy, limit, where } from "firebase/firestore";
+import { addDoc, collection, doc, setDoc, getDocs, query, orderBy, limit, where } from "firebase/firestore";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -206,6 +206,8 @@ export default function Register() {
             const cred = await createUserWithEmailAndPassword(auth, form.email, form.password);
             await updateProfile(cred.user, { displayName: form.fullName });
 
+            const createdAt = new Date().toISOString();
+
             await setDoc(doc(db, "users", cred.user.uid), {
                 fullName: form.fullName,
                 company: form.company,
@@ -215,7 +217,7 @@ export default function Register() {
                 role_id: roleId,
                 access: false,
                 newsletter: !!form.newsletter,
-                createdAt: new Date().toISOString(),
+                createdAt,
                 status: "pending",
                 uid: cred.user.uid,
                 id: cred.user.uid,
@@ -229,13 +231,36 @@ export default function Register() {
                 },
             });
 
+            await addDoc(collection(db, "notifications"), {
+                type: "new_user",
+                category: "user",
+                notificationType: "new_user",
+                read: false,
+                isRead: false,
+                seen: false,
+                status: "unread",
+                entityId: cred.user.uid,
+                userId: cred.user.uid,
+                uid: cred.user.uid,
+                opid: newOpid,
+                name: form.fullName,
+                fullName: form.fullName,
+                email: form.email,
+                company: form.company,
+                department: form.department,
+                role: "user",
+                route: "/admin/client-area/user-management",
+                createdAt,
+            });
+
             await signOut(auth);
             return { email: form.email };
         },
         onSuccess: ({ email }) => {
             try {
                 localStorage.setItem(PENDING_KEY, email);
-            } catch { }
+            } catch {
+            }
 
             setSubmittedEmail(email);
             setErr("");
@@ -294,7 +319,8 @@ export default function Register() {
     const handleClearPending = () => {
         try {
             localStorage.removeItem(PENDING_KEY);
-        } catch { }
+        } catch {
+        }
         setSubmittedEmail("");
     };
 
