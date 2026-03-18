@@ -7,14 +7,9 @@ const admin = require("firebase-admin");
 const REGION = "us-central1";
 const RECAPTCHA_SECRET = defineSecret("RECAPTCHA_SECRET");
 
-let _adminReady = false;
-const getAdmin = () => {
-    if (!_adminReady) {
-        admin.initializeApp();
-        _adminReady = true;
-    }
-    return admin;
-};
+if (!admin.apps.length) {
+    admin.initializeApp();
+}
 
 const jsonBody = (req) => {
     if (req.body && typeof req.body === "object") return req.body;
@@ -51,7 +46,7 @@ const getToken = (req) => {
 const requireAuth = async (req) => {
     const token = getToken(req);
     if (!token) throw new Error("missing_token");
-    const decoded = await getAdmin().auth().verifyIdToken(token);
+    const decoded = await admin.auth().verifyIdToken(token);
     if (!decoded?.uid) throw new Error("invalid_token");
     return decoded;
 };
@@ -67,7 +62,7 @@ const isSafePath = (p) => {
 };
 
 const deleteQueryInBatches = async (q, batchSize = 450) => {
-    const db = getAdmin().firestore();
+    const db = admin.firestore();
     let hasMore = true;
 
     while (hasMore) {
@@ -89,7 +84,7 @@ const deleteSubcollectionDocs = async (docRef, subName) => {
 };
 
 const deleteCollectionsAndItemsByUser = async (uid) => {
-    const db = getAdmin().firestore();
+    const db = admin.firestore();
     const colSnap = await db.collection("collections").where("userId", "==", uid).get();
 
     for (const d of colSnap.docs) {
@@ -100,12 +95,12 @@ const deleteCollectionsAndItemsByUser = async (uid) => {
 };
 
 const deleteDownloadsByUser = async (uid) => {
-    const db = getAdmin().firestore();
+    const db = admin.firestore();
     await deleteQueryInBatches(db.collection("downloads").where("userId", "==", uid));
 };
 
 const deletePermissionsByUser = async (uid) => {
-    const db = getAdmin().firestore();
+    const db = admin.firestore();
     const candidates = ["permissions", "user_permissions", "roles", "user_roles"];
 
     for (const name of candidates) {
@@ -128,16 +123,15 @@ const deletePermissionsByUser = async (uid) => {
 };
 
 const deleteUserProfileDoc = async (uid) => {
-    const db = getAdmin().firestore();
+    const db = admin.firestore();
     const ref = db.doc(`users/${uid}`);
     const snap = await ref.get();
     if (snap.exists) await ref.delete();
 };
 
 const deleteUserStorage = async (uid) => {
-    const a = getAdmin();
     const bucketName = process.env.DELETE_STORAGE_BUCKET || "";
-    const bucket = bucketName ? a.storage().bucket(bucketName) : a.storage().bucket();
+    const bucket = bucketName ? admin.storage().bucket(bucketName) : admin.storage().bucket();
     const prefixes = [`${uid}/`, `users/${uid}/`, `downloads/${uid}/`, `collections/${uid}/`];
 
     for (const prefix of prefixes) {
@@ -149,17 +143,11 @@ const deleteUserStorage = async (uid) => {
     }
 };
 
-const getFetch = () => {
-    if (typeof fetch === "function") return fetch;
-    return require("node-fetch");
-};
-
 const fetchWithTimeout = async (url, options, timeoutMs) => {
     const controller = new AbortController();
     const t = setTimeout(() => controller.abort(), timeoutMs);
     try {
-        const f = getFetch();
-        return await f(url, { ...options, signal: controller.signal });
+        return await fetch(url, { ...options, signal: controller.signal });
     } finally {
         clearTimeout(t);
     }
@@ -182,13 +170,16 @@ exports.verifyRecaptcha = onRequest({ region: REGION, secrets: [RECAPTCHA_SECRET
             {
                 method: "POST",
                 headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: new URLSearchParams({ secret, response: token }).toString(),
+                body: new URLSearchParams({ secret, response: token }).toString()
             },
             5000
         );
 
         const data = await resp.json().catch(() => ({}));
-        if (!resp.ok || !data?.success) return res.status(400).json({ success: false });
+
+        if (!resp.ok || !data?.success) {
+            return res.status(400).json({ success: false });
+        }
 
         return res.json({ success: true });
     } catch {
@@ -215,10 +206,10 @@ exports.downloadFile = onRequest({ region: REGION }, async (req, res) => {
             if (!ok) return res.status(403).send("Forbidden");
         }
 
-        const bucket = getAdmin().storage().bucket();
+        const bucket = admin.storage().bucket();
         const file = bucket.file(filePath);
-
         const [exists] = await file.exists();
+
         if (!exists) return res.status(404).send("File not found");
 
         res.setHeader("Content-Type", "application/octet-stream");
@@ -252,7 +243,7 @@ exports.deleteMyAccount = onCall({ region: REGION }, async (request) => {
         await deleteUserStorage(uid);
     }
 
-    await getAdmin().auth().deleteUser(uid);
+    await admin.auth().deleteUser(uid);
     return { ok: true };
 });
 
@@ -264,39 +255,86 @@ exports.resetPasswordWithToken = onRequest({ region: REGION }, async (req, res) 
     const token = String(body.token || "").trim();
     const newPassword = String(body.newPassword || "");
 
-    if (!token || token.length < 20) return res.status(400).json({ error: "Invalid token" });
-    if (!newPassword || newPassword.length < 8) return res.status(400).json({ error: "Password must be at least 8 characters" });
+    if (!token || token.length < 20) {
+        return res.status(400).json({ error: "Invalid token" });
+    }
+
+    if (!newPassword || newPassword.length < 8) {
+        return res.status(400).json({ error: "Password must be at least 8 characters" });
+    }
 
     try {
-        const db = getAdmin().firestore();
+        const db = admin.firestore();
         const ref = db.collection("password_reset_tokens").doc(token);
-        const snap = await ref.get();
 
-        if (!snap.exists) return res.status(404).json({ error: "Token not found" });
+        const result = await db.runTransaction(async (tx) => {
+            const snap = await tx.get(ref);
 
-        const data = snap.data() || {};
-        const expiresAtMs = data.expiresAt?.toDate ? data.expiresAt.toDate().getTime() : 0;
+            if (!snap.exists) {
+                throw new Error("TOKEN_NOT_FOUND");
+            }
 
-        if (data.status === "used" || data.usedAt) return res.status(400).json({ error: "Token already used" });
+            const data = snap.data() || {};
+            const expiresAtMs = data.expiresAt?.toDate ? data.expiresAt.toDate().getTime() : 0;
+            const email = String(data.email || "").trim().toLowerCase();
 
-        if (!expiresAtMs || Date.now() > expiresAtMs) {
-            await ref.update({ status: "expired" });
-            return res.status(400).json({ error: "Token expired" });
-        }
+            if (!email) {
+                throw new Error("INVALID_TOKEN_DATA");
+            }
 
-        const email = String(data.email || "").trim().toLowerCase();
-        if (!email) return res.status(400).json({ error: "Invalid token data" });
+            if (data.status === "used" || data.usedAt) {
+                throw new Error("TOKEN_ALREADY_USED");
+            }
 
-        const user = await getAdmin().auth().getUserByEmail(email);
-        await getAdmin().auth().updateUser(user.uid, { password: newPassword });
+            if (!expiresAtMs || Date.now() > expiresAtMs) {
+                tx.update(ref, {
+                    status: "expired",
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                });
+                throw new Error("TOKEN_EXPIRED");
+            }
+
+            tx.update(ref, {
+                status: "processing",
+                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            });
+
+            return { email };
+        });
+
+        const user = await admin.auth().getUserByEmail(result.email);
+        await admin.auth().updateUser(user.uid, { password: newPassword });
 
         await ref.update({
             status: "used",
             usedAt: admin.firestore.FieldValue.serverTimestamp(),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
         });
 
         return res.json({ ok: true });
-    } catch {
+    } catch (e) {
+        const code = e?.code || e?.message || "";
+
+        if (code === "TOKEN_NOT_FOUND") {
+            return res.status(404).json({ error: "Token not found" });
+        }
+
+        if (code === "INVALID_TOKEN_DATA") {
+            return res.status(400).json({ error: "Invalid token data" });
+        }
+
+        if (code === "TOKEN_ALREADY_USED") {
+            return res.status(400).json({ error: "Token already used" });
+        }
+
+        if (code === "TOKEN_EXPIRED") {
+            return res.status(400).json({ error: "Token expired" });
+        }
+
+        if (code === "auth/user-not-found") {
+            return res.status(404).json({ error: "User not found" });
+        }
+
         return res.status(500).json({ error: "Server error" });
     }
 });

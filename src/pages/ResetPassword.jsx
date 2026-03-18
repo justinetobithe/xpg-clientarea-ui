@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { db } from "../firebase";
-import { doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc } from "firebase/firestore";
 import axios from "axios";
 import { useToast } from "../contexts/ToastContext";
 import { useTranslation } from "react-i18next";
@@ -45,13 +45,15 @@ export default function ResetPassword() {
                     return;
                 }
 
-                const data = snap.data();
+                const data = snap.data() || {};
                 setDocData(data);
 
                 const expiresAt = data?.expiresAt?.toDate ? data.expiresAt.toDate().getTime() : 0;
-                const usedAt = data?.usedAt ? true : false;
+                const usedAt = !!data?.usedAt;
 
-                if (expiresAt) setExpiresText(new Date(expiresAt).toLocaleString());
+                if (expiresAt) {
+                    setExpiresText(new Date(expiresAt).toLocaleString());
+                }
 
                 if (usedAt || data?.status === "used") {
                     setStatus("used");
@@ -59,7 +61,7 @@ export default function ResetPassword() {
                     return;
                 }
 
-                if (expiresAt && Date.now() > expiresAt) {
+                if (!expiresAt || Date.now() > expiresAt) {
                     setStatus("expired");
                     setLoading(false);
                     return;
@@ -74,6 +76,7 @@ export default function ResetPassword() {
         };
 
         run();
+
         return () => {
             mounted = false;
         };
@@ -101,26 +104,42 @@ export default function ResetPassword() {
         }
 
         setSubmitting(true);
+
         try {
-            await axios.post(`${import.meta.env.VITE_XPG_API_URL}/resetPasswordWithToken`, {
+            const baseUrl = String(import.meta.env.VITE_XPG_API_URL || "").replace(/\/$/, "");
+            const url = `${baseUrl}/resetPasswordWithToken`;
+
+            await axios.post(url, {
                 token,
                 newPassword: password
             });
 
-            await updateDoc(doc(db, "password_reset_tokens", token), {
-                status: "used",
-                usedAt: serverTimestamp()
-            });
+            setStatus("used");
+            setDocData((prev) => ({
+                ...(prev || {}),
+                status: "used"
+            }));
 
             showToast({
                 variant: "success",
                 title: t("auth.reset.toast.updatedTitle"),
                 description: t("auth.reset.toast.updatedDesc")
             });
-            nav("/login");
+
+            setTimeout(() => {
+                nav("/login");
+            }, 1200);
         } catch (e) {
-            const msg = e?.response?.data?.error || t("auth.reset.toast.failedDesc");
-            showToast({ variant: "error", title: t("auth.reset.toast.failedTitle"), description: msg });
+            const msg =
+                e?.response?.data?.error ||
+                e?.message ||
+                t("auth.reset.toast.failedDesc");
+
+            showToast({
+                variant: "error",
+                title: t("auth.reset.toast.failedTitle"),
+                description: msg
+            });
         } finally {
             setSubmitting(false);
         }
@@ -149,7 +168,9 @@ export default function ResetPassword() {
                     <img src="/image/logo-white.png" alt="Logo" className="h-[90px]" />
                 </div>
 
-                <h1 className="text-center text-xl font-semibold text-white mb-2">{t("auth.reset.title")}</h1>
+                <h1 className="text-center text-xl font-semibold text-white mb-2">
+                    {t("auth.reset.title")}
+                </h1>
 
                 {loading ? (
                     <div className="text-center text-white/70">{t("auth.reset.loading")}</div>
@@ -180,7 +201,9 @@ export default function ResetPassword() {
                 ) : (
                     <div className="space-y-5">
                         <div className="rounded-lg border border-white/10 bg-black/30 p-4">
-                            <div className="text-white/90 font-semibold">{t("auth.reset.statuses.valid")}</div>
+                            <div className="text-white/90 font-semibold">
+                                {t("auth.reset.statuses.valid")}
+                            </div>
                             <div className="text-white/70 text-sm mt-1">
                                 {t("auth.reset.labels.email", { email: docData?.email || "—" })}
                             </div>
