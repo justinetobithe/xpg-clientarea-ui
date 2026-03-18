@@ -106,7 +106,7 @@ export default function ResetPassword() {
         setSubmitting(true);
 
         try {
-            const baseUrl = String(import.meta.env.VITE_XPG_API_URL || "").replace(/\/$/, "");
+            const baseUrl = String(import.meta.env.VITE_FUNCTIONS_URL || "").replace(/\/$/, "");
             const url = `${baseUrl}/resetPasswordWithToken`;
 
             await axios.post(url, {
