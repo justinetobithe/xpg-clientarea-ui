@@ -5,20 +5,6 @@ import { ChevronDown, Search, ChevronLeft, ChevronRight, X } from "lucide-react"
 import { useGamesQuery } from "../../hooks/useGamesQuery";
 import { useTranslation } from "react-i18next";
 
-const TYPE_ORDER = [
-    "Baccarat",
-    "Teen Patti",
-    "Roulette",
-    "Blackjack",
-    "Dragon Tiger",
-    "Sic Bo",
-    "Poker",
-    "Andar Bahar",
-    "Dealer Cutouts",
-    "Lobby Assets",
-    "Other",
-];
-
 function cx(...classes) {
     return classes.filter(Boolean).join(" ");
 }
@@ -74,8 +60,20 @@ function usePageSize() {
     return size;
 }
 
-function normalize(s) {
-    return String(s || "").toLowerCase().trim();
+function normalize(value) {
+    return String(value || "").toLowerCase().trim();
+}
+
+function normalizeCategory(value) {
+    return String(value || "").trim().replace(/\s+/g, " ");
+}
+
+function slugify(value) {
+    return normalizeCategory(value)
+        .toLowerCase()
+        .replace(/&/g, "and")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
 }
 
 function getGameName(game, i18n, t) {
@@ -83,35 +81,35 @@ function getGameName(game, i18n, t) {
     return name || t("games.untitled");
 }
 
-function isGanamosByName(game, i18n, t) {
-    const n = normalize(getGameName(game, i18n, t)).replace(/\s+/g, " ");
-    return n === "ganamos" || n.includes("ganamos");
+function getGameCategory(game) {
+    return normalizeCategory(game?.category);
 }
 
-const TURKISH_TABLE_GAME_NAMES = new Set([
-    "royal blackjack",
-    "turkish blackjack",
-    "diamond blackjack",
-    "royal roulette",
-]);
+const LOCAL_CATEGORY_IMAGE_MAP = {
+    "all-games": "/image/categories/all-games-banner.png",
+    ganamos: "/image/categories/ganamos-banner.png",
+    "lobby-assets": "/image/categories/lobby-assets-banner.png",
+    roulette: "/image/categories/roulette-banner.png",
+    blackjack: "/image/categories/blackjack-banner.png",
+    baccarat: "/image/categories/baccarat-banner.png",
+    "dice-games": "/image/categories/dice-games-banner.png",
+    "high-low": "/image/categories/high-low-banner.png",
+    poker: "/image/categories/poker-banner.png",
+    "dealer-cutouts": "/image/categories/dealer-cutouts.png",
+    "turkish-tables": "/image/categories/turkish-table.png",
+    "andar-bahar": "/image/categories/high-low-banner.png",
+    "dragon-tiger": "/image/categories/high-low-banner.png",
+    "sic-bo": "/image/categories/dice-games-banner.png",
+    "teen-patti": "/image/categories/poker-banner.png",
+    document: "/image/categories/lobby-assets-banner.png",
+    "32-cards": "/image/categories/32-cards-banner.png",
+};
 
-function detectTypeFromGame(game, i18n, t) {
-    const rawName = getGameName(game, i18n, t);
-    const n = normalize(rawName).replace(/\s+/g, " ");
-
-    if (TURKISH_TABLE_GAME_NAMES.has(n)) return "Turkish Tables";
-    if (n.includes("turkish")) return "Turkish Tables";
-    if (n.includes("dealer cutout") || n.includes("dealer-cutout") || n.includes("dealer")) return "Dealer Cutouts";
-    if (n.includes("baccarat")) return "Baccarat";
-    if (n.includes("teen patti") || n.includes("teenpatti")) return "Teen Patti";
-    if (n.includes("roulette")) return "Roulette";
-    if (n.includes("blackjack")) return "Blackjack";
-    if (n.includes("dragon tiger") || n.includes("dragontiger")) return "Dragon Tiger";
-    if (n.includes("andar bahar") || n.includes("andarbahar")) return "Andar Bahar";
-    if (n.includes("sic bo") || n.includes("sicbo")) return "Sic Bo";
-    if (n.includes("poker")) return "Poker";
-    if (n.includes("lobby") || n.includes("asset")) return "Lobby Assets";
-    return "Other";
+function getCategoryImage(categoryName, games) {
+    const slug = slugify(categoryName);
+    if (LOCAL_CATEGORY_IMAGE_MAP[slug]) return LOCAL_CATEGORY_IMAGE_MAP[slug];
+    const match = games.find((g) => normalize(getGameCategory(g)) === normalize(categoryName));
+    return match?.bannerURL || match?.imageURL || "/image/categories/all-games-banner.png";
 }
 
 function GameCardSkeleton() {
@@ -138,6 +136,10 @@ function GamesGridSkeleton({ count = 12 }) {
 function GameImage({ src, alt }) {
     const { t } = useTranslation();
     const [failed, setFailed] = useState(false);
+
+    useEffect(() => {
+        setFailed(false);
+    }, [src]);
 
     if (!src || failed) {
         return (
@@ -293,69 +295,6 @@ function Pagination({ page, totalPages, onPrev, onNext, onJump }) {
     );
 }
 
-const BASE_CATEGORY_DEFS = [
-    {
-        id: "ganamos",
-        label: "Ganamos",
-        image: "/image/categories/ganamos-banner.png",
-        types: ["__GANAMOS__"],
-    },
-    {
-        id: "lobby-assets",
-        label: "Lobby Assets",
-        image: "/image/categories/lobby-assets-banner.png",
-        types: ["Lobby Assets"],
-    },
-    {
-        id: "roulette",
-        label: "Roulette",
-        image: "/image/categories/roulette-banner.png",
-        types: ["Roulette"],
-    },
-    {
-        id: "blackjack",
-        label: "Blackjack",
-        image: "/image/categories/blackjack-banner.png",
-        types: ["Blackjack"],
-    },
-    {
-        id: "baccarat",
-        label: "Baccarat",
-        image: "/image/categories/baccarat-banner.png",
-        types: ["Baccarat"],
-    },
-    {
-        id: "dice-games",
-        label: "Dice Games",
-        image: "/image/categories/dice-games-banner.png",
-        types: ["Sic Bo"],
-    },
-    {
-        id: "high-low",
-        label: "High/Low",
-        image: "/image/categories/high-low-banner.png",
-        types: ["Dragon Tiger", "Andar Bahar"],
-    },
-    {
-        id: "poker",
-        label: "Poker",
-        image: "/image/categories/poker-banner.png",
-        types: ["Teen Patti", "Poker"],
-    },
-    {
-        id: "dealer-cutouts",
-        label: "Dealer Cutouts",
-        image: "/image/categories/dealer-cutouts.png",
-        types: ["Dealer Cutouts"],
-    },
-    {
-        id: "turkish-tables",
-        label: "Turkish Tables",
-        image: "/image/categories/turkish-table.png",
-        types: ["Turkish Tables"],
-    },
-];
-
 export default function GamesSection() {
     const { t, i18n } = useTranslation();
     const { data: allGames = [], isLoading, error } = useGamesQuery();
@@ -369,20 +308,50 @@ export default function GamesSection() {
             { value: "order-asc", label: t("games.sort.defaultOrder") },
             { value: "name-asc", label: t("games.sort.nameAsc") },
             { value: "name-desc", label: t("games.sort.nameDesc") },
-            { value: "type-asc", label: t("games.sort.typeAsc") || "Type (A → Z)" },
+            { value: "category-asc", label: t("games.sort.typeAsc") || "Category (A → Z)" },
         ],
         [t]
     );
 
-    const hasGanamosPermission = useMemo(() => {
-        const list = Array.isArray(allGames) ? allGames : [];
-        return list.some((g) => isGanamosByName(g, i18n, t));
-    }, [allGames, i18n, t]);
+    const dynamicCategories = useMemo(() => {
+        const map = new Map();
 
-    const CATEGORY_DEFS = useMemo(() => {
-        const defs = [...BASE_CATEGORY_DEFS];
-        return defs.filter((c) => (c.id === "ganamos" ? hasGanamosPermission : true));
-    }, [hasGanamosPermission]);
+        for (const game of Array.isArray(allGames) ? allGames : []) {
+            const categoryName = getGameCategory(game);
+            if (!categoryName) continue;
+
+            const key = normalize(categoryName);
+            if (!map.has(key)) {
+                map.set(key, {
+                    id: slugify(categoryName),
+                    label: categoryName,
+                    image: getCategoryImage(categoryName, allGames),
+                    count: 0,
+                });
+            }
+
+            map.get(key).count += 1;
+        }
+
+        const categories = Array.from(map.values()).sort((a, b) => a.label.localeCompare(b.label));
+        const priorityOrder = ["ganamos", "turkish-tables"];
+        const prioritized = [];
+        const rest = [];
+
+        for (const category of categories) {
+            if (priorityOrder.includes(category.id)) {
+                prioritized.push(category);
+            } else {
+                rest.push(category);
+            }
+        }
+
+        prioritized.sort((a, b) => priorityOrder.indexOf(a.id) - priorityOrder.indexOf(b.id));
+
+        return [...prioritized, ...rest];
+    }, [allGames]);
+
+    const availableTypes = useMemo(() => ["All", ...dynamicCategories.map((c) => c.label)], [dynamicCategories]);
 
     const [activeCategory, setActiveCategory] = useState("All");
     const [activeType, setActiveType] = useState("All");
@@ -408,62 +377,17 @@ export default function GamesSection() {
         };
     }, []);
 
-    const categoryCounts = useMemo(() => {
-        const list = Array.isArray(allGames) ? allGames : [];
-        const counts = new Map();
-        for (const c of CATEGORY_DEFS) counts.set(c.id, 0);
-
-        const ganamosCount = list.filter((g) => isGanamosByName(g, i18n, t)).length;
-        if (counts.has("ganamos")) counts.set("ganamos", ganamosCount);
-
-        for (const g of list) {
-            if (isGanamosByName(g, i18n, t)) continue;
-            const type = detectTypeFromGame(g, i18n, t);
-            for (const c of CATEGORY_DEFS) {
-                if (c.id === "ganamos") continue;
-                if (c.types.includes(type)) counts.set(c.id, (counts.get(c.id) || 0) + 1);
-            }
+    useEffect(() => {
+        if (activeCategory !== "All" && !dynamicCategories.some((c) => c.id === activeCategory)) {
+            setActiveCategory("All");
         }
-
-        return counts;
-    }, [allGames, CATEGORY_DEFS, i18n, t]);
-
-    const availableTypes = useMemo(() => {
-        const list = Array.isArray(allGames) ? allGames : [];
-        const set = new Set();
-
-        if (activeCategory === "ganamos") return ["All"];
-
-        const allowedByCategory =
-            activeCategory === "All" ? null : CATEGORY_DEFS.find((c) => c.id === activeCategory)?.types || null;
-
-        for (const g of list) {
-            if (isGanamosByName(g, i18n, t)) continue;
-            const type = detectTypeFromGame(g, i18n, t);
-            if (allowedByCategory && !allowedByCategory.includes(type)) continue;
-            set.add(type);
-        }
-
-        const arr = Array.from(set);
-        arr.sort((a, b) => {
-            const ai = TYPE_ORDER.indexOf(a);
-            const bi = TYPE_ORDER.indexOf(b);
-            const ax = ai === -1 ? 999 : ai;
-            const bx = bi === -1 ? 999 : bi;
-            if (ax !== bx) return ax - bx;
-            return a.localeCompare(b);
-        });
-
-        return ["All", ...arr];
-    }, [allGames, activeCategory, CATEGORY_DEFS, i18n, t]);
+    }, [activeCategory, dynamicCategories]);
 
     useEffect(() => {
-        if (activeCategory === "ganamos") {
-            if (activeType !== "All") setActiveType("All");
-            return;
+        if (activeType !== "All" && !availableTypes.includes(activeType)) {
+            setActiveType("All");
         }
-        if (activeType !== "All" && !availableTypes.includes(activeType)) setActiveType("All");
-    }, [availableTypes, activeType, activeCategory]);
+    }, [activeType, availableTypes]);
 
     const updateCatArrows = useCallback(() => {
         const el = catTrackRef.current;
@@ -489,7 +413,7 @@ export default function GamesSection() {
             el.removeEventListener("scroll", onScroll);
             ro.disconnect();
         };
-    }, [updateCatArrows, allGames.length]);
+    }, [updateCatArrows, dynamicCategories.length]);
 
     const scrollCatsBy = useCallback((dir) => {
         const el = catTrackRef.current;
@@ -501,40 +425,34 @@ export default function GamesSection() {
     const filteredGames = useMemo(() => {
         let list = Array.isArray(allGames) ? [...allGames] : [];
 
-        if (activeCategory === "ganamos") {
-            list = list.filter((g) => isGanamosByName(g, i18n, t));
-        } else {
-            list = list.filter((g) => !isGanamosByName(g, i18n, t));
-            const allowedByCategory =
-                activeCategory === "All" ? null : CATEGORY_DEFS.find((c) => c.id === activeCategory)?.types || null;
+        if (activeCategory !== "All") {
+            const selectedCategory = dynamicCategories.find((c) => c.id === activeCategory)?.label || "";
+            list = list.filter((g) => normalize(getGameCategory(g)) === normalize(selectedCategory));
+        }
 
-            if (allowedByCategory) {
-                list = list.filter((g) => allowedByCategory.includes(detectTypeFromGame(g, i18n, t)));
-            }
-
-            if (activeType !== "All") {
-                list = list.filter((g) => detectTypeFromGame(g, i18n, t) === activeType);
-            }
+        if (activeType !== "All") {
+            list = list.filter((g) => normalize(getGameCategory(g)) === normalize(activeType));
         }
 
         if (searchTerm.length >= 2) {
             const lower = searchTerm.toLowerCase();
-            list = list.filter((g) => normalize(getGameName(g, i18n, t)).includes(lower));
+            list = list.filter((g) => {
+                const name = normalize(getGameName(g, i18n, t));
+                const category = normalize(getGameCategory(g));
+                return name.includes(lower) || category.includes(lower);
+            });
         }
 
         if (sortBy.value === "name-asc") {
             list.sort((a, b) => getGameName(a, i18n, t).localeCompare(getGameName(b, i18n, t)));
         } else if (sortBy.value === "name-desc") {
             list.sort((a, b) => getGameName(b, i18n, t).localeCompare(getGameName(a, i18n, t)));
-        } else if (sortBy.value === "type-asc") {
+        } else if (sortBy.value === "category-asc") {
             list.sort((a, b) => {
-                const at = detectTypeFromGame(a, i18n, t);
-                const bt = detectTypeFromGame(b, i18n, t);
-                const ai = TYPE_ORDER.indexOf(at);
-                const bi = TYPE_ORDER.indexOf(bt);
-                const ax = ai === -1 ? 999 : ai;
-                const bx = bi === -1 ? 999 : bi;
-                if (ax !== bx) return ax - bx;
+                const ac = getGameCategory(a);
+                const bc = getGameCategory(b);
+                const byCategory = ac.localeCompare(bc);
+                if (byCategory !== 0) return byCategory;
                 return getGameName(a, i18n, t).localeCompare(getGameName(b, i18n, t));
             });
         } else {
@@ -542,7 +460,7 @@ export default function GamesSection() {
         }
 
         return list;
-    }, [allGames, activeCategory, activeType, searchTerm, sortBy.value, CATEGORY_DEFS, i18n, t]);
+    }, [allGames, activeCategory, activeType, searchTerm, sortBy.value, dynamicCategories, i18n, t]);
 
     const showSkeleton = isLoading || isSearching;
 
@@ -551,7 +469,8 @@ export default function GamesSection() {
     }, [activeCategory, activeType, searchTerm, sortBy.value, pageSize, allGames.length]);
 
     const totalPages = Math.max(1, Math.ceil(filteredGames.length / pageSize));
-    const start = (page - 1) * pageSize;
+    const safePage = Math.min(page, totalPages);
+    const start = (safePage - 1) * pageSize;
     const pageSlice = filteredGames.slice(start, start + pageSize);
 
     const clearAll = () => {
@@ -562,17 +481,6 @@ export default function GamesSection() {
         setIsSearching(false);
         setPage(1);
     };
-
-    const orderedCategories = useMemo(() => {
-        const ganamos = CATEGORY_DEFS.find((c) => c.id === "ganamos");
-        const turkish = CATEGORY_DEFS.find((c) => c.id === "turkish-tables");
-        const rest = CATEGORY_DEFS.filter((c) => c.id !== "ganamos" && c.id !== "turkish-tables");
-        const out = [];
-        if (ganamos) out.push(ganamos);
-        if (turkish) out.push(turkish);
-        out.push(...rest);
-        return out;
-    }, [CATEGORY_DEFS]);
 
     return (
         <section className="mt-8 space-y-8">
@@ -622,18 +530,18 @@ export default function GamesSection() {
                         <CategoryCard
                             active={activeCategory === "All"}
                             label={t("games.categories.all") || "All Games"}
-                            image="/image/categories/all-games-banner.png"
+                            image={LOCAL_CATEGORY_IMAGE_MAP["all-games"]}
                             count={allGames.length}
                             onClick={() => setActiveCategory("All")}
                         />
 
-                        {orderedCategories.map((c) => (
+                        {dynamicCategories.map((c) => (
                             <CategoryCard
                                 key={c.id}
                                 active={activeCategory === c.id}
                                 label={c.label}
                                 image={c.image}
-                                count={categoryCounts.get(c.id) || 0}
+                                count={c.count}
                                 onClick={() => setActiveCategory(c.id)}
                             />
                         ))}
@@ -651,7 +559,7 @@ export default function GamesSection() {
                             <span className="text-white/85">
                                 {activeCategory === "All"
                                     ? t("games.categories.all") || "All Categories"
-                                    : CATEGORY_DEFS.find((c) => c.id === activeCategory)?.label}
+                                    : dynamicCategories.find((c) => c.id === activeCategory)?.label || "All Categories"}
                             </span>
                             <span className="text-white/60"> · </span>
                             <span className="text-white/85">{activeType === "All" ? t("games.types.all") || "All Types" : activeType}</span>
@@ -797,7 +705,7 @@ export default function GamesSection() {
                         </div>
 
                         <Pagination
-                            page={page}
+                            page={safePage}
                             totalPages={totalPages}
                             onPrev={() => setPage((p) => Math.max(1, p - 1))}
                             onNext={() => setPage((p) => Math.min(totalPages, p + 1))}
