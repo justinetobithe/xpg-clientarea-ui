@@ -14,8 +14,12 @@ function useMobileViewportFix(enabled = true) {
 
         const setVars = () => {
             const h = window.innerHeight || 0;
-            if (h) document.documentElement.style.setProperty("--app-vh", `${h * 0.01}px`);
-            if (window.visualViewport?.height) document.documentElement.style.setProperty("--vvh", `${window.visualViewport.height * 0.01}px`);
+            if (h) {
+                document.documentElement.style.setProperty("--app-vh", `${h * 0.01}px`);
+            }
+            if (window.visualViewport?.height) {
+                document.documentElement.style.setProperty("--vvh", `${window.visualViewport.height * 0.01}px`);
+            }
         };
 
         setVars();
@@ -65,6 +69,7 @@ export default function Home() {
             stopUserDownloadsListener();
             return;
         }
+
         startUserDownloadsListener(user.uid, 10);
         return () => stopUserDownloadsListener();
     }, [user?.uid, startUserDownloadsListener, stopUserDownloadsListener]);
@@ -75,32 +80,33 @@ export default function Home() {
     }, [startAnnouncementsListener, stopAnnouncementsListener]);
 
     return (
-        <div className="w-full min-h-[calc(var(--vvh, var(--app-vh, 1vh))*100)] bg-[#0b0d13]">
+        <div className="w-full min-h-[calc(var(--vvh,var(--app-vh,1vh))*100)] bg-[#0b0d13] overflow-x-hidden">
             <HeroBanner
                 image="/image/welcome-banner.png"
                 className="mt-0"
-                imgClassName="object-[center_15%] sm:object-center"
+                imgClassName="object-[center_20%] sm:object-center"
                 overlayClassName="bg-gradient-to-b from-black/35 via-black/60 to-black/85"
-                heightClassName="h-[240px] sm:h-[320px] md:h-[520px] lg:h-[680px]"
+                heightClassName="h-[170px] xs:h-[190px] sm:h-[260px] md:h-[420px] lg:h-[680px]"
+                priority
             >
                 <div
-                    className="h-full flex items-center justify-center px-4"
+                    className="flex h-full items-start justify-center px-4 pt-16 sm:items-center sm:pt-0"
                     style={{
-                        paddingTop: "calc(env(safe-area-inset-top) + 64px)",
+                        paddingTop: "calc(env(safe-area-inset-top) + 52px)",
                         paddingLeft: "calc(16px + env(safe-area-inset-left))",
                         paddingRight: "calc(16px + env(safe-area-inset-right))",
                     }}
                 >
-                    <div className="text-center max-w-[92vw]">
-                        <div className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-black/40 px-4 py-1.5 mb-3 backdrop-blur-sm">
+                    <div className="w-full max-w-[92vw] text-center sm:max-w-[88vw]">
+                        <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-white/25 bg-black/40 px-3 py-1.5 backdrop-blur-sm sm:mb-3 sm:px-4">
                             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.9)] animate-pulse" />
-                            <span className="text-[10px] sm:text-[11px] md:text-xs font-semibold tracking-[0.28em] text-white/75">
+                            <span className="text-[9px] font-semibold tracking-[0.18em] text-white/75 sm:text-[11px] sm:tracking-[0.28em] md:text-xs">
                                 {t("home.welcomeBadge")}
                             </span>
                         </div>
 
-                        <h1 className="text-[34px] sm:text-5xl md:text-6xl lg:text-[4.5rem] font-black tracking-tight leading-[1.05]">
-                            <span className="block bg-gradient-to-r from-white via-amber-200 to-orange-400 bg-clip-text text-transparent drop-shadow-[0_14px_40px_rgba(0,0,0,0.95)]">
+                        <h1 className="text-[24px] font-black leading-[1.02] tracking-tight xs:text-[28px] sm:text-5xl md:text-6xl lg:text-[4.5rem]">
+                            <span className="block break-words bg-gradient-to-r from-white via-amber-200 to-orange-400 bg-clip-text text-transparent drop-shadow-[0_14px_40px_rgba(0,0,0,0.95)]">
                                 {t("home.title")}
                             </span>
                         </h1>
@@ -109,14 +115,14 @@ export default function Home() {
             </HeroBanner>
 
             <div
-                className="px-4 md:px-8 py-8 max-w-7xl mx-auto w-full"
+                className="mx-auto w-full max-w-7xl min-w-0 px-4 py-6 md:px-8 sm:py-8"
                 style={{
                     paddingLeft: "calc(16px + env(safe-area-inset-left))",
                     paddingRight: "calc(16px + env(safe-area-inset-right))",
                     paddingBottom: "calc(32px + env(safe-area-inset-bottom))",
                 }}
             >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 items-stretch">
+                <div className="grid min-w-0 grid-cols-1 items-stretch gap-5 sm:gap-6 md:grid-cols-2 md:gap-8">
                     <div className="min-w-0">
                         <RecentDownloadsPanel items={downloads} loading={loadingDownloads} error={downloadsError} />
                     </div>

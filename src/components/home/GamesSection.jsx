@@ -12,22 +12,30 @@ function cx(...classes) {
 function useMobileViewportFix(enabled = true) {
     useEffect(() => {
         if (!enabled) return;
+
         const setVars = () => {
             const h = window.innerHeight || 0;
-            if (h) document.documentElement.style.setProperty("--app-vh", `${h * 0.01}px`);
+            if (h) {
+                document.documentElement.style.setProperty("--app-vh", `${h * 0.01}px`);
+            }
             if (window.visualViewport?.height) {
                 document.documentElement.style.setProperty("--vvh", `${window.visualViewport.height * 0.01}px`);
             }
         };
+
         setVars();
+
         const vv = window.visualViewport;
         const onVV = () => setVars();
+
         if (vv) {
             vv.addEventListener("resize", onVV);
             vv.addEventListener("scroll", onVV);
         }
+
         window.addEventListener("resize", setVars);
         window.addEventListener("orientationchange", setVars);
+
         return () => {
             window.removeEventListener("resize", setVars);
             window.removeEventListener("orientationchange", setVars);
@@ -42,6 +50,7 @@ function useMobileViewportFix(enabled = true) {
 function usePageSize() {
     const [size, setSize] = useState(() => {
         const w = typeof window !== "undefined" ? window.innerWidth : 1200;
+        if (w < 480) return 8;
         if (w < 640) return 10;
         if (w < 1024) return 12;
         return 16;
@@ -50,9 +59,10 @@ function usePageSize() {
     useEffect(() => {
         const onResize = () => {
             const w = window.innerWidth;
-            const next = w < 640 ? 10 : w < 1024 ? 12 : 16;
+            const next = w < 480 ? 8 : w < 640 ? 10 : w < 1024 ? 12 : 16;
             setSize(next);
         };
+
         window.addEventListener("resize", onResize, { passive: true });
         return () => window.removeEventListener("resize", onResize);
     }, []);
@@ -125,7 +135,7 @@ function GameCardSkeleton() {
 
 function GamesGridSkeleton({ count = 12 }) {
     return (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {Array.from({ length: count }).map((_, i) => (
                 <GameCardSkeleton key={i} />
             ))}
@@ -143,7 +153,7 @@ function GameImage({ src, alt }) {
 
     if (!src || failed) {
         return (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/30 text-white/50 text-xs">
+            <div className="absolute inset-0 flex items-center justify-center bg-black/30 text-white/50 text-[10px] sm:text-xs">
                 {t("games.image.noImage")}
             </div>
         );
@@ -167,18 +177,22 @@ function CategoryCard({ active, label, image, onClick, count }) {
             type="button"
             onClick={onClick}
             className={cx(
-                "snap-start shrink-0 w-[60%] sm:w-[38%] lg:w-[26%]",
-                "rounded-xl overflow-hidden border bg-white/[0.03] shadow-[0_10px_30px_-18px_rgba(0,0,0,0.8)] transition",
-                "border-white/10 hover:-translate-y-0.5 hover:scale-[1.02]",
+                "snap-start shrink-0 w-[78%] xs:w-[68%] sm:w-[44%] md:w-[34%] lg:w-[26%]",
+                "rounded-xl overflow-hidden border bg-white/[0.03] shadow-[0_10px_30px_-18px_rgba(0,0,0,0.8)] transition-transform duration-200 will-change-transform origin-center",
+                "border-white/10 hover:-translate-y-1 hover:scale-[1.02]",
                 active ? "ring-2 ring-primary" : ""
             )}
         >
             <div className="relative aspect-[16/9] bg-black/20 overflow-hidden">
                 <GameImage src={image} alt={label} />
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/45 via-black/10 to-black/0 opacity-95" />
-                <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between gap-2">
-                    <div className="text-white text-sm font-semibold truncate">{label}</div>
-                    <div className="text-xs text-white/80 bg-black/35 px-2 py-1 rounded-md">{count}</div>
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-black/0 opacity-95" />
+                <div className="absolute bottom-2 left-2 right-2 flex items-end justify-between gap-2">
+                    <div className="text-white text-xs sm:text-sm font-semibold leading-tight line-clamp-2 text-left">
+                        {label}
+                    </div>
+                    <div className="shrink-0 text-[10px] sm:text-xs text-white/80 bg-black/35 px-2 py-1 rounded-md">
+                        {count}
+                    </div>
                 </div>
             </div>
         </button>
@@ -190,7 +204,7 @@ function GameCard({ to, imageURL, title }) {
         <Link
             to={to}
             className={cx(
-                "group rounded-xl overflow-hidden border transition will-change-transform",
+                "group rounded-xl overflow-hidden border transition will-change-transform min-w-0",
                 "bg-white/[0.03] border-white/10 shadow-[0_10px_30px_-18px_rgba(0,0,0,0.8)] hover:shadow-primary/30",
                 "hover:-translate-y-0.5 hover:scale-[1.02] active:scale-[0.99]"
             )}
@@ -199,8 +213,10 @@ function GameCard({ to, imageURL, title }) {
                 <GameImage src={imageURL} alt={title} />
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-black/0 to-black/0 opacity-90" />
             </div>
-            <div className="px-3 py-3">
-                <div className="text-center text-white text-sm font-semibold leading-tight truncate">{title}</div>
+            <div className="px-2.5 sm:px-3 py-3">
+                <div className="text-center text-white text-xs sm:text-sm font-semibold leading-tight line-clamp-2 min-h-[2.5rem] sm:min-h-[2.75rem]">
+                    {title}
+                </div>
             </div>
         </Link>
     );
@@ -231,7 +247,7 @@ function Pagination({ page, totalPages, onPrev, onNext, onJump }) {
                 paddingRight: "env(safe-area-inset-right)",
             }}
         >
-            <div className="flex items-center justify-center gap-2 w-full">
+            <div className="flex items-center justify-center gap-2 w-full flex-wrap sm:flex-nowrap">
                 <button
                     type="button"
                     onClick={onPrev}
@@ -247,7 +263,7 @@ function Pagination({ page, totalPages, onPrev, onNext, onJump }) {
                     {t("games.pagination.prev")}
                 </button>
 
-                <div className="text-xs text-white/70 px-2">
+                <div className="text-xs text-white/70 px-2 text-center">
                     {t("games.pagination.page")} <span className="text-primary font-semibold">{page}</span> / {totalPages}
                 </div>
 
@@ -418,7 +434,7 @@ export default function GamesSection() {
     const scrollCatsBy = useCallback((dir) => {
         const el = catTrackRef.current;
         if (!el) return;
-        const step = Math.max(280, Math.round(el.clientWidth * 0.9));
+        const step = Math.max(220, Math.round(el.clientWidth * 0.9));
         el.scrollBy({ left: dir * step, behavior: "smooth" });
     }, []);
 
@@ -483,11 +499,14 @@ export default function GamesSection() {
     };
 
     return (
-        <section className="mt-8 space-y-8">
-            <div>
+        <section className="mt-6 sm:mt-8 space-y-6 sm:space-y-8 min-w-0">
+            <div className="min-w-0">
                 <div className="flex items-center justify-between mb-4 gap-3">
-                    <div className="text-lg font-semibold text-white">{t("games.categories.title") || "Categories"}</div>
-                    <div className="flex items-center gap-2">
+                    <div className="text-base sm:text-lg font-semibold text-white">
+                        {t("games.categories.title") || "Categories"}
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
                         <button
                             type="button"
                             aria-label="Prev categories"
@@ -518,69 +537,83 @@ export default function GamesSection() {
                 </div>
 
                 {!showSkeleton && (
-                    <div
-                        ref={catTrackRef}
-                        className={cx(
-                            "flex gap-4 pb-1 overflow-x-auto",
-                            "snap-x snap-mandatory",
-                            "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-                        )}
-                        style={{ WebkitOverflowScrolling: "touch", overscrollBehaviorX: "contain" }}
-                    >
-                        <CategoryCard
-                            active={activeCategory === "All"}
-                            label={t("games.categories.all") || "All Games"}
-                            image={LOCAL_CATEGORY_IMAGE_MAP["all-games"]}
-                            count={allGames.length}
-                            onClick={() => setActiveCategory("All")}
-                        />
-
-                        {dynamicCategories.map((c) => (
+                    <div className="pt-2">
+                        <div
+                            ref={catTrackRef}
+                            className={cx(
+                                "flex gap-3 sm:gap-4 px-1 pt-2 pb-3 overflow-x-auto min-w-0",
+                                "snap-x snap-mandatory",
+                                "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                            )}
+                            style={{ WebkitOverflowScrolling: "touch", overscrollBehaviorX: "contain" }}
+                        >
                             <CategoryCard
-                                key={c.id}
-                                active={activeCategory === c.id}
-                                label={c.label}
-                                image={c.image}
-                                count={c.count}
-                                onClick={() => setActiveCategory(c.id)}
+                                active={activeCategory === "All"}
+                                label={t("games.categories.all") || "All Games"}
+                                image={LOCAL_CATEGORY_IMAGE_MAP["all-games"]}
+                                count={allGames.length}
+                                onClick={() => setActiveCategory("All")}
                             />
-                        ))}
+
+                            {dynamicCategories.map((c) => (
+                                <CategoryCard
+                                    key={c.id}
+                                    active={activeCategory === c.id}
+                                    label={c.label}
+                                    image={c.image}
+                                    count={c.count}
+                                    onClick={() => setActiveCategory(c.id)}
+                                />
+                            ))}
+                        </div>
                     </div>
                 )}
 
                 {showSkeleton && <div className="text-sm text-white/60">{t("games.categories.loading") || "Loading..."}</div>}
             </div>
 
-            <div>
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-4">
-                    <div className="flex items-center gap-3 min-w-0">
-                        <div className="text-lg font-semibold text-white min-w-0 truncate">
-                            {(t("games.list.title") || "Games")}:{" "}
-                            <span className="text-white/85">
-                                {activeCategory === "All"
-                                    ? t("games.categories.all") || "All Categories"
-                                    : dynamicCategories.find((c) => c.id === activeCategory)?.label || "All Categories"}
-                            </span>
-                            <span className="text-white/60"> · </span>
-                            <span className="text-white/85">{activeType === "All" ? t("games.types.all") || "All Types" : activeType}</span>
-                            <span className="text-white/60"> · </span>
-                            <span className="text-white/85">{showSkeleton ? allGames.length : filteredGames.length}</span>
+            <div className="min-w-0">
+                <div className="flex flex-col gap-3 mb-4">
+                    <div className="flex flex-col gap-2 min-w-0">
+                        <div className="min-w-0 max-w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
+                            <div className="text-base sm:text-lg font-semibold text-white leading-snug break-words">
+                                {(t("games.list.title") || "Games")}:{" "}
+                                <span className="text-white/85">
+                                    {activeCategory === "All"
+                                        ? t("games.categories.all") || "All Categories"
+                                        : dynamicCategories.find((c) => c.id === activeCategory)?.label || "All Categories"}
+                                </span>
+                                <span className="text-white/60"> · </span>
+                                <span className="text-white/85">
+                                    {activeType === "All" ? t("games.types.all") || "All Types" : activeType}
+                                </span>
+                                <span className="text-white/60"> · </span>
+                                <span className="text-white/85">{showSkeleton ? allGames.length : filteredGames.length}</span>
+                            </div>
                         </div>
 
                         {(activeCategory !== "All" || activeType !== "All" || inputValue) && (
-                            <button
-                                type="button"
-                                onClick={clearAll}
-                                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/15 bg-white/[0.03] hover:bg-white/[0.06] text-white text-xs font-semibold"
-                            >
-                                <X className="h-4 w-4" />
-                                {t("games.list.clearAll") || "Clear"}
-                            </button>
+                            <div>
+                                <button
+                                    type="button"
+                                    onClick={clearAll}
+                                    className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-white/15 bg-white/[0.03] hover:bg-white/[0.06] text-white text-xs font-semibold"
+                                >
+                                    <X className="h-4 w-4" />
+                                    {t("games.list.clearAll") || "Clear"}
+                                </button>
+                            </div>
                         )}
                     </div>
 
-                    <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto" style={{ paddingLeft: "env(safe-area-inset-left)", paddingRight: "env(safe-area-inset-right)" }}>
-                        <div className="relative flex items-center flex-1 min-w-0">
+                    <div
+                        className="flex flex-col gap-3 w-full"
+                        style={{
+                            paddingLeft: "env(safe-area-inset-left)",
+                            paddingRight: "env(safe-area-inset-right)",
+                        }}
+                    >
+                        <div className="relative flex items-center w-full min-w-0">
                             <input
                                 type="text"
                                 value={inputValue}
@@ -604,7 +637,7 @@ export default function GamesSection() {
                                     }, 450);
                                 }}
                                 placeholder={t("games.list.searchPlaceholder") || "Search games..."}
-                                className="w-full bg-white/[0.03] rounded-lg py-2 pl-10 pr-10 text-sm text-white border border-white/10 focus:outline-none focus:ring-1 focus:ring-primary transition"
+                                className="w-full min-w-0 bg-white/[0.03] rounded-xl py-3 pl-10 pr-10 text-sm text-white border border-white/10 focus:outline-none focus:ring-1 focus:ring-primary transition"
                                 inputMode="search"
                                 enterKeyHint="search"
                                 autoCorrect="off"
@@ -628,63 +661,77 @@ export default function GamesSection() {
                             ) : null}
                         </div>
 
-                        <Listbox value={activeType} onChange={(v) => setActiveType(v)}>
-                            {({ open }) => (
-                                <div className="relative w-full sm:w-56 z-10">
-                                    <Listbox.Button className="relative w-full cursor-default rounded-lg bg-white/[0.03] py-2 pl-3 pr-10 text-left shadow-md focus:outline-none border border-white/10 text-white transition hover:bg-white/[0.05]">
-                                        <span className="block truncate text-xs">{activeType === "All" ? t("games.types.all") || "All Types" : activeType}</span>
-                                        <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                                            <ChevronDown className={cx("h-5 w-5 text-gray-400 transition", open ? "rotate-180" : "")} />
-                                        </span>
-                                    </Listbox.Button>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full items-start">
+                            <Listbox value={activeType} onChange={(v) => setActiveType(v)}>
+                                {({ open }) => (
+                                    <div className={cx("relative isolate w-full", open ? "z-[70]" : "z-[20]")}>
+                                        <Listbox.Button className="relative w-full cursor-default rounded-xl bg-white/[0.03] py-3 pl-3 pr-10 text-left shadow-md focus:outline-none border border-white/10 text-white transition hover:bg-white/[0.05]">
+                                            <span className="block truncate text-sm">
+                                                {activeType === "All" ? t("games.types.all") || "All Types" : activeType}
+                                            </span>
+                                            <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                                                <ChevronDown className={cx("h-5 w-5 text-gray-400 transition", open ? "rotate-180" : "")} />
+                                            </span>
+                                        </Listbox.Button>
 
-                                    <Listbox.Options className="absolute mt-1 max-h-72 w-full overflow-auto rounded-md bg-[#151620] py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm border border-white/10">
-                                        {availableTypes.map((tp) => (
-                                            <Listbox.Option
-                                                key={tp}
-                                                className={({ active }) => cx("relative cursor-default select-none py-2 px-4 text-xs", active ? "bg-primary/30 text-white" : "text-white")}
-                                                value={tp}
-                                            >
-                                                {({ selected }) => (
-                                                    <span className={cx("block truncate", selected ? "font-medium" : "font-normal")}>
-                                                        {tp === "All" ? t("games.types.all") || "All Types" : tp}
-                                                    </span>
-                                                )}
-                                            </Listbox.Option>
-                                        ))}
-                                    </Listbox.Options>
-                                </div>
-                            )}
-                        </Listbox>
+                                        <Listbox.Options className="absolute left-0 right-0 top-full mt-2 max-h-72 overflow-y-auto overflow-x-hidden rounded-xl bg-[#151620] py-1 text-base shadow-[0_16px_40px_rgba(0,0,0,0.45)] ring-1 ring-white/10 focus:outline-none sm:text-sm">
+                                            {availableTypes.map((tp) => (
+                                                <Listbox.Option
+                                                    key={tp}
+                                                    className={({ active }) =>
+                                                        cx(
+                                                            "relative cursor-default select-none py-3 px-4 text-sm leading-tight",
+                                                            active ? "bg-primary/30 text-white" : "text-white"
+                                                        )
+                                                    }
+                                                    value={tp}
+                                                >
+                                                    {({ selected }) => (
+                                                        <span className={cx("block truncate", selected ? "font-medium" : "font-normal")}>
+                                                            {tp === "All" ? t("games.types.all") || "All Types" : tp}
+                                                        </span>
+                                                    )}
+                                                </Listbox.Option>
+                                            ))}
+                                        </Listbox.Options>
+                                    </div>
+                                )}
+                            </Listbox>
 
-                        <Listbox value={sortBy} onChange={setSortBy}>
-                            {({ open }) => (
-                                <div className="relative w-full sm:w-56 z-10">
-                                    <Listbox.Button className="relative w-full cursor-default rounded-lg bg-white/[0.03] py-2 pl-3 pr-10 text-left shadow-md focus:outline-none border border-white/10 text-white transition hover:bg-white/[0.05]">
-                                        <span className="block truncate text-xs">{sortBy.label}</span>
-                                        <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                                            <ChevronDown className={cx("h-5 w-5 text-gray-400 transition", open ? "rotate-180" : "")} />
-                                        </span>
-                                    </Listbox.Button>
+                            <Listbox value={sortBy} onChange={setSortBy}>
+                                {({ open }) => (
+                                    <div className={cx("relative isolate w-full", open ? "z-[70]" : "z-[10]")}>
+                                        <Listbox.Button className="relative w-full cursor-default rounded-xl bg-white/[0.03] py-3 pl-3 pr-10 text-left shadow-md focus:outline-none border border-white/10 text-white transition hover:bg-white/[0.05]">
+                                            <span className="block truncate text-sm">{sortBy.label}</span>
+                                            <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                                                <ChevronDown className={cx("h-5 w-5 text-gray-400 transition", open ? "rotate-180" : "")} />
+                                            </span>
+                                        </Listbox.Button>
 
-                                    <Listbox.Options className="absolute mt-1 max-h-72 w-full overflow-auto rounded-md bg-[#151620] py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm border border-white/10">
-                                        {sortOptions.map((option) => (
-                                            <Listbox.Option
-                                                key={option.value}
-                                                className={({ active }) => cx("relative cursor-default select-none py-2 px-4 text-xs", active ? "bg-primary/30 text-white" : "text-white")}
-                                                value={option}
-                                            >
-                                                {({ selected }) => (
-                                                    <span className={cx("block truncate", selected ? "font-medium" : "font-normal")}>
-                                                        {option.label}
-                                                    </span>
-                                                )}
-                                            </Listbox.Option>
-                                        ))}
-                                    </Listbox.Options>
-                                </div>
-                            )}
-                        </Listbox>
+                                        <Listbox.Options className="absolute left-0 right-0 top-full mt-2 max-h-72 overflow-y-auto overflow-x-hidden rounded-xl bg-[#151620] py-1 text-base shadow-[0_16px_40px_rgba(0,0,0,0.45)] ring-1 ring-white/10 focus:outline-none sm:text-sm">
+                                            {sortOptions.map((option) => (
+                                                <Listbox.Option
+                                                    key={option.value}
+                                                    className={({ active }) =>
+                                                        cx(
+                                                            "relative cursor-default select-none py-3 px-4 text-sm leading-tight",
+                                                            active ? "bg-primary/30 text-white" : "text-white"
+                                                        )
+                                                    }
+                                                    value={option}
+                                                >
+                                                    {({ selected }) => (
+                                                        <span className={cx("block truncate", selected ? "font-medium" : "font-normal")}>
+                                                            {option.label}
+                                                        </span>
+                                                    )}
+                                                </Listbox.Option>
+                                            ))}
+                                        </Listbox.Options>
+                                    </div>
+                                )}
+                            </Listbox>
+                        </div>
                     </div>
                 </div>
 
@@ -698,7 +745,7 @@ export default function GamesSection() {
 
                 {!showSkeleton && !error && filteredGames.length > 0 && (
                     <>
-                        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                        <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 lg:grid-cols-4 min-w-0">
                             {pageSlice.map((game) => (
                                 <GameCard key={game.id} to={`/game/${game.id}`} imageURL={game.imageURL} title={getGameName(game, i18n, t)} />
                             ))}

@@ -8,6 +8,8 @@ export default function HeroBanner({
     alt = "Hero banner",
     imgClassName = "",
     fallbackAspect = "16/9",
+    heightClassName = "",
+    priority = false,
 }) {
     const [ratio, setRatio] = useState(null);
 
@@ -25,24 +27,26 @@ export default function HeroBanner({
     }, [image]);
 
     const aspect = useMemo(() => ratio || fallbackAspect, [ratio, fallbackAspect]);
+    const hasCustomHeight = Boolean(heightClassName?.trim());
 
     return (
         <section
             className={[
-                "relative w-screen left-1/2 right-1/2 -mx-[50vw] overflow-hidden border-b border-border bg-black",
+                "relative w-full overflow-hidden border-b border-border bg-black",
+                hasCustomHeight ? heightClassName : "",
                 className,
             ].join(" ")}
-            style={{ aspectRatio: aspect }}
+            style={hasCustomHeight ? undefined : { aspectRatio: aspect }}
         >
             {image ? (
                 <img
                     src={image}
                     alt={alt}
                     className={[
-                        "absolute inset-0 w-full h-full object-cover object-center select-none",
+                        "absolute inset-0 h-full w-full select-none object-cover object-center",
                         imgClassName,
                     ].join(" ")}
-                    loading="eager"
+                    loading={priority ? "eager" : "lazy"}
                     draggable={false}
                 />
             ) : (
@@ -56,7 +60,7 @@ export default function HeroBanner({
                 ].join(" ")}
             />
 
-            <div className="relative z-10 h-full">{children}</div>
+            <div className="relative z-10 h-full w-full">{children}</div>
         </section>
     );
 }

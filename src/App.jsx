@@ -17,29 +17,15 @@ import GameDetails from "./pages/GameDetails";
 import { ToastProvider } from "./contexts/ToastContext";
 import CollectionsDrawer from "./components/CollectionsDrawer";
 import NotFound from "./pages/NotFound";
+import SplashScreen from "./components/common/SplashScreen";
 
 function ProtectedLayout({ children }) {
   return (
-    <div className="min-h-screen bg-evo text-foreground flex flex-col">
+    <div className="flex min-h-screen flex-col bg-evo text-foreground">
       <Navbar />
       <CollectionsDrawer />
       <div className="flex-1">{children}</div>
       <Footer />
-    </div>
-  );
-}
-
-function Splash() {
-  return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden text-foreground">
-      <div className="absolute inset-0 bg-[url('/image/bg.jpg')] bg-cover bg-center scale-110 blur-xl opacity-60" />
-      <div className="absolute inset-0 bg-black/70" />
-      <div className="relative w-[94%] max-w-md rounded-2xl border border-border bg-card shadow-2xl p-8 md:p-10">
-        <div className="flex flex-col items-center gap-4">
-          <img src="/image/logo-white.png" alt="Logo" className="h-[90px]" />
-          <div className="text-white/80 text-sm">Loading…</div>
-        </div>
-      </div>
     </div>
   );
 }
@@ -66,7 +52,7 @@ export default function App() {
       <DialogProvider>
         <BrowserRouter>
           {loading ? (
-            <Splash />
+            <SplashScreen />
           ) : (
             <Routes>
               <Route path="/" element={requireAccess(<Home />)} />
