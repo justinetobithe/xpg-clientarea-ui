@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { collection, getDocs, orderBy, query } from "firebase/firestore";
 import { db } from "../firebase";
@@ -10,23 +10,36 @@ const normalize = (s) => String(s || "").toLowerCase().trim();
 const gameMatches = (g, term) => {
     const t = normalize(term);
     if (!t) return true;
+
     const name = normalize(g?.name || g?.title || g?.game_name);
-    return name.includes(t);
+    const category =
+        typeof g?.category === "string"
+            ? normalize(g.category)
+            : normalize(g?.category?.name);
+    const desc = normalize(g?.description);
+
+    return name.includes(t) || category.includes(t) || desc.includes(t);
 };
 
 const sectionMatches = (s, term) => {
     const t = normalize(term);
     if (!t) return true;
+
     const name = normalize(s?.name || s?.title);
-    return name.includes(t);
+    const desc = normalize(s?.description);
+
+    return name.includes(t) || desc.includes(t);
 };
 
 const fileMatches = (f, term) => {
     const t = normalize(term);
     if (!t) return true;
+
     const name = normalize(f?.name || f?.filename || f?.title);
     const desc = normalize(f?.description);
-    return name.includes(t) || desc.includes(t);
+    const type = normalize(f?.type || f?.fileType);
+
+    return name.includes(t) || desc.includes(t) || type.includes(t);
 };
 
 async function fetchSectionsAndFilesForGames(gameIds) {
@@ -65,7 +78,8 @@ export function useSearchQuery(term) {
     const baseLoading = gamesQuery.isLoading || announcementsQuery.isLoading;
     const baseError = gamesQuery.error || announcementsQuery.error;
 
-    const baseGames = gamesQuery.data || [];
+    const gamesData = gamesQuery.data;
+    const baseGames = Array.isArray(gamesData) ? gamesData : gamesData?.games || [];
     const baseAnnouncements = announcementsQuery.data || [];
 
     const matchedAnnouncements = useMemo(() => {
@@ -81,17 +95,19 @@ export function useSearchQuery(term) {
     const gameIds = useMemo(() => matchedGames.map((g) => g.id).filter(Boolean), [matchedGames]);
 
     const sectionsQuery = useQuery({
-        queryKey: ["search-sections-files", gameIds.join("|")],
+        queryKey: ["search-sections-files", gameIds.join("|"), q],
         queryFn: () => fetchSectionsAndFilesForGames(gameIds),
-        enabled: !!q && gameIds.length > 0
+        enabled: !!q && gameIds.length > 0,
     });
 
     const hydratedGames = useMemo(() => {
         if (!q || matchedGames.length === 0) return [];
 
         const map = sectionsQuery.data || {};
+
         return matchedGames.map((g) => {
             const sectionsRaw = map[g.id] || [];
+
             const sections = sectionsRaw
                 .map((s) => {
                     const keepSection = sectionMatches(s, q);
@@ -107,7 +123,6 @@ export function useSearchQuery(term) {
 
     const isLoading = baseLoading || sectionsQuery.isLoading;
     const error = baseError || sectionsQuery.error;
-
     const totalCount = (matchedAnnouncements?.length || 0) + (hydratedGames?.length || 0);
 
     return {
@@ -116,6 +131,6 @@ export function useSearchQuery(term) {
         q,
         matchedAnnouncements,
         matchedGames: hydratedGames,
-        totalCount
+        totalCount,
     };
 }

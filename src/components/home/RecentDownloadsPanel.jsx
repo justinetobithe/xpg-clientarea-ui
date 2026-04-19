@@ -13,13 +13,13 @@ function cx(...classes) {
 function RecentDownloadSkeletonRow() {
     return (
         <div className="hidden md:grid grid-cols-[56px_minmax(0,1fr)_150px_90px] items-center gap-3 px-4 py-3 animate-pulse">
-            <div className="h-10 w-10 rounded bg-white/10" />
+            <div className="h-10 w-10 rounded-xl bg-white/10" />
             <div className="space-y-2">
                 <div className="h-4 w-11/12 bg-white/10 rounded" />
                 <div className="h-3 w-1/2 bg-white/10 rounded" />
             </div>
             <div className="h-3 w-24 bg-white/10 rounded" />
-            <div className="h-3 w-14 bg-white/10 rounded justify-self-end" />
+            <div className="h-9 w-9 bg-white/10 rounded-xl justify-self-end" />
         </div>
     );
 }
@@ -27,15 +27,15 @@ function RecentDownloadSkeletonRow() {
 function RecentDownloadSkeletonCard() {
     return (
         <div className="md:hidden px-4 py-3 animate-pulse">
-            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
                 <div className="flex items-start gap-3">
-                    <div className="h-10 w-10 rounded bg-white/10" />
+                    <div className="h-10 w-10 rounded-xl bg-white/10" />
                     <div className="min-w-0 flex-1 space-y-2">
                         <div className="h-4 w-11/12 bg-white/10 rounded" />
                         <div className="h-3 w-7/12 bg-white/10 rounded" />
                         <div className="h-3 w-5/12 bg-white/10 rounded" />
                     </div>
-                    <div className="h-9 w-9 rounded-lg bg-white/10" />
+                    <div className="h-9 w-9 rounded-xl bg-white/10" />
                 </div>
             </div>
         </div>
@@ -54,10 +54,10 @@ function TooltipIconButton({ label, disabled, onClick, children }) {
             onClick={onClick}
             className={cx(
                 "relative group inline-flex items-center justify-center",
-                "h-9 w-9 rounded-lg border border-white/10 bg-white/[0.04]",
-                "hover:bg-white/[0.08] active:bg-white/[0.10]",
-                "text-primary",
-                disabled ? "opacity-70 cursor-not-allowed" : ""
+                "h-10 w-10 rounded-xl border border-white/10 bg-white/[0.05]",
+                "hover:bg-white/[0.10] active:bg-white/[0.12] transition-all duration-200",
+                "text-primary shadow-[0_10px_24px_-18px_rgba(255,123,29,0.45)]",
+                disabled ? "opacity-70 cursor-not-allowed" : "hover:scale-[1.03]"
             )}
             aria-label={label}
             title={label}
@@ -66,7 +66,7 @@ function TooltipIconButton({ label, disabled, onClick, children }) {
             <span
                 className={cx(
                     "pointer-events-none absolute -top-9 right-0 z-10",
-                    "whitespace-nowrap rounded-md bg-black/80 px-2 py-1 text-[11px] text-white",
+                    "whitespace-nowrap rounded-md bg-black/85 px-2 py-1 text-[11px] text-white",
                     "opacity-0 translate-y-1 transition",
                     "group-hover:opacity-100 group-hover:translate-y-0",
                     "hidden md:block"
@@ -154,7 +154,7 @@ export default function RecentDownloadsPanel({ items = [], loading = false, erro
     const mobileMaxItems = 10;
 
     const mobileVisibleCards = 5;
-    const mobileRowHeight = 104;
+    const mobileRowHeight = 112;
     const mobileScrollHeight = mobileVisibleCards * mobileRowHeight;
 
     const desktopItems = Array.isArray(items) ? items.slice(0, desktopMaxItems) : [];
@@ -163,11 +163,13 @@ export default function RecentDownloadsPanel({ items = [], loading = false, erro
     const showMobileScroller = !loading && !error && mobileItems.length > 0;
 
     return (
-        <div className="bg-card border border-border rounded-2xl p-5 md:p-6 h-full min-h-[560px] flex flex-col">
-            <div className="flex items-center justify-between mb-4 shrink-0">
+        <div className="relative overflow-hidden bg-card border border-border rounded-[26px] p-5 md:p-6 h-full min-h-[560px] flex flex-col shadow-[0_20px_60px_-28px_rgba(0,0,0,0.95)]">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,123,29,0.10),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.04),transparent_30%)]" />
+
+            <div className="relative flex items-center justify-between mb-4 shrink-0">
                 <div>
                     <div className="text-lg font-semibold text-white flex items-center gap-2">
-                        <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-primary/15 border border-primary/30">
+                        <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-primary/15 border border-primary/30 shadow-[0_8px_22px_rgba(255,123,29,0.14)]">
                             <DownloadCloud className="h-4 w-4 text-primary" />
                         </span>
                         {t("downloads.title")}
@@ -176,8 +178,8 @@ export default function RecentDownloadsPanel({ items = [], loading = false, erro
                 </div>
             </div>
 
-            <div className="rounded-xl overflow-hidden border border-white/10 bg-background/10 flex-1 min-h-0">
-                <div className="hidden md:grid grid-cols-[56px_minmax(0,1fr)_150px_90px] items-center gap-3 px-4 py-3 text-xs font-bold text-white/80 bg-white/5">
+            <div className="relative rounded-[22px] overflow-hidden border border-white/10 bg-background/10 flex-1 min-h-0">
+                <div className="hidden md:grid grid-cols-[56px_minmax(0,1fr)_150px_90px] items-center gap-3 px-4 py-3 text-xs font-bold text-white/80 bg-white/[0.05] backdrop-blur-sm">
                     <div />
                     <div>{t("downloads.table.filename")}</div>
                     <div>{t("downloads.table.downloaded")}</div>
@@ -194,11 +196,16 @@ export default function RecentDownloadsPanel({ items = [], loading = false, erro
 
                 {!loading && error && <div className="text-sm text-red-400 py-6 text-center">{error}</div>}
 
-                {!loading && !error && items.length === 0 && <div className="text-sm text-white/60 py-6 text-center">{t("downloads.empty")}</div>}
+                {!loading && !error && items.length === 0 && (
+                    <div className="text-sm text-white/60 py-6 text-center">{t("downloads.empty")}</div>
+                )}
 
                 {showMobileScroller && (
                     <div className="md:hidden border-t border-white/10">
-                        <div className="px-4 pt-3 pb-2 flex items-center justify-between" style={{ paddingLeft: "env(safe-area-inset-left)", paddingRight: "env(safe-area-inset-right)" }}>
+                        <div
+                            className="px-4 pt-3 pb-2 flex items-center justify-between"
+                            style={{ paddingLeft: "env(safe-area-inset-left)", paddingRight: "env(safe-area-inset-right)" }}
+                        >
                             <div className="text-xs font-semibold text-white/70">{t("downloads.recent")}</div>
                             <div className="text-[11px] text-white/50">
                                 {t("downloads.showing", { count: Math.min(mobileItems.length, mobileMaxItems), plus: mobileItems.length >= mobileMaxItems ? "+" : "" })}
@@ -218,7 +225,7 @@ export default function RecentDownloadsPanel({ items = [], loading = false, erro
                                 const sectionTitle = (f.sectionTitle || f._sectionTitle || "").toString();
 
                                 const icon = thumb ? (
-                                    <img src={thumb} alt="" className="h-10 w-10 rounded object-cover" loading="lazy" />
+                                    <img src={thumb} alt="" className="h-11 w-11 rounded-xl object-cover" loading="lazy" />
                                 ) : ext === "PDF" ? (
                                     <FileText size={20} className="text-white/70" />
                                 ) : isImage(ext) ? (
@@ -228,13 +235,21 @@ export default function RecentDownloadsPanel({ items = [], loading = false, erro
                                 );
 
                                 return (
-                                    <div key={stableKey || `${name}-${idx}`} className="px-4 py-2" style={{ paddingLeft: "env(safe-area-inset-left)", paddingRight: "env(safe-area-inset-right)" }}>
-                                        <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+                                    <div
+                                        key={stableKey || `${name}-${idx}`}
+                                        className="px-4 py-2"
+                                        style={{ paddingLeft: "env(safe-area-inset-left)", paddingRight: "env(safe-area-inset-right)" }}
+                                    >
+                                        <div className="group rounded-2xl border border-white/10 bg-white/[0.04] p-3 transition hover:bg-white/[0.06] hover:border-primary/25">
                                             <div className="flex items-start gap-3">
-                                                <div className="flex h-10 w-10 items-center justify-center">{icon}</div>
+                                                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/[0.04] border border-white/10">
+                                                    {icon}
+                                                </div>
 
                                                 <div className="min-w-0 flex-1">
-                                                    <div className="text-sm font-semibold text-white leading-snug break-words whitespace-normal">{name}</div>
+                                                    <div className="text-sm font-semibold text-white leading-snug break-words whitespace-normal">
+                                                        {name}
+                                                    </div>
                                                     <div className="mt-1 text-xs text-white/60">
                                                         {sectionTitle ? <span className="break-words">{sectionTitle}</span> : <span>{t("downloads.dash")}</span>}
                                                         {ext ? <span>{` • ${ext}`}</span> : null}
@@ -279,12 +294,12 @@ export default function RecentDownloadsPanel({ items = [], loading = false, erro
                         const stableKey = stableKeyOf(f);
                         const isDownloading = !!stableKey && downloadingKey === stableKey;
 
-                        const rowBg = idx % 2 === 0 ? "bg-white/[0.02]" : "bg-white/[0.06]";
+                        const rowBg = idx % 2 === 0 ? "bg-white/[0.025]" : "bg-white/[0.05]";
                         const downloadedAt = formatDownloadedAt(f);
                         const sectionTitle = (f.sectionTitle || f._sectionTitle || "").toString();
 
                         const icon = thumb ? (
-                            <img src={thumb} alt="" className="h-10 w-10 rounded object-cover" loading="lazy" />
+                            <img src={thumb} alt="" className="h-11 w-11 rounded-xl object-cover" loading="lazy" />
                         ) : ext === "PDF" ? (
                             <FileText size={20} className="text-white/70" />
                         ) : isImage(ext) ? (
@@ -296,12 +311,21 @@ export default function RecentDownloadsPanel({ items = [], loading = false, erro
                         return (
                             <div
                                 key={stableKey || `${name}-${idx}`}
-                                className={cx("hidden md:grid grid-cols-[56px_minmax(0,1fr)_150px_90px] items-center gap-3 px-4 py-3", rowBg)}
+                                className={cx(
+                                    "hidden md:grid grid-cols-[56px_minmax(0,1fr)_150px_90px] items-center gap-3 px-4 py-3 transition",
+                                    rowBg,
+                                    "hover:bg-white/[0.07]"
+                                )}
                             >
-                                <div className="flex items-center justify-center">{icon}</div>
+                                <div className="flex items-center justify-center rounded-xl bg-white/[0.04] border border-white/10 h-11 w-11">
+                                    {icon}
+                                </div>
 
                                 <div className="min-w-0 pr-2">
-                                    <div className="text-sm font-semibold text-white leading-snug break-words whitespace-normal line-clamp-3" title={name}>
+                                    <div
+                                        className="text-sm font-semibold text-white leading-snug break-words whitespace-normal line-clamp-3"
+                                        title={name}
+                                    >
                                         {name}
                                     </div>
                                     <div className="text-xs text-white/60 truncate mt-0.5">

@@ -22,6 +22,18 @@ const truthy = (v) => v === true || v === "true" || v === 1;
 const isHidden = (g) =>
     g?.hidden === true || g?.hidden === "true" || g?.hidden === 1;
 
+function normalizeCategoryName(value) {
+    return String(value || "").trim().replace(/\s+/g, " ");
+}
+
+function slugifyCategory(value) {
+    return normalizeCategoryName(value)
+        .toLowerCase()
+        .replace(/&/g, "and")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+}
+
 function extractGameIdsFromPermissionsSnap(snap) {
     return Array.from(
         new Set(
@@ -94,6 +106,23 @@ async function fetchGamesForRole(roleId) {
     return fetchGamesByIds(gameIds);
 }
 
+async function fetchGameCategories() {
+    const snap = await getDocs(collection(db, "gameCategories"));
+    const categories = snap.docs.map((d) => {
+        const data = d.data() || {};
+        return {
+            id: d.id,
+            ...data,
+            name: normalizeCategoryName(data.name),
+            slug: data.slug || slugifyCategory(data.name),
+            bannerURL: data.bannerURL || "",
+        };
+    });
+
+    categories.sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")));
+    return categories;
+}
+
 export function useGamesQuery() {
     const authLoading = useAuthStore((s) => s.loading);
     const user = useAuthStore((s) => s.user);
@@ -103,14 +132,18 @@ export function useGamesQuery() {
 
     const uid = user?.uid || "";
     const roleId = useMemo(() => String(profile?.role_id ?? "").trim(), [profile?.role_id]);
-    const key = useMemo(() => ["games", uid || "anon", roleId || "no-role"], [uid, roleId]);
+    const key = useMemo(() => ["games-with-categories", uid || "anon", roleId || "no-role"], [uid, roleId]);
 
     const queryResult = useQuery({
         queryKey: key,
         enabled: !authLoading && !!uid && !!profile && !!roleId,
         queryFn: async () => {
             setRtError(null);
-            return fetchGamesForRole(roleId);
+            const [games, categories] = await Promise.all([
+                fetchGamesForRole(roleId),
+                fetchGameCategories(),
+            ]);
+            return { games, categories };
         },
         staleTime: 0,
         refetchOnMount: "always",
@@ -118,5 +151,9 @@ export function useGamesQuery() {
         refetchOnReconnect: true,
     });
 
-    return { ...queryResult, error: rtError ?? queryResult.error };
+    return {
+        ...queryResult,
+        data: queryResult.data || { games: [], categories: [] },
+        error: rtError ?? queryResult.error,
+    };
 }

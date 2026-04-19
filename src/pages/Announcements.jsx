@@ -54,13 +54,14 @@ const pickCtaUrl = (item) => {
 const isExternalUrl = (url) => /^https?:\/\//i.test(url);
 
 const SkeletonCard = () => (
-    <div className="rounded-3xl overflow-hidden border border-white/10 bg-white/[0.03] animate-pulse">
-        <div className="h-56 bg-white/5" />
-        <div className="p-5 space-y-3">
+    <div className="relative overflow-hidden rounded-[28px] border border-white/10 bg-white/[0.04] animate-pulse">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,123,29,0.10),transparent_30%)]" />
+        <div className="relative h-56 bg-white/5" />
+        <div className="relative p-5 space-y-3">
             <div className="h-7 bg-white/10 rounded w-4/5" />
             <div className="h-4 bg-white/10 rounded w-3/5" />
-            <div className="h-12 bg-white/10 rounded w-full" />
-            <div className="h-12 bg-white/10 rounded w-full" />
+            <div className="h-12 bg-white/10 rounded-2xl w-full" />
+            <div className="h-12 bg-white/10 rounded-2xl w-full" />
             <div className="h-4 bg-white/10 rounded w-32" />
         </div>
     </div>
@@ -69,18 +70,19 @@ const SkeletonCard = () => (
 function ActionRow({ icon: Icon, label, href, to }) {
     const base = cx(
         "w-full inline-flex items-center gap-3 rounded-2xl",
-        "bg-white/[0.03] hover:bg-white/[0.07] transition px-4 py-3 text-left"
+        "bg-white/[0.04] border border-white/8 hover:bg-white/[0.08] hover:border-primary/20",
+        "transition-all duration-300 px-4 py-3 text-left group/action"
     );
 
     const content = (
         <>
-            <span className="h-9 w-9 rounded-xl bg-white/[0.08] grid place-items-center shrink-0">
-                <Icon className="h-5 w-5 text-white/90" />
+            <span className="h-10 w-10 rounded-xl bg-white/[0.08] border border-white/10 grid place-items-center shrink-0 transition group-hover/action:bg-primary/12 group-hover/action:border-primary/20">
+                <Icon className="h-5 w-5 text-white/90 group-hover/action:text-primary transition" />
             </span>
             <span className="flex-1 min-w-0">
                 <span className="block text-sm font-semibold text-primary truncate">{label}</span>
             </span>
-            <ArrowUpRight className="h-4 w-4 text-white/55 shrink-0" />
+            <ArrowUpRight className="h-4 w-4 text-white/50 shrink-0 transition group-hover/action:text-primary group-hover/action:translate-x-0.5 group-hover/action:-translate-y-0.5" />
         </>
     );
 
@@ -112,36 +114,48 @@ function ActionRow({ icon: Icon, label, href, to }) {
         </Link>
     );
 }
- 
-function AnnouncementCard({ item }) {
+
+function AnnouncementCard({ item, index }) {
     const { t } = useTranslation();
 
     const title = item?.title || t("announcements.page.fallbackTitle");
     const dateLabel = formatLongDate(item?.date || item?.createdAt);
     const snippet = getPlainText(getAnnouncementHTML(item)).slice(0, 120);
-
     const ctaLabel = item?.ctaLabel || "View Marketing Pack";
     const ctaURL = pickCtaUrl(item);
 
     return (
-        <div className="rounded-3xl overflow-hidden border border-white/10 bg-white/[0.03] hover:bg-white/[0.05] transition shadow-[0_22px_90px_rgba(0,0,0,0.45)]">
+        <div
+            className="group relative rounded-[28px] overflow-hidden border border-white/10 bg-white/[0.04] hover:bg-white/[0.06] transition-all duration-300 shadow-[0_22px_90px_rgba(0,0,0,0.40)] hover:-translate-y-1 hover:border-primary/25 hover:shadow-[0_28px_90px_rgba(255,123,29,0.12)]"
+            style={{ animationDelay: `${index * 50}ms` }}
+        >
+            <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-primary/12 blur-3xl" />
+                <div className="absolute inset-x-[-30%] top-0 h-full rotate-12 bg-gradient-to-r from-transparent via-white/[0.05] to-transparent" />
+            </div>
+
             <div className="relative">
                 {item?.imageURL ? (
-                    <img src={item.imageURL} alt={title} className="h-56 w-full object-cover" loading="lazy" />
+                    <img
+                        src={item.imageURL}
+                        alt={title}
+                        className="h-56 w-full object-cover transition duration-700 group-hover:scale-[1.05]"
+                        loading="lazy"
+                    />
                 ) : (
                     <div className="h-56 bg-gradient-to-br from-white/10 via-white/5 to-transparent" />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
             </div>
 
-            <div className="p-5">
+            <div className="relative p-5">
                 <div className="text-white font-extrabold text-xl leading-snug line-clamp-2 break-words">{title}</div>
 
-                <div className="mt-2 text-sm text-white/70 line-clamp-2 min-h-[40px] break-words">
+                <div className="mt-2 text-sm text-white/72 line-clamp-2 min-h-[40px] break-words leading-relaxed">
                     {snippet || t("announcements.page.openToReadMore")}
                 </div>
 
-                <div className="mt-4 space-y-2">
+                <div className="mt-4 space-y-2.5">
                     {!!ctaURL && <ActionRow icon={ImageIcon} label={ctaLabel} href={ctaURL} />}
                     <ActionRow icon={BookOpen} label={t("announcements.page.open") || "Read Announcement"} to={`/announcement/${item.id}`} />
                 </div>
@@ -186,8 +200,9 @@ export default function Announcements() {
 
     return (
         <div className="w-full pt-20 md:pt-24 pb-[env(safe-area-inset-bottom)]">
-            <header className="bg-darken-evo border-b border-border py-10">
-                <div className="max-w-7xl mx-auto px-4 md:px-8">
+            <header className="relative bg-darken-evo border-b border-border py-10 overflow-hidden">
+                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,123,29,0.14),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.04),transparent_30%)]" />
+                <div className="relative max-w-7xl mx-auto px-4 md:px-8">
                     <div className="flex items-start gap-4 min-w-0">
                         <div className="h-12 w-12 rounded-2xl bg-primary/20 border border-primary/35 flex items-center justify-center shrink-0 shadow-[0_10px_40px_rgba(0,0,0,0.35)]">
                             <Sparkles className="h-5 w-5 text-primary" />
@@ -206,7 +221,7 @@ export default function Announcements() {
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
                             placeholder={t("announcements.page.searchPlaceholder")}
-                            className="w-full rounded-xl bg-black/25 border border-white/15 pl-9 pr-3 py-2.5 text-[16px] md:text-sm text-white placeholder:text-white/60 outline-none focus:ring-1 focus:ring-primary"
+                            className="w-full rounded-2xl bg-black/25 border border-white/15 pl-10 pr-3 py-3 text-[16px] md:text-sm text-white placeholder:text-white/55 outline-none focus:ring-1 focus:ring-primary focus:border-primary/30 transition"
                         />
                     </div>
                 </div>
@@ -220,14 +235,14 @@ export default function Announcements() {
                         ))}
                     </div>
                 ) : filtered.length === 0 ? (
-                    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+                    <div className="rounded-[26px] border border-white/10 bg-white/[0.04] p-6 shadow-[0_20px_80px_rgba(0,0,0,0.35)]">
                         <div className="text-white font-semibold text-lg mb-1">{t("announcements.page.empty.title")}</div>
                         <div className="text-white/80 text-sm">{t("announcements.page.empty.subtitle")}</div>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                        {filtered.map((a) => (
-                            <AnnouncementCard key={a.id} item={a} />
+                        {filtered.map((a, index) => (
+                            <AnnouncementCard key={a.id} item={a} index={index} />
                         ))}
                     </div>
                 )}

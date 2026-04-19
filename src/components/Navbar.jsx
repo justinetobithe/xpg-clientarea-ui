@@ -212,10 +212,8 @@ export default function Navbar() {
     const [open, setOpen] = useState(false);
     const [scrollY, setScrollY] = useState(0);
     const [logoutLoading, setLogoutLoading] = useState(false);
-
     const [searchValue, setSearchValue] = useState("");
     const [searchNavLoading, setSearchNavLoading] = useState(false);
-
     const [langPickerOpen, setLangPickerOpen] = useState(false);
 
     const timerRef = useRef(null);
@@ -358,7 +356,7 @@ export default function Navbar() {
             if (closeMobile) setOpen(false);
             nav(`/search?q=${encodeURIComponent(q)}`);
             setSearchNavLoading(false);
-        }, 450);
+        }, 380);
     };
 
     const openLiveGame = useCallback(() => {
@@ -385,7 +383,9 @@ export default function Navbar() {
             <header
                 className={cx(
                     "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
-                    isTop ? "bg-transparent" : "bg-black/80 backdrop-blur-md shadow-lg"
+                    isTop
+                        ? "bg-transparent"
+                        : "bg-black/75 backdrop-blur-xl border-b border-white/10 shadow-[0_18px_50px_rgba(0,0,0,0.45)]"
                 )}
                 style={{ paddingTop: "env(safe-area-inset-top)" }}
             >
@@ -435,7 +435,7 @@ export default function Navbar() {
                     <div className="flex items-center gap-2 md:gap-3 shrink-0">
                         <button
                             onClick={toggleDrawer}
-                            className="md:hidden relative flex items-center justify-center bg-primary text-primary-foreground h-9 w-9 rounded-md"
+                            className="md:hidden relative flex items-center justify-center bg-primary text-primary-foreground h-9 w-9 rounded-xl shadow-[0_10px_28px_rgba(255,123,29,0.28)]"
                             type="button"
                         >
                             <LayoutGrid size={18} />
@@ -446,33 +446,53 @@ export default function Navbar() {
 
                         <button
                             onClick={toggleDrawer}
-                            className="hidden md:flex items-center gap-2 bg-primary text-primary-foreground font-semibold px-4 py-2.5 rounded-md text-sm"
+                            className="hidden md:flex items-center gap-2 bg-primary text-primary-foreground font-semibold px-4 py-2.5 rounded-xl text-sm shadow-[0_10px_28px_rgba(255,123,29,0.26)] transition hover:brightness-105"
                             type="button"
                         >
                             {t("navbar.collections")}
                             <span className="bg-black text-white text-xs rounded-full px-2">{collectionsCount}</span>
                         </button>
 
-                        <div className="hidden md:flex items-center bg-white rounded-md overflow-hidden">
-                            <input
-                                value={searchValue}
-                                onChange={(e) => setSearchValue(e.target.value)}
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter") goSearch(false);
-                                }}
-                                disabled={logoutLoading}
-                                className="px-3 py-2 text-sm text-black outline-none w-60 disabled:opacity-70"
-                                placeholder={t("navbar.searchPlaceholder")}
-                            />
+                        <div className="hidden md:flex items-center relative">
+                            <div className="group relative flex items-center rounded-2xl border border-white/10 bg-white/[0.92] shadow-[0_16px_40px_rgba(0,0,0,0.25)] transition-all duration-300 focus-within:border-primary/40 focus-within:shadow-[0_18px_44px_rgba(255,123,29,0.18)] hover:shadow-[0_18px_44px_rgba(0,0,0,0.28)]">
+                                <div className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2">
+                                    <Search className="h-4.5 w-4.5 text-black/55 transition duration-300 group-focus-within:text-primary" />
+                                </div>
 
-                            <button
-                                type="button"
-                                onClick={() => goSearch(false)}
-                                disabled={logoutLoading || !String(searchValue || "").trim()}
-                                className="px-2 text-black disabled:opacity-70"
-                            >
-                                {searchNavLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search size={16} />}
-                            </button>
+                                <input
+                                    value={searchValue}
+                                    onChange={(e) => setSearchValue(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") goSearch(false);
+                                    }}
+                                    disabled={logoutLoading}
+                                    className="w-72 lg:w-80 bg-transparent pl-11 pr-12 py-3 text-sm text-black outline-none placeholder:text-black/40 disabled:opacity-70"
+                                    placeholder={t("navbar.searchPlaceholder")}
+                                />
+
+                                {searchValue ? (
+                                    <button
+                                        type="button"
+                                        onClick={() => setSearchValue("")}
+                                        className="absolute right-11 top-1/2 -translate-y-1/2 inline-flex h-7 w-7 items-center justify-center rounded-lg text-black/45 hover:bg-black/6 hover:text-black/70 transition"
+                                    >
+                                        <X className="h-4 w-4" />
+                                    </button>
+                                ) : null}
+
+                                <button
+                                    type="button"
+                                    onClick={() => goSearch(false)}
+                                    disabled={logoutLoading || !String(searchValue || "").trim()}
+                                    className={cx(
+                                        "mr-1.5 inline-flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300",
+                                        "bg-gradient-to-r from-[#ff7b1d] to-[#ffb15b] text-black shadow-[0_10px_24px_rgba(255,123,29,0.24)]",
+                                        "hover:scale-[1.03] hover:brightness-105 disabled:opacity-60 disabled:scale-100"
+                                    )}
+                                >
+                                    {searchNavLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search size={16} />}
+                                </button>
+                            </div>
                         </div>
 
                         <div className="hidden md:block">
@@ -591,7 +611,29 @@ export default function Navbar() {
                                     WebkitOverflowScrolling: "touch",
                                 }}
                             >
-                                <div className="space-y-2">
+                                <div className="space-y-3">
+                                    <div className="relative">
+                                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-white/55" />
+                                        <input
+                                            value={searchValue}
+                                            onChange={(e) => setSearchValue(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter") goSearch(true);
+                                            }}
+                                            disabled={logoutLoading}
+                                            placeholder={t("navbar.searchPlaceholder")}
+                                            className="w-full rounded-2xl border border-white/10 bg-white/[0.05] pl-11 pr-20 py-3 text-white placeholder:text-white/40 outline-none transition focus:border-primary/35 focus:bg-white/[0.07]"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => goSearch(true)}
+                                            disabled={logoutLoading || !String(searchValue || "").trim()}
+                                            className="absolute right-1.5 top-1/2 -translate-y-1/2 inline-flex h-10 items-center justify-center rounded-xl bg-gradient-to-r from-[#ff7b1d] to-[#ffb15b] px-3 text-black font-semibold disabled:opacity-60"
+                                        >
+                                            {searchNavLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                                        </button>
+                                    </div>
+
                                     <MobileSectionTitle>{t("navbar.language.header")}</MobileSectionTitle>
 
                                     <button

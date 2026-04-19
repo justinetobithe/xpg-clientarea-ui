@@ -91,8 +91,19 @@ function getGameName(game, i18n, t) {
     return name || t("games.untitled");
 }
 
-function getGameCategory(game) {
-    return normalizeCategory(game?.category);
+function getGameCategoryName(game) {
+    if (typeof game?.category === "string") return normalizeCategory(game.category);
+    return normalizeCategory(game?.category?.name);
+}
+
+function getGameCategorySlug(game) {
+    const categorySlug = game?.category?.slug;
+    if (categorySlug) return String(categorySlug).trim().toLowerCase();
+    return slugify(getGameCategoryName(game));
+}
+
+function getGameCategoryId(game) {
+    return String(game?.categoryId || game?.category?.id || "").trim();
 }
 
 const LOCAL_CATEGORY_IMAGE_MAP = {
@@ -115,19 +126,37 @@ const LOCAL_CATEGORY_IMAGE_MAP = {
     "32-cards": "/image/categories/32-cards-banner.png",
 };
 
-function getCategoryImage(categoryName, games) {
-    const slug = slugify(categoryName);
+function getCategoryImage(category) {
+    const slug = String(category?.slug || "").trim().toLowerCase();
+    if (category?.bannerURL) return category.bannerURL;
     if (LOCAL_CATEGORY_IMAGE_MAP[slug]) return LOCAL_CATEGORY_IMAGE_MAP[slug];
-    const match = games.find((g) => normalize(getGameCategory(g)) === normalize(categoryName));
-    return match?.bannerURL || match?.imageURL || "/image/categories/all-games-banner.png";
+    return "/image/categories/all-games-banner.png";
+}
+
+function matchesCategory(game, category) {
+    if (!game || !category) return false;
+
+    const gameCategoryId = getGameCategoryId(game);
+    const categoryId = String(category.id || "").trim();
+    if (gameCategoryId && categoryId && gameCategoryId === categoryId) return true;
+
+    const gameCategorySlug = getGameCategorySlug(game);
+    const categorySlug = String(category.slug || "").trim().toLowerCase();
+    if (gameCategorySlug && categorySlug && gameCategorySlug === categorySlug) return true;
+
+    const gameCategoryName = normalize(getGameCategoryName(game));
+    const categoryName = normalize(category.name);
+    return !!gameCategoryName && !!categoryName && gameCategoryName === categoryName;
 }
 
 function GameCardSkeleton() {
     return (
-        <div className="rounded-xl overflow-hidden bg-white/[0.03] border border-white/10 animate-pulse">
-            <div className="aspect-[16/10] bg-white/10" />
-            <div className="px-3 py-3">
-                <div className="h-4 bg-white/10 rounded w-4/5 mx-auto" />
+        <div className="rounded-2xl overflow-hidden bg-white/[0.04] border border-white/10 animate-pulse">
+            <div className="aspect-[16/11] bg-white/10" />
+            <div className="p-3 sm:p-4 space-y-3">
+                <div className="h-4 bg-white/10 rounded w-2/3" />
+                <div className="h-3 bg-white/10 rounded w-1/3" />
+                <div className="h-3 bg-white/10 rounded w-1/2" />
             </div>
         </div>
     );
@@ -165,7 +194,7 @@ function GameImage({ src, alt }) {
             alt={alt}
             loading="lazy"
             onError={() => setFailed(true)}
-            className="absolute inset-0 h-full w-full object-cover object-center"
+            className="absolute inset-0 h-full w-full object-cover object-center transition duration-500 group-hover:scale-[1.06]"
             draggable="false"
         />
     );
@@ -199,22 +228,36 @@ function CategoryCard({ active, label, image, onClick, count }) {
     );
 }
 
-function GameCard({ to, imageURL, title }) {
+function GameCard({ to, imageURL, title, categoryLabel }) {
     return (
         <Link
             to={to}
             className={cx(
-                "group rounded-xl overflow-hidden border transition will-change-transform min-w-0",
-                "bg-white/[0.03] border-white/10 shadow-[0_10px_30px_-18px_rgba(0,0,0,0.8)] hover:shadow-primary/30",
-                "hover:-translate-y-0.5 hover:scale-[1.02] active:scale-[0.99]"
+                "group relative min-w-0 overflow-hidden rounded-2xl border",
+                "border-white/10 bg-white/[0.03] backdrop-blur-sm",
+                "shadow-[0_18px_44px_-22px_rgba(0,0,0,0.95)] transition-all duration-300",
+                "hover:-translate-y-1.5 hover:shadow-[0_24px_60px_-20px_rgba(255,123,29,0.20)] hover:border-primary/35",
+                "active:scale-[0.99]"
             )}
         >
-            <div className="relative aspect-[16/10] bg-black/20 overflow-hidden">
-                <GameImage src={imageURL} alt={title} />
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-black/0 to-black/0 opacity-90" />
+            <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                <div className="absolute inset-x-[-20%] top-0 h-full rotate-12 bg-gradient-to-r from-transparent via-white/8 to-transparent" />
             </div>
-            <div className="px-2.5 sm:px-3 py-3">
-                <div className="text-center text-white text-xs sm:text-sm font-semibold leading-tight line-clamp-2 min-h-[2.5rem] sm:min-h-[2.75rem]">
+
+            <div className="relative aspect-[16/11] overflow-hidden bg-black/30">
+                <GameImage src={imageURL} alt={title} />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#090909] via-black/20 to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/80 to-transparent" />
+
+                <div className="absolute left-3 top-3">
+                    <div className="inline-flex items-center rounded-full border border-white/15 bg-black/45 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/85 backdrop-blur-md">
+                        {categoryLabel || "Assets"}
+                    </div>
+                </div>
+            </div>
+
+            <div className="relative p-3 sm:p-4">
+                <div className="mb-2 line-clamp-2 text-sm font-extrabold leading-tight text-white text-center sm:text-[15px]">
                     {title}
                 </div>
             </div>
@@ -313,7 +356,9 @@ function Pagination({ page, totalPages, onPrev, onNext, onJump }) {
 
 export default function GamesSection() {
     const { t, i18n } = useTranslation();
-    const { data: allGames = [], isLoading, error } = useGamesQuery();
+    const { data, isLoading, error } = useGamesQuery();
+    const allGames = data?.games || [];
+    const allCategories = data?.categories || [];
 
     useMobileViewportFix(true);
 
@@ -330,46 +375,72 @@ export default function GamesSection() {
     );
 
     const dynamicCategories = useMemo(() => {
-        const map = new Map();
+        const normalizedCategories = Array.isArray(allCategories) ? [...allCategories] : [];
+        const prepared = normalizedCategories.map((category) => {
+            const count =
+                normalize(category?.name) === "all games"
+                    ? allGames.length
+                    : allGames.filter((game) => matchesCategory(game, category)).length;
 
-        for (const game of Array.isArray(allGames) ? allGames : []) {
-            const categoryName = getGameCategory(game);
-            if (!categoryName) continue;
+            return {
+                id: String(category.id || "").trim(),
+                slug: String(category.slug || slugify(category.name)).trim().toLowerCase(),
+                label: normalizeCategory(category.name),
+                image: getCategoryImage(category),
+                count,
+                raw: category,
+            };
+        });
 
-            const key = normalize(categoryName);
-            if (!map.has(key)) {
-                map.set(key, {
-                    id: slugify(categoryName),
-                    label: categoryName,
-                    image: getCategoryImage(categoryName, allGames),
-                    count: 0,
-                });
-            }
+        const allGamesCategory = prepared.find((c) => c.slug === "all-games" || normalize(c.label) === "all games");
+        const ganamosCategory = prepared.find((c) => c.slug === "ganamos");
+        const turkishTablesCategory = prepared.find((c) => c.slug === "turkish-tables");
 
-            map.get(key).count += 1;
+        const rest = prepared
+            .filter(
+                (c) =>
+                    c.id !== allGamesCategory?.id &&
+                    c.id !== ganamosCategory?.id &&
+                    c.id !== turkishTablesCategory?.id
+            )
+            .sort((a, b) => a.label.localeCompare(b.label));
+
+        const ordered = [];
+        if (allGamesCategory) ordered.push(allGamesCategory);
+        if (ganamosCategory) ordered.push(ganamosCategory);
+        if (turkishTablesCategory) ordered.push(turkishTablesCategory);
+        ordered.push(...rest);
+
+        if (!allGamesCategory) {
+            ordered.unshift({
+                id: "__all_games__",
+                slug: "all-games",
+                label: "All Games",
+                image: LOCAL_CATEGORY_IMAGE_MAP["all-games"],
+                count: allGames.length,
+                raw: null,
+            });
         }
 
-        const categories = Array.from(map.values()).sort((a, b) => a.label.localeCompare(b.label));
-        const priorityOrder = ["ganamos", "turkish-tables"];
-        const prioritized = [];
-        const rest = [];
+        return ordered;
+    }, [allCategories, allGames]);
 
-        for (const category of categories) {
-            if (priorityOrder.includes(category.id)) {
-                prioritized.push(category);
-            } else {
-                rest.push(category);
-            }
-        }
+    const allGamesCategoryKey = useMemo(() => {
+        const found = dynamicCategories.find((c) => c.slug === "all-games" || normalize(c.label) === "all games");
+        return found?.id || "__all_games__";
+    }, [dynamicCategories]);
 
-        prioritized.sort((a, b) => priorityOrder.indexOf(a.id) - priorityOrder.indexOf(b.id));
+    const availableTypes = useMemo(
+        () => [
+            "All",
+            ...dynamicCategories
+                .filter((c) => c.id !== allGamesCategoryKey)
+                .map((c) => c.label),
+        ],
+        [dynamicCategories, allGamesCategoryKey]
+    );
 
-        return [...prioritized, ...rest];
-    }, [allGames]);
-
-    const availableTypes = useMemo(() => ["All", ...dynamicCategories.map((c) => c.label)], [dynamicCategories]);
-
-    const [activeCategory, setActiveCategory] = useState("All");
+    const [activeCategory, setActiveCategory] = useState("__all_games__");
     const [activeType, setActiveType] = useState("All");
     const [inputValue, setInputValue] = useState("");
     const [searchTerm, setSearchTerm] = useState("");
@@ -394,10 +465,14 @@ export default function GamesSection() {
     }, []);
 
     useEffect(() => {
-        if (activeCategory !== "All" && !dynamicCategories.some((c) => c.id === activeCategory)) {
-            setActiveCategory("All");
+        setActiveCategory(allGamesCategoryKey);
+    }, [allGamesCategoryKey]);
+
+    useEffect(() => {
+        if (activeCategory !== allGamesCategoryKey && !dynamicCategories.some((c) => c.id === activeCategory)) {
+            setActiveCategory(allGamesCategoryKey);
         }
-    }, [activeCategory, dynamicCategories]);
+    }, [activeCategory, dynamicCategories, allGamesCategoryKey]);
 
     useEffect(() => {
         if (activeType !== "All" && !availableTypes.includes(activeType)) {
@@ -441,20 +516,22 @@ export default function GamesSection() {
     const filteredGames = useMemo(() => {
         let list = Array.isArray(allGames) ? [...allGames] : [];
 
-        if (activeCategory !== "All") {
-            const selectedCategory = dynamicCategories.find((c) => c.id === activeCategory)?.label || "";
-            list = list.filter((g) => normalize(getGameCategory(g)) === normalize(selectedCategory));
+        if (activeCategory !== allGamesCategoryKey) {
+            const selectedCategory = dynamicCategories.find((c) => c.id === activeCategory)?.raw || null;
+            if (selectedCategory) {
+                list = list.filter((g) => matchesCategory(g, selectedCategory));
+            }
         }
 
         if (activeType !== "All") {
-            list = list.filter((g) => normalize(getGameCategory(g)) === normalize(activeType));
+            list = list.filter((g) => normalize(getGameCategoryName(g)) === normalize(activeType));
         }
 
         if (searchTerm.length >= 2) {
             const lower = searchTerm.toLowerCase();
             list = list.filter((g) => {
                 const name = normalize(getGameName(g, i18n, t));
-                const category = normalize(getGameCategory(g));
+                const category = normalize(getGameCategoryName(g));
                 return name.includes(lower) || category.includes(lower);
             });
         }
@@ -465,8 +542,8 @@ export default function GamesSection() {
             list.sort((a, b) => getGameName(b, i18n, t).localeCompare(getGameName(a, i18n, t)));
         } else if (sortBy.value === "category-asc") {
             list.sort((a, b) => {
-                const ac = getGameCategory(a);
-                const bc = getGameCategory(b);
+                const ac = getGameCategoryName(a);
+                const bc = getGameCategoryName(b);
                 const byCategory = ac.localeCompare(bc);
                 if (byCategory !== 0) return byCategory;
                 return getGameName(a, i18n, t).localeCompare(getGameName(b, i18n, t));
@@ -476,7 +553,7 @@ export default function GamesSection() {
         }
 
         return list;
-    }, [allGames, activeCategory, activeType, searchTerm, sortBy.value, dynamicCategories, i18n, t]);
+    }, [allGames, activeCategory, activeType, searchTerm, sortBy.value, dynamicCategories, allGamesCategoryKey, i18n, t]);
 
     const showSkeleton = isLoading || isSearching;
 
@@ -490,7 +567,7 @@ export default function GamesSection() {
     const pageSlice = filteredGames.slice(start, start + pageSize);
 
     const clearAll = () => {
-        setActiveCategory("All");
+        setActiveCategory(allGamesCategoryKey);
         setActiveType("All");
         setInputValue("");
         setSearchTerm("");
@@ -547,14 +624,6 @@ export default function GamesSection() {
                             )}
                             style={{ WebkitOverflowScrolling: "touch", overscrollBehaviorX: "contain" }}
                         >
-                            <CategoryCard
-                                active={activeCategory === "All"}
-                                label={t("games.categories.all") || "All Games"}
-                                image={LOCAL_CATEGORY_IMAGE_MAP["all-games"]}
-                                count={allGames.length}
-                                onClick={() => setActiveCategory("All")}
-                            />
-
                             {dynamicCategories.map((c) => (
                                 <CategoryCard
                                     key={c.id}
@@ -579,9 +648,7 @@ export default function GamesSection() {
                             <div className="text-base sm:text-lg font-semibold text-white leading-snug break-words">
                                 {(t("games.list.title") || "Games")}:{" "}
                                 <span className="text-white/85">
-                                    {activeCategory === "All"
-                                        ? t("games.categories.all") || "All Categories"
-                                        : dynamicCategories.find((c) => c.id === activeCategory)?.label || "All Categories"}
+                                    {dynamicCategories.find((c) => c.id === activeCategory)?.label || "All Games"}
                                 </span>
                                 <span className="text-white/60"> · </span>
                                 <span className="text-white/85">
@@ -592,7 +659,7 @@ export default function GamesSection() {
                             </div>
                         </div>
 
-                        {(activeCategory !== "All" || activeType !== "All" || inputValue) && (
+                        {(activeCategory !== allGamesCategoryKey || activeType !== "All" || inputValue) && (
                             <div>
                                 <button
                                     type="button"
@@ -747,7 +814,13 @@ export default function GamesSection() {
                     <>
                         <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 lg:grid-cols-4 min-w-0">
                             {pageSlice.map((game) => (
-                                <GameCard key={game.id} to={`/game/${game.id}`} imageURL={game.imageURL} title={getGameName(game, i18n, t)} />
+                                <GameCard
+                                    key={game.id}
+                                    to={`/game/${game.id}`}
+                                    imageURL={game.imageURL}
+                                    title={getGameName(game, i18n, t)}
+                                    categoryLabel={getGameCategoryName(game)}
+                                />
                             ))}
                         </div>
 

@@ -9,6 +9,7 @@ import {
     FileText,
     ChevronDown,
     ChevronUp,
+    ArrowUpRight,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import PageShell from "../components/common/PageShell";
@@ -50,7 +51,7 @@ function Highlight({ text = "", q = "" }) {
 
 function StatPill({ icon: Icon, label, value }) {
     return (
-        <div className="flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-3 py-1.5">
+        <div className="flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-3 py-1.5 backdrop-blur-sm">
             <Icon className="h-4 w-4 text-white/70 shrink-0" />
             <div className="text-xs text-white/60 whitespace-nowrap">{label}</div>
             <div className="text-xs font-semibold text-white whitespace-nowrap">{value}</div>
@@ -60,7 +61,7 @@ function StatPill({ icon: Icon, label, value }) {
 
 function EmptyCard({ icon: Icon, title, desc }) {
     return (
-        <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
+        <div className="rounded-[24px] border border-white/10 bg-white/[0.04] p-5 shadow-[0_20px_60px_rgba(0,0,0,0.28)]">
             <div className="flex items-start gap-3">
                 <div className="h-10 w-10 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center shrink-0">
                     <Icon className="h-5 w-5 text-white/70" />
@@ -74,7 +75,15 @@ function EmptyCard({ icon: Icon, title, desc }) {
     );
 }
 
-function GameCard({ g, q }) {
+function SearchLoadingCard({ text }) {
+    return (
+        <div className="rounded-[24px] border border-white/10 bg-white/[0.04] p-6 text-white/70 text-sm shadow-[0_20px_60px_rgba(0,0,0,0.28)] animate-pulse">
+            {text}
+        </div>
+    );
+}
+
+function GameCard({ g, q, index }) {
     const { t } = useTranslation();
     const [open, setOpen] = useState(false);
 
@@ -84,12 +93,21 @@ function GameCard({ g, q }) {
     const hasNested = sections.some((s) => Array.isArray(s.files) && s.files.length > 0);
 
     return (
-        <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-black/20 overflow-hidden shadow-[0_20px_70px_rgba(0,0,0,0.35)]">
+        <div
+            className="group rounded-[26px] border border-white/10 bg-gradient-to-br from-white/[0.05] via-white/[0.03] to-black/25 overflow-hidden shadow-[0_24px_70px_rgba(0,0,0,0.34)] hover:border-primary/20 hover:-translate-y-1 transition-all duration-300"
+            style={{ animationDelay: `${index * 40}ms` }}
+        >
+            <div className="pointer-events-none absolute opacity-0" />
             <div className="p-5">
                 <div className="flex gap-4">
-                    <div className="w-24 h-16 rounded-xl overflow-hidden border border-white/10 bg-white/5 shrink-0">
+                    <div className="w-28 h-20 rounded-2xl overflow-hidden border border-white/10 bg-white/5 shrink-0 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                         {img ? (
-                            <img src={img} alt={title} className="w-full h-full object-cover block" loading="lazy" />
+                            <img
+                                src={img}
+                                alt={title}
+                                className="w-full h-full object-cover block transition duration-500 group-hover:scale-[1.05]"
+                                loading="lazy"
+                            />
                         ) : (
                             <div className="w-full h-full flex items-center justify-center">
                                 <Gamepad2 className="h-6 w-6 text-white/40" />
@@ -121,16 +139,17 @@ function GameCard({ g, q }) {
                 <div className="mt-4 flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-end">
                     <Link
                         to={`/game/${g.id}`}
-                        className="w-full sm:w-auto inline-flex items-center justify-center rounded-xl bg-primary text-black font-bold px-4 py-2 text-sm hover:opacity-90 transition"
+                        className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#ff7b1d] to-[#ffb15b] text-black font-bold px-4 py-2.5 text-sm shadow-[0_12px_30px_rgba(255,123,29,0.20)] hover:brightness-105 hover:scale-[1.01] transition"
                     >
                         {t("search.actions.open")}
+                        <ArrowUpRight className="h-4 w-4" />
                     </Link>
 
                     {sections.length > 0 ? (
                         <button
                             type="button"
                             onClick={() => setOpen((v) => !v)}
-                            className="w-full sm:w-auto inline-flex items-center justify-center rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white/80 hover:bg-white/10 transition"
+                            className="w-full sm:w-auto inline-flex items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] px-3 py-2.5 text-white/80 hover:bg-white/[0.09] transition"
                             aria-label={open ? t("search.actions.collapse") : t("search.actions.expand")}
                         >
                             {open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -140,68 +159,102 @@ function GameCard({ g, q }) {
                 </div>
             </div>
 
-            {open ? (
-                <div className="border-t border-white/10 px-5 py-5 bg-black/15">
-                    <div className="space-y-4">
-                        {sections.length === 0 ? (
-                            <div className="text-white/60 text-sm">{t("search.gameCard.noSectionsFound")}</div>
-                        ) : (
-                            sections.map((s) => {
-                                const secTitle = s.name || s.title || t("search.common.section");
-                                const files = Array.isArray(s.files) ? s.files : [];
-                                return (
-                                    <div key={s.id} className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                                        <div className="flex items-start justify-between gap-3">
-                                            <div className="text-white font-semibold min-w-0 break-words">
-                                                <Highlight text={secTitle} q={q} />
-                                            </div>
-                                            <div className="text-xs text-white/50 shrink-0">
-                                                {t("search.common.filesCount", { count: files.length })}
-                                            </div>
-                                        </div>
+            <div
+                className={`grid transition-all duration-300 ease-out ${open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}
+            >
+                <div className="overflow-hidden">
+                    <div className="border-t border-white/10 px-5 py-5 bg-black/15">
+                        <div className="space-y-4">
+                            {sections.length === 0 ? (
+                                <div className="text-white/60 text-sm">{t("search.gameCard.noSectionsFound")}</div>
+                            ) : (
+                                sections.map((s) => {
+                                    const secTitle = s.name || s.title || t("search.common.section");
+                                    const files = Array.isArray(s.files) ? s.files : [];
 
-                                        {files.length === 0 ? (
-                                            <div className="text-white/60 text-sm mt-2">{t("search.gameCard.noMatchingFiles")}</div>
-                                        ) : (
-                                            <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
-                                                {files.map((f) => {
-                                                    const fname = f.name || f.filename || f.title || t("search.common.file");
-                                                    const fdesc = f.description || "";
-                                                    return (
-                                                        <div
-                                                            key={f.id}
-                                                            className="rounded-xl border border-white/10 bg-black/25 p-3 hover:bg-black/35 transition"
-                                                        >
-                                                            <div className="flex items-start gap-2">
-                                                                <div className="mt-0.5 h-8 w-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
-                                                                    <FileText className="h-4 w-4 text-white/70" />
-                                                                </div>
-                                                                <div className="min-w-0">
-                                                                    <div className="text-white/90 text-sm font-semibold break-words">
-                                                                        <Highlight text={fname} q={q} />
+                                    return (
+                                        <div key={s.id} className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                                            <div className="flex items-start justify-between gap-3">
+                                                <div className="text-white font-semibold min-w-0 break-words">
+                                                    <Highlight text={secTitle} q={q} />
+                                                </div>
+                                                <div className="text-xs text-white/50 shrink-0">
+                                                    {t("search.common.filesCount", { count: files.length })}
+                                                </div>
+                                            </div>
+
+                                            {files.length === 0 ? (
+                                                <div className="text-white/60 text-sm mt-2">{t("search.gameCard.noMatchingFiles")}</div>
+                                            ) : (
+                                                <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                    {files.map((f) => {
+                                                        const fname = f.name || f.filename || f.title || t("search.common.file");
+                                                        const fdesc = f.description || "";
+
+                                                        return (
+                                                            <div
+                                                                key={f.id}
+                                                                className="rounded-2xl border border-white/10 bg-black/25 p-3 hover:bg-black/35 transition"
+                                                            >
+                                                                <div className="flex items-start gap-2">
+                                                                    <div className="mt-0.5 h-8 w-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+                                                                        <FileText className="h-4 w-4 text-white/70" />
                                                                     </div>
-                                                                    {fdesc ? (
-                                                                        <div className="text-white/60 text-xs mt-1 break-words line-clamp-2">
-                                                                            <Highlight text={fdesc} q={q} />
+                                                                    <div className="min-w-0">
+                                                                        <div className="text-white/90 text-sm font-semibold break-words">
+                                                                            <Highlight text={fname} q={q} />
                                                                         </div>
-                                                                    ) : (
-                                                                        <div className="text-white/50 text-xs mt-1">{t("search.common.noDescription")}</div>
-                                                                    )}
+                                                                        {fdesc ? (
+                                                                            <div className="text-white/60 text-xs mt-1 break-words line-clamp-2">
+                                                                                <Highlight text={fdesc} q={q} />
+                                                                            </div>
+                                                                        ) : (
+                                                                            <div className="text-white/50 text-xs mt-1">{t("search.common.noDescription")}</div>
+                                                                        )}
+                                                                    </div>
                                                                 </div>
                                                             </div>
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        )}
-                                    </div>
-                                );
-                            })
-                        )}
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })
+                            )}
+                        </div>
                     </div>
                 </div>
-            ) : null}
+            </div>
         </div>
+    );
+}
+
+function AnnouncementResultCard({ a, q, index }) {
+    const { t } = useTranslation();
+    const title = a.title || a.name || t("search.common.untitled");
+    const body = a.body || a.content || a.description || "";
+
+    return (
+        <Link
+            to={`/announcement/${a.id}`}
+            className="group block rounded-[24px] border border-white/10 bg-white/[0.04] hover:bg-white/[0.07] hover:border-primary/20 transition-all duration-300 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.22)]"
+            style={{ animationDelay: `${index * 40}ms` }}
+        >
+            <div className="flex items-start gap-3">
+                <div className="h-11 w-11 rounded-2xl border border-white/10 bg-white/5 flex items-center justify-center shrink-0 transition group-hover:bg-primary/10 group-hover:border-primary/20">
+                    <Megaphone className="h-5 w-5 text-white/70 group-hover:text-primary transition" />
+                </div>
+                <div className="min-w-0">
+                    <div className="text-white font-semibold break-words line-clamp-2">
+                        <Highlight text={title} q={q} />
+                    </div>
+                    <div className="text-white/60 text-sm break-words line-clamp-2 mt-1 leading-relaxed">
+                        <Highlight text={body} q={q} />
+                    </div>
+                </div>
+            </div>
+        </Link>
     );
 }
 
@@ -211,7 +264,7 @@ export default function Search() {
     const { isLoading, error, matchedAnnouncements, matchedGames, totalCount } = useSearchQuery(q);
 
     const headerRight = (
-        <div className="hidden md:flex items-center gap-2 rounded-xl border border-white/10 bg-black/25 px-4 py-2">
+        <div className="hidden md:flex items-center gap-2 rounded-2xl border border-white/10 bg-black/25 px-4 py-2.5 backdrop-blur-sm shadow-[0_14px_34px_rgba(0,0,0,0.22)]">
             <SearchIcon className="h-4 w-4 text-white/70" />
             <span className="text-sm text-white/70">
                 {t("search.header.queryLabel")} <span className="text-white font-semibold">{q || t("search.common.dash")}</span>
@@ -225,10 +278,11 @@ export default function Search() {
     return (
         <PageShell crumb={t("search.crumb")} title={t("search.title")} subtitle={t("search.subtitle")} right={headerRight}>
             <div className="pb-[env(safe-area-inset-bottom)]">
-                <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.05] via-black/20 to-black/30 p-5 md:p-6 shadow-[0_30px_90px_rgba(0,0,0,0.45)]">
-                    <div className="flex items-start justify-between gap-4 flex-col md:flex-row">
+                <div className="relative rounded-[30px] border border-white/10 bg-gradient-to-br from-white/[0.06] via-black/20 to-black/30 p-5 md:p-6 shadow-[0_30px_90px_rgba(0,0,0,0.45)] overflow-hidden">
+                    <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,123,29,0.14),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.04),transparent_30%)]" />
+                    <div className="relative flex items-start justify-between gap-4 flex-col md:flex-row">
                         <div className="flex items-start gap-3 min-w-0">
-                            <div className="h-12 w-12 rounded-2xl border border-white/10 bg-white/5 flex items-center justify-center shrink-0">
+                            <div className="h-12 w-12 rounded-2xl border border-white/10 bg-white/5 flex items-center justify-center shrink-0 shadow-[0_10px_30px_rgba(0,0,0,0.22)]">
                                 <Sparkles className="h-6 w-6 text-primary" />
                             </div>
                             <div className="min-w-0">
@@ -245,7 +299,7 @@ export default function Search() {
                                     {q ? t("search.hero.showingMatched") : t("search.hero.useNavbarHint")}
                                 </div>
 
-                                <div className="mt-3 md:hidden inline-flex items-center gap-2 rounded-xl border border-white/10 bg-black/25 px-3 py-2">
+                                <div className="mt-3 md:hidden inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-black/25 px-3 py-2.5">
                                     <SearchIcon className="h-4 w-4 text-white/70 shrink-0" />
                                     <span className="text-sm text-white/70 break-words">
                                         {t("search.header.queryLabel")}{" "}
@@ -279,13 +333,13 @@ export default function Search() {
                 ) : null}
 
                 {q && isLoading ? (
-                    <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-6 text-white/70 text-sm">
-                        {t("search.states.searching")}
+                    <div className="mt-6">
+                        <SearchLoadingCard text={t("search.states.searching")} />
                     </div>
                 ) : null}
 
                 {q && !isLoading && error ? (
-                    <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-6 text-red-400 text-sm">
+                    <div className="mt-6 rounded-[24px] border border-white/10 bg-black/20 p-6 text-red-400 text-sm shadow-[0_20px_60px_rgba(0,0,0,0.22)]">
                         {error?.message || t("search.states.failed")}
                     </div>
                 ) : null}
@@ -299,7 +353,7 @@ export default function Search() {
                 {q && !isLoading && !error && totalCount > 0 ? (
                     <div className="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
                         <div className="lg:col-span-4 space-y-4">
-                            <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
+                            <div className="rounded-[26px] border border-white/10 bg-white/[0.04] p-5 shadow-[0_20px_60px_rgba(0,0,0,0.22)]">
                                 <div className="flex items-center justify-between mb-3 gap-3">
                                     <div className="text-white font-semibold text-lg min-w-0 break-words">
                                         {t("search.panels.announcements.title")}{" "}
@@ -314,38 +368,16 @@ export default function Search() {
                                     <div className="text-white/60 text-sm">{t("search.panels.announcements.empty")}</div>
                                 ) : (
                                     <div className="space-y-3">
-                                        {matchedAnnouncements.map((a) => {
-                                            const title = a.title || a.name || t("search.common.untitled");
-                                            const body = a.body || a.content || a.description || "";
-                                            return (
-                                                <Link
-                                                    key={a.id}
-                                                    to={`/announcement/${a.id}`}
-                                                    className="group block rounded-2xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] transition p-4"
-                                                >
-                                                    <div className="flex items-start gap-3">
-                                                        <div className="h-10 w-10 rounded-xl border border-white/10 bg-white/5 flex items-center justify-center shrink-0">
-                                                            <Megaphone className="h-5 w-5 text-white/70 group-hover:text-primary transition" />
-                                                        </div>
-                                                        <div className="min-w-0">
-                                                            <div className="text-white font-semibold break-words line-clamp-2">
-                                                                <Highlight text={title} q={q} />
-                                                            </div>
-                                                            <div className="text-white/60 text-sm break-words line-clamp-2 mt-1">
-                                                                <Highlight text={body} q={q} />
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </Link>
-                                            );
-                                        })}
+                                        {matchedAnnouncements.map((a, index) => (
+                                            <AnnouncementResultCard key={a.id} a={a} q={q} index={index} />
+                                        ))}
                                     </div>
                                 )}
                             </div>
                         </div>
 
                         <div className="lg:col-span-8 space-y-4">
-                            <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
+                            <div className="rounded-[26px] border border-white/10 bg-white/[0.04] p-5 shadow-[0_20px_60px_rgba(0,0,0,0.22)]">
                                 <div className="text-white font-semibold text-lg break-words">
                                     {t("search.panels.games.title")} <span className="text-white/50">({gamesCount})</span>
                                 </div>
@@ -356,8 +388,8 @@ export default function Search() {
                                 <EmptyCard icon={Gamepad2} title={t("search.panels.games.emptyTitle")} desc={t("search.panels.games.emptyDesc")} />
                             ) : (
                                 <div className="space-y-4">
-                                    {matchedGames.map((g) => (
-                                        <GameCard key={g.id} g={g} q={q} />
+                                    {matchedGames.map((g, index) => (
+                                        <GameCard key={g.id} g={g} q={q} index={index} />
                                     ))}
                                 </div>
                             )}
