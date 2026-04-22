@@ -41,11 +41,17 @@ export default function App() {
   const hasAccess = profile?.access === true;
 
   const requireAccess = (element) =>
-    isAuthed && hasAccess ? <ProtectedLayout>{element}</ProtectedLayout> : <Navigate to="/login" replace />;
+    isAuthed && hasAccess ? (
+      <ProtectedLayout>{element}</ProtectedLayout>
+    ) : (
+      <Navigate to="/login" replace />
+    );
 
-  const guestOnly = (element) => (!isAuthed || !hasAccess ? element : <Navigate to="/" replace />);
+  const guestOnly = (element) =>
+    !isAuthed || !hasAccess ? element : <Navigate to="/" replace />;
 
-  const notFoundElement = isAuthed && hasAccess ? requireAccess(<NotFound />) : <NotFound />;
+  const notFoundElement =
+    isAuthed && hasAccess ? requireAccess(<NotFound />) : <NotFound />;
 
   return (
     <ToastProvider>
@@ -61,12 +67,19 @@ export default function App() {
               <Route path="/announcement/:id" element={requireAccess(<AnnouncementDetails />)} />
               <Route path="/game/:gameId" element={requireAccess(<GameDetails />)} />
               <Route path="/settings" element={requireAccess(<Settings />)} />
-
               <Route path="/login" element={guestOnly(<Login />)} />
-              <Route path="/register" element={!isAuthed ? <Register /> : <Navigate to="/" replace />} />
-              <Route path="/forgot-password" element={!isAuthed ? <ForgotPassword /> : <Navigate to="/" replace />} />
-              <Route path="/reset-password" element={!isAuthed ? <ResetPassword /> : <Navigate to="/" replace />} />
-
+              <Route
+                path="/register"
+                element={!isAuthed ? <Register /> : <Navigate to="/" replace />}
+              />
+              <Route
+                path="/forgot-password"
+                element={!isAuthed ? <ForgotPassword /> : <Navigate to="/" replace />}
+              />
+              <Route
+                path="/reset-password"
+                element={!isAuthed ? <ResetPassword /> : <Navigate to="/" replace />}
+              />
               <Route path="*" element={notFoundElement} />
             </Routes>
           )}

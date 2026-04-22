@@ -106,6 +106,10 @@ function getGameCategoryId(game) {
     return String(game?.categoryId || game?.category?.id || "").trim();
 }
 
+function isCategoryVisible(category) {
+    return category?.showInClientArea !== false;
+}
+
 const LOCAL_CATEGORY_IMAGE_MAP = {
     "all-games": "/image/categories/all-games-banner.png",
     ganamos: "/image/categories/ganamos-banner.png",
@@ -248,7 +252,6 @@ function GameCard({ to, imageURL, title, categoryLabel }) {
                 <GameImage src={imageURL} alt={title} />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#090909] via-black/20 to-transparent" />
                 <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/80 to-transparent" />
-
                 <div className="absolute left-3 top-3">
                     <div className="inline-flex items-center rounded-full border border-white/15 bg-black/45 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/85 backdrop-blur-md">
                         {categoryLabel || "Assets"}
@@ -357,8 +360,8 @@ function Pagination({ page, totalPages, onPrev, onNext, onJump }) {
 export default function GamesSection() {
     const { t, i18n } = useTranslation();
     const { data, isLoading, error } = useGamesQuery();
-    const allGames = data?.games || [];
-    const allCategories = data?.categories || [];
+    const rawGames = data?.games || [];
+    const rawCategories = data?.categories || [];
 
     useMobileViewportFix(true);
 
@@ -374,13 +377,14 @@ export default function GamesSection() {
         [t]
     );
 
+    const visibleCategories = useMemo(() => {
+        return Array.isArray(rawCategories) ? rawCategories.filter(isCategoryVisible) : [];
+    }, [rawCategories]);
+
     const dynamicCategories = useMemo(() => {
-        const normalizedCategories = Array.isArray(allCategories) ? [...allCategories] : [];
+        const normalizedCategories = Array.isArray(visibleCategories) ? [...visibleCategories] : [];
         const prepared = normalizedCategories.map((category) => {
-            const count =
-                normalize(category?.name) === "all games"
-                    ? allGames.length
-                    : allGames.filter((game) => matchesCategory(game, category)).length;
+            const count = rawGames.filter((game) => matchesCategory(game, category)).length;
 
             return {
                 id: String(category.id || "").trim(),
@@ -417,13 +421,13 @@ export default function GamesSection() {
                 slug: "all-games",
                 label: "All Games",
                 image: LOCAL_CATEGORY_IMAGE_MAP["all-games"],
-                count: allGames.length,
+                count: rawGames.length,
                 raw: null,
             });
         }
 
         return ordered;
-    }, [allCategories, allGames]);
+    }, [visibleCategories, rawGames]);
 
     const allGamesCategoryKey = useMemo(() => {
         const found = dynamicCategories.find((c) => c.slug === "all-games" || normalize(c.label) === "all games");
@@ -514,7 +518,7 @@ export default function GamesSection() {
     }, []);
 
     const filteredGames = useMemo(() => {
-        let list = Array.isArray(allGames) ? [...allGames] : [];
+        let list = Array.isArray(rawGames) ? [...rawGames] : [];
 
         if (activeCategory !== allGamesCategoryKey) {
             const selectedCategory = dynamicCategories.find((c) => c.id === activeCategory)?.raw || null;
@@ -553,13 +557,13 @@ export default function GamesSection() {
         }
 
         return list;
-    }, [allGames, activeCategory, activeType, searchTerm, sortBy.value, dynamicCategories, allGamesCategoryKey, i18n, t]);
+    }, [rawGames, activeCategory, activeType, searchTerm, sortBy.value, dynamicCategories, allGamesCategoryKey, i18n, t]);
 
     const showSkeleton = isLoading || isSearching;
 
     useEffect(() => {
         setPage(1);
-    }, [activeCategory, activeType, searchTerm, sortBy.value, pageSize, allGames.length]);
+    }, [activeCategory, activeType, searchTerm, sortBy.value, pageSize, rawGames.length]);
 
     const totalPages = Math.max(1, Math.ceil(filteredGames.length / pageSize));
     const safePage = Math.min(page, totalPages);
@@ -655,7 +659,7 @@ export default function GamesSection() {
                                     {activeType === "All" ? t("games.types.all") || "All Types" : activeType}
                                 </span>
                                 <span className="text-white/60"> · </span>
-                                <span className="text-white/85">{showSkeleton ? allGames.length : filteredGames.length}</span>
+                                <span className="text-white/85">{showSkeleton ? rawGames.length : filteredGames.length}</span>
                             </div>
                         </div>
 
@@ -806,7 +810,7 @@ export default function GamesSection() {
 
                 {!showSkeleton && error && <div className="text-red-400 text-sm">{error?.message || t("games.list.failedToLoad")}</div>}
 
-                {!showSkeleton && !error && allGames.length > 0 && filteredGames.length === 0 && (
+                {!showSkeleton && !error && rawGames.length > 0 && filteredGames.length === 0 && (
                     <div className="text-white/70 text-sm">{t("games.list.noGamesFound") || "No games found."}</div>
                 )}
 
@@ -834,7 +838,7 @@ export default function GamesSection() {
                     </>
                 )}
 
-                {!showSkeleton && !error && allGames.length === 0 && (
+                {!showSkeleton && !error && rawGames.length === 0 && (
                     <div className="text-white/70 text-sm">{t("games.list.noGamesFound") || "No games found."}</div>
                 )}
             </div>
